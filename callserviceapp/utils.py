@@ -1,4 +1,3 @@
-from callserviceapp.models import order
 from math import asin, cos, radians, sin, sqrt
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives, send_mail

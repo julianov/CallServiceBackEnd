@@ -153,25 +153,18 @@ class item_company (models.Model):
 #################################################################################################################
 #Models for orders
 
-class Proveedor (models.Model):
+class ordenGeneral (models.Model):
+    
     id = models.AutoField(primary_key=True)
 
-    proveedor_independiente= models.ForeignKey(serviceProvider, blank=True, null=True, on_delete=models.CASCADE)
-    proveedor_company = models.ForeignKey (company, blank=True, null=True, on_delete=models.CASCADE)
-    item= models.ForeignKey(item,on_delete=models.CASCADE)
+    
+    client_email = models.EmailField(blank=True)
+    proveedor_email=models.EmailField(blank=True)
+    rubro= models.ForeignKey(item,default=None,on_delete=models.CASCADE)
     tiempo_respuesta_promedio=models.FloatField(default=1000)
 
-    def __str__(self):
-        if self.proveedor_independiente:
-            return str(self.proveedor_independiente.email)
-        elif self.proveedor_company:
-            return str (self.proveedor_company.email)
-    
-    def getTiempoRespuesta(self): 
-        return self.tiempo_respuesta_promedio
-
-class ordenGeneral (models.Model):
-    id = models.AutoField(primary_key=True)
+    fecha_creacion=models.DateField( auto_now_add=True)
+    ticket =  models.IntegerField(default=1000, blank=True)
 
     STATUS = [
         ("ENV","ENVIADA"),
@@ -185,17 +178,20 @@ class ordenGeneral (models.Model):
     ]
     status = models.CharField(max_length=3,choices= STATUS,default= "SO")
        
-    location_lat = models.FloatField()
-    location_long = models.FloatField()
-    day = models.DateField()
-    time = models.TimeField()
+    location_lat = models.FloatField(default=None, blank=True)
+    location_long = models.FloatField(default=None, blank=True)
+    day = models.DateField(default=None, blank=True)
+    time = models.TimeField(default=None, blank=True)
    
     tituloPedido = models.TextField(default="Solicitud de pedido")
-    problem_description = models.TextField()
+    problem_description = models.TextField(default=None, blank=True)
     picture1=models.ImageField(default=None, blank=True)
     picture2=models.ImageField(default=None,blank=True)
 
+    
+
 class ordenEmergencia (models.Model):
+
     id = models.AutoField(primary_key=True)
 
     STATUS = [
@@ -210,13 +206,23 @@ class ordenEmergencia (models.Model):
     ]
     status = models.CharField(max_length=3,choices= STATUS,default= "SO")
 
-    lista_proveedores = models.ForeignKey (Proveedor, default=None ,on_delete=models.CASCADE)
+    lista_proveedores_independientes = models.ForeignKey (item, default=None ,on_delete=models.CASCADE)
+    lista_proveedores_empresa = models.ForeignKey (item_company, default=None ,on_delete=models.CASCADE)
+
+
+    client_email = models.EmailField(blank=True)
+    proveedor_email=models.EmailField(blank=True)
+    #rubro= models.ForeignKey(item,on_delete=models.CASCADE)
+    tiempo_respuesta_promedio=models.FloatField(default=1000)
+    
+    fecha_creacion=models.DateField( auto_now_add=True)
+    ticket =  models.IntegerField(default=1000, blank=True)
    
-    location_lat = models.FloatField()
-    location_long = models.FloatField()
+    location_lat = models.FloatField(default=None, blank=True)
+    location_long = models.FloatField(default=None, blank=True)
    
     tituloPedido = models.TextField(default="Solicitud de pedido")
-    problem_description = models.TextField()
+    problem_description = models.TextField(blank=True)
     picture1=models.ImageField(default=None, blank=True)
     picture2=models.ImageField(default=None,blank=True)
 
@@ -228,24 +234,7 @@ class chat (models.Model):
     proveedor=models.EmailField(blank=True)
     day = models.DateField()
     time = models.TimeField()
-
-
-class order (models.Model):
-    id = models.AutoField(primary_key=True)
-
-    client = models.ForeignKey(client, on_delete=models.CASCADE)
-    proveedor = models.ForeignKey (Proveedor, default=None ,on_delete=models.CASCADE)
-    proveedor_email=models.EmailField(blank=True)
-
-    fecha_creacion=models.DateField( auto_now_add=True)
-    ticket =  models.IntegerField(default=1000)
-
-    orden_general=models.ForeignKey(ordenGeneral, on_delete=models.CASCADE)
-    orden_emergencia=models.ForeignKey(ordenEmergencia, on_delete=models.CASCADE)
-
-    
-
-
+  
 
 ################################################################################################
 

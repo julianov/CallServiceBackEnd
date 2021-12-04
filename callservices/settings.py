@@ -135,6 +135,8 @@ STATICFILES_DIRS = (
     os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'static'),
 )
 
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
 CORS_ORIGIN_ALLOW_ALL = True
 
 CSRF_USE_SESSIONS = False

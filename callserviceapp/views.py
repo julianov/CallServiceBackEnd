@@ -1,10 +1,11 @@
+from django.db.models.fields import DateTimeCheckMixin, DateTimeField
 from django.shortcuts import render
 from django.http import HttpResponse
 
 from django.http import JsonResponse
 from json import loads
 
-from callserviceapp.models import Proveedor, client, item_company, ordenEmergencia, ordenGeneral, order, serviceProvider, item
+from callserviceapp.models import  client, item_company, ordenEmergencia, ordenGeneral, serviceProvider, item
 from callserviceapp.models import company
 
 from callserviceapp.utils import distanciaEnLaTierra, ordenarProveedores, proveedoresRadio, send_proveedor_mail_new_orden, send_user_mail
@@ -12,6 +13,11 @@ import random
 
 import base64
 import math
+
+import datetime
+import datetime
+
+
 
 
 # Create your views here.
@@ -907,7 +913,6 @@ def Buscar (request , tipo, dato):
 @csrf_exempt
 def pedirOrdenGeneral (request):
     if request.method == 'POST': 
-
     
         ProveedorEmail=request.POST.get("ProveedorEmail")
         clienteEmail=request.POST.get("clienteEmail")
@@ -923,6 +928,8 @@ def pedirOrdenGeneral (request):
         print("el email del cliente es: "+clienteEmail)
         print("el email del proveedor es: "+ProveedorEmail )
         print("tipo de proveedor: "+tipoProveedor)
+        print("rubro: "+itemProveedor)
+       
 
         if tipoProveedor=="Proveedor de servicio independiente":
             serviceProvider_=serviceProvider.objects.filter(email=ProveedorEmail)
@@ -932,39 +939,48 @@ def pedirOrdenGeneral (request):
             print(client_)
             if serviceProvider_ and client_: 
                 
-                proveedor= Proveedor ()
-                proveedor.proveedor_independiente=serviceProvider_.first()
-                proveedor.item=itemProveedor
-                proveedor.save()
+                rubro= item.objects.filter(items=itemProveedor, provider=serviceProvider_.first()).first()
+                print("el rubro es: "+str(rubro))
+                if not rubro:
+                    return HttpResponse("bad")
+                else:
+                    if ordenGeneral.objects.filter(client_email=clienteEmail, proveedor_email=ProveedorEmail):
+                        return HttpResponse("ya hay una orden")
+                    else:
+                        new=ordenGeneral()
+                        
+                        new.status="ENV"
+                        new.rubro=rubro
+                        new.location_lat= clienteLat
+                        new.location_long=clienteLong
+                        new.tituloPedido=tituloPedido
+                        if diaPedido and diaPedido!=None:
+                            new.day=diaPedido
+                        else: 
+                            new.day=datetime.date(1997, 10, 19)
+                        if horaPedido and horaPedido!=None:
+                            new.time=horaPedido
+                        else: 
+                            new.time=datetime.time(0, 0, 0)
+                        new.problem_description=descripcion_problema
+                        if request.FILES.get("imagen1"):
+                            new.picture1= request.FILES.get("imagen1")
+                        if request.FILES.get("imagen2"):
+                            new.picture2=request.FILES.get("imagen2")
 
-                new=ordenGeneral()
-                
-                new.status=order.ENV
-                new.location_lat= clienteLat
-                new.location_long=clienteLong
-                new.tituloPedido=tituloPedido
-                new.day=diaPedido
-                new.time=horaPedido
-                new.problem_description=descripcion_problema
-                if request.FILES.get("imagen1"):
-                    new.picture1= request.FILES.get("imagen1")
-                if request.FILES.get("imagen2"):
-                    new.picture2=request.FILES.get("imagen2")
-                new.save()
-
-                og=order()
-                og.client=client_.first()
-                og.proveedor=proveedor
-
-                ticket_numero=order.objects.count()+1000
-                og.ticket=ticket_numero 
-                og.orden_general=new
-                og.save()
-                try:
-                    send_proveedor_mail_new_orden(ticket_numero, ProveedorEmail, client_.name+" "+client_.last_name)
-                except:
-                    print("problem found at send proveedor mail new orden")
-                return HttpResponse(ticket_numero) 
+                        new.client_email=clienteEmail
+                        new.proveedor_email=ProveedorEmail
+                        ticket_numero=ordenGeneral.objects.count()+ordenEmergencia.objects.count()+1000
+                        new.ticket=ticket_numero
+                        new.save()
+                    
+                        try:
+                            print("el nombre del cliente es: "+client_.first().name)
+                            print("el apellido del cliente es: "+client_.first().last_name)
+                            send_proveedor_mail_new_orden(ticket_numero, ProveedorEmail, client_.first().name+" "+client_.first().last_name)
+                        except:
+                            print("problem found at send proveedor mail new orden")
+                        return HttpResponse(ticket_numero) 
 
             else: 
                 print("debe enviar bad")
@@ -974,44 +990,53 @@ def pedirOrdenGeneral (request):
             client_=client.objects.filter(email=clienteEmail)
             if company_ and client_: 
                 
-                proveedor= Proveedor ()
-                proveedor.proveedor_company=company_.first()
-                proveedor.item=itemProveedor
-                proveedor.save()
+                rubro= item.objects.filter(items=itemProveedor, provider=company_.first()).first()
+                if not rubro:
+                    return HttpResponse("bad")
+                else:
+                    if ordenGeneral.objects.filter(client_email=clienteEmail, proveedor_email=ProveedorEmail):
+                        return HttpResponse("ya hay una orden")
+                    else: 
+                        new=ordenGeneral()
+                        new.rubro=rubro
+                        new.status="ENV"
+                        new.location_lat= clienteLat
+                        new.location_long=clienteLong
+                        new.tituloPedido=tituloPedido
+                        if diaPedido:
+                            new.day=diaPedido
+                        if horaPedido:
+                            new.time=horaPedido
+                        new.problem_description=descripcion_problema
+                        if request.FILES.get("imagen1"):
+                            new.picture1= request.FILES.get("imagen1")
+                        if request.FILES.get("imagen2"):
+                            new.picture2=request.FILES.get("imagen2")
+                        
+                        new.client_email=clienteEmail
+                        new.proveedor_email=ProveedorEmail
+                        ticket_numero=ordenGeneral.objects.count()+ordenEmergencia.objects.count()+1000
+                        new.ticket=ticket_numero
+                        new.save()
 
-                new=ordenGeneral()
-                
-                new.status=order.ENV
-                new.location_lat= clienteLat
-                new.location_long=clienteLong
-                new.tituloPedido=tituloPedido
-                new.day=diaPedido
-                new.time=horaPedido
-                new.problem_description=descripcion_problema
-                if request.FILES.get("imagen1"):
-                    new.picture1= request.FILES.get("imagen1")
-                if request.FILES.get("imagen2"):
-                    new.picture2=request.FILES.get("imagen2")
-                new.save()
-
-                og=order()
-                og.client=client_.first()
-                og.proveedor=proveedor
-                
-                ticket_numero=order.objects.count()+1000
-                og.ticket=ticket_numero 
-                og.orden_general=new
-                og.save()
-                try:
-                    send_proveedor_mail_new_orden(ticket_numero, ProveedorEmail, client_.name+" "+client_.last_name)
-                except:
-                    print("problem found at send proveedor mail new orden")
-                return HttpResponse(ticket_numero) 
+                        try:
+                            send_proveedor_mail_new_orden(ticket_numero, ProveedorEmail, client_.name+" "+client_.last_name)
+                        except:
+                            print("problem found at send proveedor mail new orden")
+                        return HttpResponse(ticket_numero) 
 
             else: 
                 return HttpResponse("bad")
-        
 
+def consultarOrdenes(request , tipo,email):
+    if tipo=="proveedor": 
+        ordenesGenerales= ordenGeneral.objects.filter(proveedor_email=email).exclude(status="CAN", status="REX", status="RED")
+        print(ordenesGenerales) 
+        ordenesEmergencia= ordenEmergencia.objects.filter(proveedor_email=email).exclude(status="CAN", status="REX", status="RED")
+
+
+        
+'''
 @csrf_exempt
 def pedirOrdenEmergencia (request):
 
@@ -1111,6 +1136,6 @@ def pedirOrdenEmergencia (request):
             except:
                 print("problem found at send proveedor mail new orden")
             return JsonResponse(proveedorSleccionado, safe=False)
-
+'''
     
 
