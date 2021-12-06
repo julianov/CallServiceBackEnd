@@ -1039,24 +1039,46 @@ def consultarOrdenes(request , tipo,email):
             for datos in ordenesGenerales:
               cliente=client.objects.filter(email=datos.client_email).first()
               if cliente:
-                imagen=""
+                imagen={}
                 if cliente.picture:
-                    imagen="data:image/png;base64,"+base64.b64encode(cliente.picture.read()).decode('ascii')
-                
+                    imagen['imagen_Cliente']="data:image/png;base64,"+base64.b64encode(cliente.picture.read()).decode('ascii')
+                else: 
+                    imagen['imagen_Cliente']=""
+                if datos.picture1: 
+                    imagen['picture1']="data:image/png;base64,"+base64.b64encode(datos.picture1.read()).decode('ascii')
+                else:
+                    imagen['picture1']=""
+                if datos.picture2: 
+                    imagen['picture2']="data:image/png;base64,"+base64.b64encode(datos.picture2.read()).decode('ascii')
+                else:
+                    imagen['picture2']=""
+                    
                 array.append({"tipo":"Orden general","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
                 "dia":datos.day, "time":datos.time, "titulo":datos.tituloPedido,"descripcion":datos.problem_description,
-                "imagen_cliente":imagen })
+                "location_lat":datos.location_lat,"location_long":datos.location_long,
+                "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_cliente":imagen['imagen_Cliente'] })
 
         if ordenesEmergencia: 
             for datos in ordenesGenerales:
                 cliente=client.objects.filter(email=datos.client_email).first()
-                imagen=""
+                imagen={}
                 if cliente.picture:
-                    imagen="data:image/png;base64,"+base64.b64encode(cliente.picture.read()).decode('ascii')
-                
-                array.append({"tipo":"Orden de emergencia","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
-            "dia":datos.day, "time":datos.time, "titulo":datos.tituloPedido,"descripcion":datos.problem_description,
-            "imagen_cliente":imagen })
+                    imagen['imagen_Cliente']="data:image/png;base64,"+base64.b64encode(cliente.picture.read()).decode('ascii')
+                else: 
+                    imagen['imagen_Cliente']=""
+                if datos.picture1: 
+                    imagen['picture1']="data:image/png;base64,"+base64.b64encode(datos.picture1.read()).decode('ascii')
+                else:
+                    imagen['picture1']=""
+                if datos.picture2: 
+                    imagen['picture2']="data:image/png;base64,"+base64.b64encode(datos.picture2.read()).decode('ascii')
+                else:
+                    imagen['picture2']=""
+                    
+                array.append({"tipo":"Orden general","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
+                "dia":datos.day, "time":datos.time, "titulo":datos.tituloPedido,"descripcion":datos.problem_description,
+                "location_lat":datos.location_lat,"location_long":datos.location_long,
+                "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_cliente":imagen['imagen_Cliente'] })
         
         if len(array)>0:
             return JsonResponse(array, safe=False)
@@ -1077,26 +1099,46 @@ def verOrdenParticular(request , tipo,n_ticket):
             for datos in ordenesGenerales:
               cliente=client.objects.filter(email=datos.client_email).first()
               if cliente:
-                imagen=""
+                imagen={}
                 if cliente.picture:
-                    imagen="data:image/png;base64,"+base64.b64encode(cliente.picture.read()).decode('ascii')
-                
+                    imagen['imagen_Cliente']="data:image/png;base64,"+base64.b64encode(cliente.picture.read()).decode('ascii')
+                else: 
+                    imagen['imagen_Cliente']=""
+                if datos.picture1: 
+                    imagen['picture1']="data:image/png;base64,"+base64.b64encode(datos.picture1.read()).decode('ascii')
+                else:
+                    imagen['picture1']=""
+                if datos.picture2: 
+                    imagen['picture2']="data:image/png;base64,"+base64.b64encode(datos.picture2.read()).decode('ascii')
+                else:
+                    imagen['picture2']=""
+
                 array.append({"tipo":"Orden general","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
                 "dia":datos.day, "time":datos.time, "titulo":datos.tituloPedido,"descripcion":datos.problem_description,
                 "location_lat":datos.location_lat,"location_long":datos.location_long,
-                "picture1":datos.picture1, "picture2":datos.picture2, "imagen_cliente":imagen })
+                "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_cliente":imagen['imagen_Cliente'] })
 
         if ordenesEmergencia: 
             for datos in ordenesGenerales:
                 cliente=client.objects.filter(email=datos.client_email).first()
-                imagen=""
+                imagen={}
                 if cliente.picture:
-                    imagen="data:image/png;base64,"+base64.b64encode(cliente.picture.read()).decode('ascii')
+                    imagen['imagen_Cliente']="data:image/png;base64,"+base64.b64encode(cliente.picture.read()).decode('ascii')
+                else: 
+                    imagen['imagen_Cliente']=""
+                if datos.picture1: 
+                    imagen['picture1']="data:image/png;base64,"+base64.b64encode(datos.picture1.read()).decode('ascii')
+                else:
+                    imagen['picture1']=""
+                if datos.picture2: 
+                    imagen['picture2']="data:image/png;base64,"+base64.b64encode(datos.picture2.read()).decode('ascii')
+                else:
+                    imagen['picture2']=""
                 
                 array.append({"tipo":"Orden de emergencia","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
             "dia":datos.day, "time":datos.time, "titulo":datos.tituloPedido,"descripcion":datos.problem_description,
             "location_lat":datos.location_lat,"location_long":datos.location_long,
-            "picture1":datos.picture1, "picture2":datos.picture2,"imagen_cliente":imagen })
+            "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_cliente":imagen['imagen_Cliente'] })
         
         if len(array)>0:
             return JsonResponse(array, safe=False)
