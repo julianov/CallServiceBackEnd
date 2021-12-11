@@ -1055,7 +1055,7 @@ def consultarOrdenes(request , tipo,email):
                     
                 array.append({"tipo":"Orden general","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
                 "dia":datos.day, "time":datos.time, "titulo":datos.tituloPedido,"descripcion":datos.problem_description,
-                "location_lat":datos.location_lat,"location_long":datos.location_long,
+                "location_lat":datos.location_lat,"location_long":datos.location_long, "email_cliente":cliente.email,
                 "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_cliente":imagen['imagen_Cliente'] })
 
         if ordenesEmergencia: 
@@ -1075,70 +1075,10 @@ def consultarOrdenes(request , tipo,email):
                 else:
                     imagen['picture2']=""
                     
-                array.append({"tipo":"Orden general","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
-                "dia":datos.day, "time":datos.time, "titulo":datos.tituloPedido,"descripcion":datos.problem_description,
-                "location_lat":datos.location_lat,"location_long":datos.location_long,
-                "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_cliente":imagen['imagen_Cliente'] })
-        
-        if len(array)>0:
-            return JsonResponse(array, safe=False)
-        else: 
-            return HttpResponse("bad")
-    else:
-        return HttpResponse("bad") 
-
-
-def verOrdenParticular(request , tipo,n_ticket):
-    if tipo=="proveedor":
-        ordenesGenerales= ordenGeneral.objects.filter(ticket=n_ticket)
-        print(ordenesGenerales) 
-        ordenesEmergencia= ordenEmergencia.objects.filter(ticket=n_ticket)
-
-        array=[]
-        if ordenesGenerales:
-            for datos in ordenesGenerales:
-              cliente=client.objects.filter(email=datos.client_email).first()
-              if cliente:
-                imagen={}
-                if cliente.picture:
-                    imagen['imagen_Cliente']="data:image/png;base64,"+base64.b64encode(cliente.picture.read()).decode('ascii')
-                else: 
-                    imagen['imagen_Cliente']=""
-                if datos.picture1: 
-                    imagen['picture1']="data:image/png;base64,"+base64.b64encode(datos.picture1.read()).decode('ascii')
-                else:
-                    imagen['picture1']=""
-                if datos.picture2: 
-                    imagen['picture2']="data:image/png;base64,"+base64.b64encode(datos.picture2.read()).decode('ascii')
-                else:
-                    imagen['picture2']=""
-
-                array.append({"tipo":"Orden general","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
-                "dia":datos.day, "time":datos.time, "titulo":datos.tituloPedido,"descripcion":datos.problem_description,
-                "location_lat":datos.location_lat,"location_long":datos.location_long,
-                "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_cliente":imagen['imagen_Cliente'] })
-
-        if ordenesEmergencia: 
-            for datos in ordenesGenerales:
-                cliente=client.objects.filter(email=datos.client_email).first()
-                imagen={}
-                if cliente.picture:
-                    imagen['imagen_Cliente']="data:image/png;base64,"+base64.b64encode(cliente.picture.read()).decode('ascii')
-                else: 
-                    imagen['imagen_Cliente']=""
-                if datos.picture1: 
-                    imagen['picture1']="data:image/png;base64,"+base64.b64encode(datos.picture1.read()).decode('ascii')
-                else:
-                    imagen['picture1']=""
-                if datos.picture2: 
-                    imagen['picture2']="data:image/png;base64,"+base64.b64encode(datos.picture2.read()).decode('ascii')
-                else:
-                    imagen['picture2']=""
-                
                 array.append({"tipo":"Orden de emergencia","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
-            "dia":datos.day, "time":datos.time, "titulo":datos.tituloPedido,"descripcion":datos.problem_description,
-            "location_lat":datos.location_lat,"location_long":datos.location_long,
-            "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_cliente":imagen['imagen_Cliente'] })
+                "dia":datos.day, "time":datos.time, "titulo":datos.tituloPedido,"descripcion":datos.problem_description,
+                "location_lat":datos.location_lat,"location_long":datos.location_long,"email_cliente":cliente.email,
+                "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_cliente":imagen['imagen_Cliente'] })
         
         if len(array)>0:
             return JsonResponse(array, safe=False)
@@ -1148,6 +1088,62 @@ def verOrdenParticular(request , tipo,n_ticket):
         return HttpResponse("bad") 
 
 
+def datosCliente(request , n_ticket, tipo_orden):
+    if tipo_orden=="Orden general": 
+        print("pues ha llegado aqui")
+        ordenesGenerales= ordenGeneral.objects.filter(ticket=n_ticket).first()
+        if ordenesGenerales:
+            cliente= client.objects.filter(email=ordenesGenerales.client_email).first()
+            if cliente:
+                imagen=""
+                if cliente.picture:
+                    imagen="data:image/png;base64,"+base64.b64encode(cliente.picture.read()).decode('ascii') 
+                return JsonResponse( {"nombre":cliente.name,"apellido":cliente.last_name, 
+                "imagen":imagen, "calificacion":cliente.qualification}, safe=False)
+
+            else: 
+                return HttpResponse("bad") 
+        else: 
+            return HttpResponse ("bad")
+    elif tipo_orden=="Orden de emergencia":
+        ordenesEmergencia= ordenEmergencia.objects.filter(ticket=n_ticket)
+        if ordenesEmergencia:
+            cliente= client.objects.filter(email=ordenesEmergencia.client_email).first()
+            if cliente:
+                imagen=""
+                if cliente.picture:
+                    imagen="data:image/png;base64,"+base64.b64encode(cliente.picture.read()).decode('ascii') 
+                return JsonResponse( {"nombre":cliente.name,"apellido":cliente.last_name, 
+                "imagen":imagen, "calificacion":cliente.qualification}, safe=False)
+
+            else: 
+                return HttpResponse("bad") 
+        else: 
+            return HttpResponse ("bad")
+    else: 
+        return HttpResponse("bad")
+
+
+def cambiarEstadoOrden (request , n_ticket, tipo_orden,nuevo_estado_orden):
+    
+    if tipo_orden=="Orden general": 
+        ordenesGenerales= ordenGeneral.objects.filter(ticket=n_ticket).first()
+        if ordenesGenerales:
+            ordenesGenerales.status=nuevo_estado_orden
+            ordenesGenerales.save()
+            return HttpResponse("ok")
+        else: 
+            return HttpResponse("bad")
+    elif tipo_orden=="Orden de emergencia":
+        ordenesEmergencia= ordenEmergencia.objects.filter(ticket=n_ticket)
+        if ordenesEmergencia:
+            ordenesEmergencia.status=nuevo_estado_orden
+            ordenesEmergencia.save()
+            return HttpResponse("ok")
+        else: 
+            return HttpResponse("bad")
+    else: 
+            return HttpResponse("bad")
         
 '''
 @csrf_exempt
