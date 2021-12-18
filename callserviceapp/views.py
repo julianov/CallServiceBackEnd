@@ -924,6 +924,7 @@ def pedirOrdenGeneral (request):
         diaPedido=request.POST.get("diaPedido")
         horaPedido=request.POST.get("horaPedido")
         descripcion_problema=request.POST.get("descripcion_problema")
+        direccion_pedido=request.POST.get("direccion")
         
         print("el email del cliente es: "+clienteEmail)
         print("el email del proveedor es: "+ProveedorEmail )
@@ -963,6 +964,7 @@ def pedirOrdenGeneral (request):
                         else: 
                             new.time=datetime.time(0, 0, 0)
                         new.problem_description=descripcion_problema
+                        new.direccion=direccion_pedido
                         if request.FILES.get("imagen1"):
                             new.picture1= request.FILES.get("imagen1")
                         if request.FILES.get("imagen2"):
@@ -1031,9 +1033,7 @@ def pedirOrdenGeneral (request):
 def consultarOrdenes(request , tipo,email):
     if tipo=="proveedor": 
         ordenesGenerales= ordenGeneral.objects.filter(proveedor_email=email).exclude(status="CAN").exclude( status="REX").exclude( status="RED")
-        print(ordenesGenerales) 
         ordenesEmergencia= ordenEmergencia.objects.filter(proveedor_email=email).exclude(status="CAN").exclude( status="REX").exclude( status="RED")
-
         array=[]
         if ordenesGenerales:
             for datos in ordenesGenerales:
@@ -1084,6 +1084,69 @@ def consultarOrdenes(request , tipo,email):
             return JsonResponse(array, safe=False)
         else: 
             return HttpResponse("bad")
+    elif tipo=="cliente":
+        ordenesGenerales= ordenGeneral.objects.filter(client_email=email).exclude(status="CAN").exclude( status="REX").exclude( status="RED")
+        ordenesEmergencia= ordenEmergencia.objects.filter(client_email=email).exclude(status="CAN").exclude( status="REX").exclude( status="RED")
+        array=[]
+        
+        if ordenesGenerales:
+            for datos in ordenesGenerales:
+              proveedor=serviceProvider.objects.filter(email=datos.proveedor_email).first()
+              if not proveedor:
+                  proveedor=company.objects.filter(email=datos.proveedor_email).first()
+              if proveedor:
+                print("ENTONCES DEBE LLEGAR AQUI")
+                imagen={}
+                if proveedor.picture:
+                    imagen['imagen_proveedor']="data:image/png;base64,"+base64.b64encode(proveedor.picture.read()).decode('ascii')
+                else: 
+                    imagen['imagen_proveedor']=""
+                if datos.picture1: 
+                    imagen['picture1']="data:image/png;base64,"+base64.b64encode(datos.picture1.read()).decode('ascii')
+                else:
+                    imagen['picture1']=""
+                if datos.picture2: 
+                    imagen['picture2']="data:image/png;base64,"+base64.b64encode(datos.picture2.read()).decode('ascii')
+                else:
+                    imagen['picture2']=""
+                    
+                array.append({"tipo":"Orden general","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
+                "dia":datos.day, "time":datos.time, "titulo":datos.tituloPedido,"descripcion":datos.problem_description,
+                "location_lat":datos.location_lat,"location_long":datos.location_long, "email_proveedor":proveedor.email,
+                "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_proveedor":imagen['imagen_proveedor'] })
+            if len(array)>0:
+                return JsonResponse(array, safe=False)
+            else: 
+                return HttpResponse("bad")
+        if ordenesEmergencia: 
+            for datos in ordenesGenerales:
+                proveedor=serviceProvider.objects.filter(email=datos.proveedor_email).first()
+                if not proveedor:
+                    proveedor=company.objects.filter(email=datos.proveedor_email).first()
+                if proveedor:
+                    imagen={}
+                    if proveedor.picture:
+                        imagen['imagen_proveedor']="data:image/png;base64,"+base64.b64encode(proveedor.picture.read()).decode('ascii')
+                    else: 
+                        imagen['imagen_proveedor']=""
+                    if datos.picture1: 
+                        imagen['picture1']="data:image/png;base64,"+base64.b64encode(datos.picture1.read()).decode('ascii')
+                    else:
+                        imagen['picture1']=""
+                    if datos.picture2: 
+                        imagen['picture2']="data:image/png;base64,"+base64.b64encode(datos.picture2.read()).decode('ascii')
+                    else:
+                        imagen['picture2']=""
+                        
+                    array.append({"tipo":"Orden de emergencia","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
+                    "dia":datos.day, "time":datos.time, "titulo":datos.tituloPedido,"descripcion":datos.problem_description,
+                    "location_lat":datos.location_lat,"location_long":datos.location_long,"email_cliente":proveedor.email,
+                    "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_proveedor":imagen['imagen_proveedor'] })
+            
+            if len(array)>0:
+                return JsonResponse(array, safe=False)
+            else: 
+                return HttpResponse("bad")
     else:
         return HttpResponse("bad") 
 
@@ -1118,6 +1181,68 @@ def datosCliente(request , n_ticket, tipo_orden):
 
             else: 
                 return HttpResponse("bad") 
+        else: 
+            return HttpResponse ("bad")
+    else: 
+        return HttpResponse("bad")
+
+
+def datosProveedor(request , n_ticket, tipo_orden):
+    if tipo_orden=="Orden general": 
+        ordenesGenerales= ordenGeneral.objects.filter(ticket=n_ticket).first()
+        if ordenesGenerales:
+            proveedor_independiente= serviceProvider.objects.filter(email=ordenesGenerales.proveedor_email).first()
+            if proveedor_independiente:
+                imagen=""
+                if proveedor_independiente.picture:
+                    imagen="data:image/png;base64,"+base64.b64encode(proveedor_independiente.picture.read()).decode('ascii') 
+                
+                rubro=item.objects.filter(provider=proveedor_independiente).first()
+                if rubro:
+                    calificacion=rubro.qualification
+                else: 
+                    calificacion="-"
+                return JsonResponse( {"nombre":proveedor_independiente.name,"apellido":proveedor_independiente.last_name, 
+                "imagen":imagen, "calificacion":calificacion}, safe=False)
+            else:
+                compania= company.objects.filter(email=ordenesGenerales.proveedor_email).first()
+                if compania:
+                    imagen=""
+                    if compania.picture:
+                        imagen="data:image/png;base64,"+base64.b64encode(compania.picture.read()).decode('ascii') 
+                    rubro=item_company.objects.filter(provider=proveedor_independiente).first()
+                    if rubro:
+                        calificacion=rubro.qualification
+                    else: 
+                        calificacion="-"
+                    return JsonResponse( {"nombre":compania.name,"apellido":compania.last_name, 
+                "imagen":imagen, "calificacion":calificacion}, safe=False)
+                else: 
+                    return HttpResponse("bad") 
+        else: 
+            return HttpResponse ("bad")
+
+    elif tipo_orden=="Orden de emergencia":
+        ordenesEmergencia= ordenEmergencia.objects.filter(ticket=n_ticket)
+        if ordenesEmergencia:
+            proveedor_independiente= serviceProvider.objects.filter(email=ordenesEmergencia.proveedor_email).first()
+            if proveedor_independiente:
+                imagen=""
+                if proveedor_independiente.picture:
+                    imagen="data:image/png;base64,"+base64.b64encode(proveedor_independiente.picture.read()).decode('ascii') 
+                return JsonResponse( {"nombre":proveedor_independiente.name,"apellido":proveedor_independiente.last_name, 
+                "imagen":imagen, "calificacion":proveedor_independiente.qualification}, safe=False)
+            else:
+                compania= company.objects.filter(email=ordenesEmergencia.proveedor_email).first()
+                if compania:
+                    imagen=""
+                    if compania.picture:
+                        imagen="data:image/png;base64,"+base64.b64encode(compania.picture.read()).decode('ascii') 
+                
+                    return JsonResponse( {"nombre":compania.name,"apellido":compania.last_name, 
+                "imagen":imagen, "calificacion":compania.qualification}, safe=False)
+                else: 
+                    return HttpResponse("bad") 
         else: 
             return HttpResponse ("bad")
     else: 

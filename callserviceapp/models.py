@@ -185,6 +185,7 @@ class ordenGeneral (models.Model):
    
     tituloPedido = models.TextField(default="Solicitud de pedido")
     problem_description = models.TextField(default=None, blank=True)
+   # direccion = models.TextField(default=None, blank=True)
     picture1=models.ImageField(default=None, blank=True)
     picture2=models.ImageField(default=None,blank=True)
 
