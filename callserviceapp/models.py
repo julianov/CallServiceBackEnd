@@ -157,7 +157,6 @@ class ordenGeneral (models.Model):
     
     id = models.AutoField(primary_key=True)
 
-    
     client_email = models.EmailField(blank=True)
     proveedor_email=models.EmailField(blank=True)
     rubro= models.ForeignKey(item,default=None,on_delete=models.CASCADE)
@@ -169,6 +168,8 @@ class ordenGeneral (models.Model):
     STATUS = [
         ("ENV","ENVIADA"),
         ("REC","RECIBIDA"),
+        ("ABI","ABIERTA"),
+        ("PRE","PRESUPUESTADA"),
         ("ACE","ACEPTADA"),
         ("EVI","EN VIAJE"),
         ("ENS","EN SITIO"),
@@ -180,7 +181,7 @@ class ordenGeneral (models.Model):
        
     location_lat = models.FloatField(default=None, blank=True)
     location_long = models.FloatField(default=None, blank=True)
-    day = models.DateField(default=None, blank=True)
+    day = models.TextField(default="Lunes Martes Miercoles Jueves Viernes")
     time = models.TimeField(default=None, blank=True)
    
     tituloPedido = models.TextField(default="Solicitud de pedido")
@@ -189,7 +190,11 @@ class ordenGeneral (models.Model):
     picture1=models.ImageField(default=None, blank=True)
     picture2=models.ImageField(default=None,blank=True)
 
-    
+    presupuesto_inicial=models.FloatField(default=0)
+    pedido_mas_información=models.FloatField(default=0)
+
+    motivo_rechazo=models.TextField(default=None, blank=True)
+    resena=models.TextField(default = None, blank=True)    
 
 class ordenEmergencia (models.Model):
 
@@ -209,7 +214,6 @@ class ordenEmergencia (models.Model):
 
     lista_proveedores_independientes = models.ForeignKey (item, default=None ,on_delete=models.CASCADE)
     lista_proveedores_empresa = models.ForeignKey (item_company, default=None ,on_delete=models.CASCADE)
-
 
     client_email = models.EmailField(blank=True)
     proveedor_email=models.EmailField(blank=True)

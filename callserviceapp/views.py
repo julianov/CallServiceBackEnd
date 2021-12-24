@@ -926,12 +926,6 @@ def pedirOrdenGeneral (request):
         descripcion_problema=request.POST.get("descripcion_problema")
         direccion_pedido=request.POST.get("direccion")
         
-        print("el email del cliente es: "+clienteEmail)
-        print("el email del proveedor es: "+ProveedorEmail )
-        print("tipo de proveedor: "+tipoProveedor)
-        print("rubro: "+itemProveedor)
-       
-
         if tipoProveedor=="Proveedor de servicio independiente":
             serviceProvider_=serviceProvider.objects.filter(email=ProveedorEmail)
             client_=client.objects.filter(email=clienteEmail)
@@ -945,7 +939,7 @@ def pedirOrdenGeneral (request):
                 if not rubro:
                     return HttpResponse("bad")
                 else:
-                    if ordenGeneral.objects.filter(client_email=clienteEmail, proveedor_email=ProveedorEmail):
+                    if ordenGeneral.objects.filter(client_email=clienteEmail, proveedor_email=ProveedorEmail).exclude(status="CAN").exclude( status="REX").exclude( status="RED"):
                         return HttpResponse("ya hay una orden")
                     else:
                         new=ordenGeneral()
@@ -974,6 +968,8 @@ def pedirOrdenGeneral (request):
                         new.proveedor_email=ProveedorEmail
                         ticket_numero=ordenGeneral.objects.count()+ordenEmergencia.objects.count()+1000
                         new.ticket=ticket_numero
+                        new.motivo_rechazo=""
+                        new.resena=""
                         new.save()
                     
                         try:
@@ -996,7 +992,7 @@ def pedirOrdenGeneral (request):
                 if not rubro:
                     return HttpResponse("bad")
                 else:
-                    if ordenGeneral.objects.filter(client_email=clienteEmail, proveedor_email=ProveedorEmail):
+                    if ordenGeneral.objects.filter(client_email=clienteEmail, proveedor_email=ProveedorEmail).exclude(status="CAN").exclude( status="REX").exclude( status="RED"):
                         return HttpResponse("ya hay una orden")
                     else: 
                         new=ordenGeneral()
@@ -1019,6 +1015,7 @@ def pedirOrdenGeneral (request):
                         new.proveedor_email=ProveedorEmail
                         ticket_numero=ordenGeneral.objects.count()+ordenEmergencia.objects.count()+1000
                         new.ticket=ticket_numero
+                        
                         new.save()
 
                         try:
@@ -1032,9 +1029,11 @@ def pedirOrdenGeneral (request):
 
 def consultarOrdenes(request , tipo,email):
     if tipo=="proveedor": 
+        print("llego aqui")
         ordenesGenerales= ordenGeneral.objects.filter(proveedor_email=email).exclude(status="CAN").exclude( status="REX").exclude( status="RED")
         ordenesEmergencia= ordenEmergencia.objects.filter(proveedor_email=email).exclude(status="CAN").exclude( status="REX").exclude( status="RED")
         array=[]
+        print(ordenesGenerales.first())
         if ordenesGenerales:
             for datos in ordenesGenerales:
               cliente=client.objects.filter(email=datos.client_email).first()
@@ -1088,7 +1087,9 @@ def consultarOrdenes(request , tipo,email):
         ordenesGenerales= ordenGeneral.objects.filter(client_email=email).exclude(status="CAN").exclude( status="REX").exclude( status="RED")
         ordenesEmergencia= ordenEmergencia.objects.filter(client_email=email).exclude(status="CAN").exclude( status="REX").exclude( status="RED")
         array=[]
-        
+        print("lets see")
+        print(ordenesGenerales)
+        print(ordenesEmergencia)
         if ordenesGenerales:
             for datos in ordenesGenerales:
               proveedor=serviceProvider.objects.filter(email=datos.proveedor_email).first()
@@ -1147,6 +1148,8 @@ def consultarOrdenes(request , tipo,email):
                 return JsonResponse(array, safe=False)
             else: 
                 return HttpResponse("bad")
+        else:
+            return HttpResponse("bad")
     else:
         return HttpResponse("bad") 
 
@@ -1269,6 +1272,60 @@ def cambiarEstadoOrden (request , n_ticket, tipo_orden,nuevo_estado_orden):
             return HttpResponse("bad")
     else: 
             return HttpResponse("bad")
+
+@csrf_exempt
+def agregarFotoOrden(request):
+    if request.method == 'POST': 
+        
+        imagen1=""
+        imagen2=""
+        ticket=request.POST.get("ticket")
+        tipo=request.POST.get("tipo")
+        if request.FILES.get("imagen1"):
+            imagen1= request.FILES.get("imagen1")
+        if request.FILES.get("imagen2"):
+            imagen2=request.FILES.get("imagen2")
+        if tipo=="Orden general":
+            orden_General= ordenGeneral.objects.filter(ticket=ticket).first()
+            if orden_General: 
+                if imagen1!="":
+                    orden_General.picture1=imagen1
+                if imagen2!="":
+                    orden_General.picture2=imagen2
+                orden_General.save()
+                return HttpResponse("ok")
+            else:
+                return HttpResponse("bad")
+        if tipo=="Orden de emergencia":
+            orden_Emergencia= ordenEmergencia.objects.filter(ticket=ticket).first()
+            if orden_Emergencia: 
+                if imagen1!="":
+                    orden_Emergencia.picture1=imagen1
+                if imagen2!="":
+                    orden_Emergencia.picture2=imagen2
+                orden_Emergencia.save()
+                return HttpResponse("ok")
+            else:
+                return HttpResponse("bad")
+
+@csrf_exempt
+def masInfoOrdenProveedor (request):
+    if request.method == 'POST':
+        ticket=request.POST.get("ticket")
+        tipo_orden=request.POST.get("tipoOrden")
+        if tipo_orden=="Orden general":
+            orden_General= ordenGeneral.objects.filter(ticket=ticket).first()
+            if orden_General:
+                orden_General.pedido_mas_información=request.POST.get("masInfo")
+                orden_General.status="PRE"
+                orden_General.save()
+                return HttpResponse("ok")
+        else:
+            return HttpResponse("bad")
+    else: 
+        return HttpResponse("bad")
+
+        
         
 '''
 @csrf_exempt

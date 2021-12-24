@@ -21,8 +21,8 @@ def send_user_mail(randomNumber, email):
     return 1
 
 def send_proveedor_mail_new_orden(ticket, email, usuario):
-    subject = 'Nueva orden de servicio - Ticket: '+ticket+" - ServicesYA!"
-    cuerpo = "Posee nueva solicitud de trabajo."+'\n'+'\n' + "Solicitud creada por: "+usuario+'\n'
+    subject = "Nueva orden de servicio - Ticket: "+str(ticket)+" - ServicesYA!"
+    cuerpo = "Posee nueva solicitud de trabajo."+'\n'+'\n' + "Solicitud creada por: "+str(usuario)+'\n'
 
     #message.attach_alternative(content, 'text/html')
     send_mail(subject, cuerpo,'servidor.ssmtp@gmail.com', [email],fail_silently = False) #Destinatario)
