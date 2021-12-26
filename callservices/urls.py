@@ -16,7 +16,7 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 from django.urls import path
-from callserviceapp.views import Buscar, addRubro, agregarFotoOrden, askPersonalInfo, cambiarEstadoOrden, completeInfo, completeInfoRubros, consultarOrdenes, datosCliente, datosProveedor, deleteRubro, homeCliente, homeClientePedirDatos, login, modificarRubro, nuevaInfoPersonal, pedirOrdenGeneral,register, requestRubros, restarPassword, setNewPassword
+from callserviceapp.views import Buscar, addRubro, agregarFotoOrden, askPersonalInfo, cambiarEstadoOrden, completeInfo, completeInfoRubros, consultarOrdenes, datosCliente, datosProveedor, deleteRubro, homeCliente, homeClientePedirDatos, login, masInfoOrdenCliente, masInfoOrdenProveedor, modificarRubro, nuevaInfoPersonal, pedirOrdenGeneral, presupuestoCliente, presupuestoProveedor,register, requestRubros, restarPassword, setNewPassword
 
 from django.conf import settings
 from django.conf.urls.static import static
@@ -55,6 +55,9 @@ urlpatterns = [
     path('orden/cambiarestado/<n_ticket>/<tipo_orden>/<nuevo_estado_orden>',cambiarEstadoOrden),
     path('orden/agregarfoto',agregarFotoOrden),
     path('orden/masInfo/proveedor',masInfoOrdenProveedor),
+    path('orden/masInfo/cliente',masInfoOrdenCliente),
+    path('orden/presupuesto/proveedor',presupuestoProveedor),
+    path('orden/presupuesto/cliente',presupuestoCliente),
 
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

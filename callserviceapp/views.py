@@ -1029,7 +1029,7 @@ def pedirOrdenGeneral (request):
 
 def consultarOrdenes(request , tipo,email):
     if tipo=="proveedor": 
-        print("llego aqui")
+        
         ordenesGenerales= ordenGeneral.objects.filter(proveedor_email=email).exclude(status="CAN").exclude( status="REX").exclude( status="RED")
         ordenesEmergencia= ordenEmergencia.objects.filter(proveedor_email=email).exclude(status="CAN").exclude( status="REX").exclude( status="RED")
         array=[]
@@ -1055,7 +1055,9 @@ def consultarOrdenes(request , tipo,email):
                 array.append({"tipo":"Orden general","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
                 "dia":datos.day, "time":datos.time, "titulo":datos.tituloPedido,"descripcion":datos.problem_description,
                 "location_lat":datos.location_lat,"location_long":datos.location_long, "email_cliente":cliente.email,
-                "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_cliente":imagen['imagen_Cliente'] })
+                "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_cliente":imagen['imagen_Cliente'],
+                "presupuesto":datos.presupuesto_inicial, "pedidoMasInformacion": datos.pedido_mas_información})
+
 
         if ordenesEmergencia: 
             for datos in ordenesGenerales:
@@ -1114,7 +1116,8 @@ def consultarOrdenes(request , tipo,email):
                 array.append({"tipo":"Orden general","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
                 "dia":datos.day, "time":datos.time, "titulo":datos.tituloPedido,"descripcion":datos.problem_description,
                 "location_lat":datos.location_lat,"location_long":datos.location_long, "email_proveedor":proveedor.email,
-                "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_proveedor":imagen['imagen_proveedor'] })
+                "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_proveedor":imagen['imagen_proveedor'],
+                "presupuesto":datos.presupuesto_inicial, "pedidoMasInformacion": datos.pedido_mas_información })
             if len(array)>0:
                 return JsonResponse(array, safe=False)
             else: 
@@ -1253,7 +1256,6 @@ def datosProveedor(request , n_ticket, tipo_orden):
 
 
 def cambiarEstadoOrden (request , n_ticket, tipo_orden,nuevo_estado_orden):
-    
     if tipo_orden=="Orden general": 
         ordenesGenerales= ordenGeneral.objects.filter(ticket=n_ticket).first()
         if ordenesGenerales:
@@ -1325,8 +1327,56 @@ def masInfoOrdenProveedor (request):
     else: 
         return HttpResponse("bad")
 
+@csrf_exempt
+def masInfoOrdenCliente(request):
+    if request.method == 'POST':
+        ticket=request.POST.get("ticket")
         
-        
+        orden_General= ordenGeneral.objects.filter(ticket=ticket).first()
+        if orden_General:
+            orden_General.respuesta_cliente_pedido_mas_información=request.POST.get("respuesta_informacion")
+            orden_General.status="ACE"
+            orden_General.picture1_mas_información= request.FILES.get("imagen1")
+            orden_General.picture2_mas_información= request.FILES.get("imagen2")
+            orden_General.save()
+            return HttpResponse("ok")
+        else:
+            return HttpResponse("bad")
+    else: 
+        return HttpResponse("bad")
+
+@csrf_exempt
+def presupuestoProveedor(request):
+    if request.method == 'POST':
+        ticket=request.POST.get("ticket")
+        tipo_orden=request.POST.get("tipoOrden")
+        if tipo_orden=="Orden general":
+            orden_General= ordenGeneral.objects.filter(ticket=ticket).first()
+            if orden_General:
+                orden_General.presupuesto_inicial=request.POST.get("precio")
+                orden_General.status="PRE"
+                orden_General.save()
+                return HttpResponse("ok")
+        else:
+            return HttpResponse("bad")
+    else: 
+        return HttpResponse("bad")    
+@csrf_exempt
+
+def presupuestoCliente(request):
+    if request.method == 'POST':
+        ticket=request.POST.get("ticket")
+        tipo_orden=request.POST.get("tipoOrden")
+        if tipo_orden=="Orden general":
+            orden_General= ordenGeneral.objects.filter(ticket=ticket).first()
+            if orden_General:
+                orden_General.status="ACE"
+                orden_General.save()
+                return HttpResponse("ok")
+        else:
+            return HttpResponse("bad")
+    else: 
+        return HttpResponse("bad")    
 '''
 @csrf_exempt
 def pedirOrdenEmergencia (request):
