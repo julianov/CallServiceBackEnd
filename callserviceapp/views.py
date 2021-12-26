@@ -1051,12 +1051,23 @@ def consultarOrdenes(request , tipo,email):
                     imagen['picture2']="data:image/png;base64,"+base64.b64encode(datos.picture2.read()).decode('ascii')
                 else:
                     imagen['picture2']=""
+                if datos.picture1_mas_información: 
+                    imagen['picture1_mas_información']="data:image/png;base64,"+base64.b64encode(datos.picture1_mas_información.read()).decode('ascii')
+                else:
+                    imagen['picture1_mas_información']=""
+                if datos.picture2_mas_información: 
+                    imagen['picture2_mas_información']="data:image/png;base64,"+base64.b64encode(datos.picture2_mas_información.read()).decode('ascii')
+                else:
+                    imagen['picture2_mas_información']=""
                     
                 array.append({"tipo":"Orden general","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
                 "dia":datos.day, "time":datos.time, "titulo":datos.tituloPedido,"descripcion":datos.problem_description,
                 "location_lat":datos.location_lat,"location_long":datos.location_long, "email_cliente":cliente.email,
                 "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_cliente":imagen['imagen_Cliente'],
-                "presupuesto":datos.presupuesto_inicial, "pedidoMasInformacion": datos.pedido_mas_información})
+                "presupuesto":datos.presupuesto_inicial, "pedidoMasInformacion": datos.pedido_mas_información,
+                "respuesta_cliente_pedido_mas_información":datos.respuesta_cliente_pedido_mas_información,
+                "picture1_mas_información": imagen['picture1_mas_información'],
+                "picture2_mas_información": imagen['picture2_mas_información']})
 
 
         if ordenesEmergencia: 
@@ -1112,12 +1123,24 @@ def consultarOrdenes(request , tipo,email):
                     imagen['picture2']="data:image/png;base64,"+base64.b64encode(datos.picture2.read()).decode('ascii')
                 else:
                     imagen['picture2']=""
+                if datos.picture1_mas_información: 
+                    imagen['picture1_mas_información']="data:image/png;base64,"+base64.b64encode(datos.picture1_mas_información.read()).decode('ascii')
+                else:
+                    imagen['picture1_mas_información']=""
+                if datos.picture2_mas_información: 
+                    imagen['picture2_mas_información']="data:image/png;base64,"+base64.b64encode(datos.picture2_mas_información.read()).decode('ascii')
+                else:
+                    imagen['picture2_mas_información']=""
                     
                 array.append({"tipo":"Orden general","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
                 "dia":datos.day, "time":datos.time, "titulo":datos.tituloPedido,"descripcion":datos.problem_description,
                 "location_lat":datos.location_lat,"location_long":datos.location_long, "email_proveedor":proveedor.email,
                 "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_proveedor":imagen['imagen_proveedor'],
-                "presupuesto":datos.presupuesto_inicial, "pedidoMasInformacion": datos.pedido_mas_información })
+                "presupuesto":datos.presupuesto_inicial, "pedidoMasInformacion": datos.pedido_mas_información,
+                "respuesta_cliente_pedido_mas_información":datos.respuesta_cliente_pedido_mas_información,
+                "picture1_mas_información": imagen['picture1_mas_información'],
+                "picture2_mas_información": imagen['picture2_mas_información'] })
+
             if len(array)>0:
                 return JsonResponse(array, safe=False)
             else: 
