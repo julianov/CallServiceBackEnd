@@ -14,6 +14,8 @@ class client(models.Model):
     last_name = models.CharField(max_length=200, blank=True)
     picture=models.ImageField(upload_to='media/', blank=True)	
     qualification=models.IntegerField(default=0)
+    cantidad_ordenes_realizadas =models.IntegerField(default=0)
+    cantidad_ordenes_canceladas =models.IntegerField(default=0) 
 
     def __str__(self):
         return self.email
@@ -29,6 +31,8 @@ class serviceProvider(models.Model):
     last_name = models.CharField(max_length=200, blank=True)
     picture=models.ImageField(blank=True)
     #imagen_promocional=models.ImageField(blank=True)	
+    cantidad_ordenes_realizadas =models.IntegerField(default=0)
+    cantidad_ordenes_rechazadas =models.IntegerField(default=0) 
 
     def __str__(self):
         return self.email
@@ -97,7 +101,9 @@ class company (models.Model):
 
     picture=models.ImageField(default=None)
    # imagen_promocional=models.ImageField(blank=True)	
-	
+    cantidad_ordenes_realizadas =models.IntegerField(default=0)
+    cantidad_ordenes_rechazadas =models.IntegerField(default=0) 
+
 	
     def __str__(self):
         return self.email   
@@ -169,6 +175,7 @@ class ordenGeneral (models.Model):
         ("ENV","ENVIADA"),
         ("REC","RECIBIDA"),
         ("ABI","ABIERTA"),
+        ("PEI","PEDIDO INFORMACION"), #ESTO LO AGREGO COMO BETA
         ("PRE","PRESUPUESTADA"),
         ("ACE","ACEPTADA"),
         ("EVI","EN VIAJE"),
@@ -197,7 +204,9 @@ class ordenGeneral (models.Model):
     picture2_mas_información=models.ImageField(default=None,blank=True)
 
     motivo_rechazo=models.TextField(default=None, blank=True)
-    resena=models.TextField(default = None, blank=True)    
+    resena_al_proveedor=models.TextField(default = None, blank=True)    
+    resena_al_cliente=models.TextField(default = None, blank=True)    
+
 
 class ordenEmergencia (models.Model):
 

@@ -1282,6 +1282,23 @@ def cambiarEstadoOrden (request , n_ticket, tipo_orden,nuevo_estado_orden):
     if tipo_orden=="Orden general": 
         ordenesGenerales= ordenGeneral.objects.filter(ticket=n_ticket).first()
         if ordenesGenerales:
+            if nuevo_estado_orden=="CAN":
+                email_cliente=ordenesGenerales.client_email
+                cliente=client.objects.filter(email=email_cliente).first()
+                cliente.cantidad_ordenes_canceladas=cliente.cantidad_ordenes_canceladas+1
+                cliente.save()
+            elif nuevo_estado_orden=="REX":
+                email_proveedor=ordenesGenerales.proveedor_email
+                proveedor=serviceProvider.objects.filter(email=email_proveedor).first()
+                if proveedor:
+                    proveedor.cantidad_ordenes_rechazadas=proveedor.cantidad_ordenes_rechazadas+1 
+                    proveedor.save()
+                else:
+                    compania=company.objects.filter(email=email_proveedor).first()
+                    if compania: 
+                        compania.cantidad_ordenes_rechazadas= compania.cantidad_ordenes_rechazadas+1
+                        compania.save()
+
             ordenesGenerales.status=nuevo_estado_orden
             ordenesGenerales.save()
             return HttpResponse("ok")
@@ -1335,6 +1352,7 @@ def agregarFotoOrden(request):
 
 @csrf_exempt
 def masInfoOrdenProveedor (request):
+    print("bueno llego a pedir más info")
     if request.method == 'POST':
         ticket=request.POST.get("ticket")
         tipo_orden=request.POST.get("tipoOrden")
@@ -1342,8 +1360,9 @@ def masInfoOrdenProveedor (request):
             orden_General= ordenGeneral.objects.filter(ticket=ticket).first()
             if orden_General:
                 orden_General.pedido_mas_información=request.POST.get("masInfo")
-                orden_General.status="PRE"
+                orden_General.status="PEI"
                 orden_General.save()
+                print("bueno debería haberse guardado todo bien")
                 return HttpResponse("ok")
         else:
             return HttpResponse("bad")
@@ -1358,7 +1377,7 @@ def masInfoOrdenCliente(request):
         orden_General= ordenGeneral.objects.filter(ticket=ticket).first()
         if orden_General:
             orden_General.respuesta_cliente_pedido_mas_información=request.POST.get("respuesta_informacion")
-            orden_General.status="ACE"
+            orden_General.status="PEI"
             orden_General.picture1_mas_información= request.FILES.get("imagen1")
             orden_General.picture2_mas_información= request.FILES.get("imagen2")
             orden_General.save()
@@ -1384,22 +1403,91 @@ def presupuestoProveedor(request):
             return HttpResponse("bad")
     else: 
         return HttpResponse("bad")    
-@csrf_exempt
 
+@csrf_exempt
 def presupuestoCliente(request):
     if request.method == 'POST':
         ticket=request.POST.get("ticket")
-        tipo_orden=request.POST.get("tipoOrden")
-        if tipo_orden=="Orden general":
-            orden_General= ordenGeneral.objects.filter(ticket=ticket).first()
-            if orden_General:
-                orden_General.status="ACE"
-                orden_General.save()
-                return HttpResponse("ok")
+        orden_General= ordenGeneral.objects.filter(ticket=ticket).first()
+        if orden_General:
+            print(orden_General)
+            orden_General.status="ACE"
+            orden_General.save()
+            return HttpResponse("ok")
         else:
             return HttpResponse("bad")
     else: 
         return HttpResponse("bad")    
+
+@csrf_exempt
+def finalizarOrdenProveedor(request):
+    if request.method == 'POST':
+        ticket=request.POST.get("ticket")
+        calificacion = request.POST.get("calificacion")
+        resena = request.POST.get("resena")
+        orden_General= ordenGeneral.objects.filter(ticket=ticket).first()
+        if orden_General:
+            email=orden_General.client_email
+            cliente=client.objects.filter(email=email).first()
+            if cliente:
+                calificacion_inicial= cliente.qualification
+                cliente.qualification=calificacion_inicial + (calificacion/( (cliente.cantidad_ordenes_realizadas + cliente.cantidad_ordenes_canceladas)+1))
+                cliente.cantidad_ordenes_realizadas=cliente.cantidad_ordenes_realizadas+1
+                cliente.save()
+                if resena!="":
+                    orden_General.resena_al_cliente=resena
+                orden_General.status="RED"
+                orden_General.save()
+                return HttpResponse("ok")
+            else: 
+                return HttpResponse("bad")
+        
+        else:
+            return HttpResponse("bad")
+    else: 
+        return HttpResponse("bad") 
+
+
+def finalizarOrdenCliente(request):
+    if request.method == 'POST':
+        ticket=request.POST.get("ticket")
+        calificacion = request.POST.get("calificacion")
+        resena = request.POST.get("resena")
+        orden_General= ordenGeneral.objects.filter(ticket=ticket).first()
+        if orden_General:
+            email=orden_General.proveedor_email
+            proveedor=serviceProvider.objects.filter(email=email).first()
+            if proveedor:
+                calificacion_inicial= proveedor.qualification
+                proveedor.qualification=calificacion_inicial + (calificacion/( (proveedor.cantidad_ordenes_realizadas + proveedor.cantidad_ordenes_rechazadas)+1))
+                proveedor.cantidad_ordenes_realizadas=proveedor.cantidad_ordenes_realizadas+1
+                proveedor.save()
+                if resena!="":
+                    orden_General.resena_al_proveedor=resena
+                orden_General.status="RED"
+                orden_General.save()
+                return HttpResponse("ok")
+
+            else: 
+                compania=company.objects.filter(email=email).first()
+                if compania:
+                    calificacion_inicial= compania.qualification
+                    compania.qualification=calificacion_inicial + (calificacion/( (compania.cantidad_ordenes_realizadas + compania.cantidad_ordenes_rechazadas)+1))
+                    compania.cantidad_ordenes_realizadas=compania.cantidad_ordenes_realizadas+1
+                    compania.save()
+                    if resena!="":
+                        orden_General.resena_al_proveedor=resena
+                    orden_General.status="RED"
+                    orden_General.save() 
+                    return HttpResponse("ok")
+                else: 
+                    return HttpResponse("bad")
+        
+        else:
+            return HttpResponse("bad")
+    else: 
+        return HttpResponse("bad") 
+
 '''
 @csrf_exempt
 def pedirOrdenEmergencia (request):
