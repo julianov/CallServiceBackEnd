@@ -969,7 +969,8 @@ def pedirOrdenGeneral (request):
                         ticket_numero=ordenGeneral.objects.count()+ordenEmergencia.objects.count()+1000
                         new.ticket=ticket_numero
                         new.motivo_rechazo=""
-                        new.resena=""
+                        new.resena_al_proveedor=""
+                        new.resena_al_cliente=""
                         new.save()
                     
                         try:
@@ -988,15 +989,15 @@ def pedirOrdenGeneral (request):
             client_=client.objects.filter(email=clienteEmail)
             if company_ and client_: 
                 
-                rubro= item.objects.filter(items=itemProveedor, provider=company_.first()).first()
-                if not rubro:
+                rubro_company= item_company.objects.filter(items=itemProveedor, provider=company_.first()).first()
+                if not rubro_company:
                     return HttpResponse("bad")
                 else:
                     if ordenGeneral.objects.filter(client_email=clienteEmail, proveedor_email=ProveedorEmail).exclude(status="CAN").exclude( status="REX").exclude( status="RED"):
                         return HttpResponse("ya hay una orden")
                     else: 
                         new=ordenGeneral()
-                        new.rubro=rubro
+                        new.rubro=rubro_company
                         new.status="ENV"
                         new.location_lat= clienteLat
                         new.location_long=clienteLong
@@ -1015,6 +1016,8 @@ def pedirOrdenGeneral (request):
                         new.proveedor_email=ProveedorEmail
                         ticket_numero=ordenGeneral.objects.count()+ordenEmergencia.objects.count()+1000
                         new.ticket=ticket_numero
+                        new.resena_al_proveedor=""
+                        new.resena_al_cliente=""
                         
                         new.save()
 
@@ -1030,8 +1033,8 @@ def pedirOrdenGeneral (request):
 def consultarOrdenes(request , tipo,email):
     if tipo=="proveedor": 
         
-        ordenesGenerales= ordenGeneral.objects.filter(proveedor_email=email).exclude(status="CAN").exclude( status="REX").exclude( status="RED")
-        ordenesEmergencia= ordenEmergencia.objects.filter(proveedor_email=email).exclude(status="CAN").exclude( status="REX").exclude( status="RED")
+        ordenesGenerales= ordenGeneral.objects.filter(proveedor_email=email).exclude(status="CAN").exclude( status="REX").exclude( califico_el_proveedor=True)
+        ordenesEmergencia= ordenEmergencia.objects.filter(proveedor_email=email).exclude(status="CAN").exclude( status="REX").exclude(califico_el_proveedor=True)
         array=[]
         print(ordenesGenerales.first())
         if ordenesGenerales:
@@ -1097,8 +1100,8 @@ def consultarOrdenes(request , tipo,email):
         else: 
             return HttpResponse("bad")
     elif tipo=="cliente":
-        ordenesGenerales= ordenGeneral.objects.filter(client_email=email).exclude(status="CAN").exclude( status="REX").exclude( status="RED")
-        ordenesEmergencia= ordenEmergencia.objects.filter(client_email=email).exclude(status="CAN").exclude( status="REX").exclude( status="RED")
+        ordenesGenerales= ordenGeneral.objects.filter(client_email=email).exclude(status="CAN").exclude( status="REX").exclude(califico_el_cliente=True)
+        ordenesEmergencia= ordenEmergencia.objects.filter(client_email=email).exclude(status="CAN").exclude( status="REX").exclude(califico_el_cliente=True)
         array=[]
         print("lets see")
         print(ordenesGenerales)
@@ -1431,12 +1434,13 @@ def finalizarOrdenProveedor(request):
             cliente=client.objects.filter(email=email).first()
             if cliente:
                 calificacion_inicial= cliente.qualification
-                cliente.qualification=calificacion_inicial + (calificacion/( (cliente.cantidad_ordenes_realizadas + cliente.cantidad_ordenes_canceladas)+1))
+                cliente.qualification=calificacion_inicial + (int(calificacion)/( (cliente.cantidad_ordenes_realizadas + cliente.cantidad_ordenes_canceladas)+1))
                 cliente.cantidad_ordenes_realizadas=cliente.cantidad_ordenes_realizadas+1
                 cliente.save()
                 if resena!="":
                     orden_General.resena_al_cliente=resena
                 orden_General.status="RED"
+                orden_General.califico_el_proveedor=True
                 orden_General.save()
                 return HttpResponse("ok")
             else: 
@@ -1447,32 +1451,35 @@ def finalizarOrdenProveedor(request):
     else: 
         return HttpResponse("bad") 
 
-
+@csrf_exempt
 def finalizarOrdenCliente(request):
     if request.method == 'POST':
+        print("que paso che")
         ticket=request.POST.get("ticket")
         calificacion = request.POST.get("calificacion")
         resena = request.POST.get("resena")
         orden_General= ordenGeneral.objects.filter(ticket=ticket).first()
         if orden_General:
+            print("veamos llego aqui")
             email=orden_General.proveedor_email
             proveedor=serviceProvider.objects.filter(email=email).first()
             if proveedor:
-                calificacion_inicial= proveedor.qualification
-                proveedor.qualification=calificacion_inicial + (calificacion/( (proveedor.cantidad_ordenes_realizadas + proveedor.cantidad_ordenes_rechazadas)+1))
+                calificacion_inicial= orden_General.rubro.qualification
+                orden_General.rubro.qualification=calificacion_inicial + (int(calificacion)/( (proveedor.cantidad_ordenes_realizadas + proveedor.cantidad_ordenes_rechazadas)+1))
                 proveedor.cantidad_ordenes_realizadas=proveedor.cantidad_ordenes_realizadas+1
                 proveedor.save()
                 if resena!="":
                     orden_General.resena_al_proveedor=resena
                 orden_General.status="RED"
+                orden_General.califico_el_cliente=True
                 orden_General.save()
                 return HttpResponse("ok")
 
             else: 
                 compania=company.objects.filter(email=email).first()
                 if compania:
-                    calificacion_inicial= compania.qualification
-                    compania.qualification=calificacion_inicial + (calificacion/( (compania.cantidad_ordenes_realizadas + compania.cantidad_ordenes_rechazadas)+1))
+                    calificacion_inicial= orden_General.rubro_company.qualification
+                    orden_General.rubro_company.qualification=calificacion_inicial + (calificacion/( (compania.cantidad_ordenes_realizadas + compania.cantidad_ordenes_rechazadas)+1))
                     compania.cantidad_ordenes_realizadas=compania.cantidad_ordenes_realizadas+1
                     compania.save()
                     if resena!="":
