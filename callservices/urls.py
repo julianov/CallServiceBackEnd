@@ -16,7 +16,7 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 from django.urls import path
-from callserviceapp.views import Buscar, addRubro, agregarFotoOrden, askPersonalInfo, cambiarEstadoOrden, completeInfo, completeInfoRubros, consultarOrdenes, datosCliente, datosProveedor, deleteRubro, finalizarOrdenCliente, finalizarOrdenProveedor, homeCliente, homeClientePedirDatos, login, masInfoOrdenCliente, masInfoOrdenProveedor, modificarRubro, nuevaInfoPersonal, pedirOrdenGeneral, presupuestoCliente, presupuestoProveedor,register, requestRubros, restarPassword, setNewPassword
+from callserviceapp.views import Buscar, addRubro, agregarFotoOrden, askPersonalInfo, cambiarEstadoOrden, completeInfo, completeInfoRubros, consultarOrdenes, datosCliente, datosProveedor, deleteRubro, finalizarOrdenCliente, finalizarOrdenProveedor, homeCliente, homeClientePedirDatos, login, masInfoOrdenCliente, masInfoOrdenProveedor, modificarRubro, nuevaInfoPersonal, pedirOrdenGeneral, presupuestoCliente, presupuestoProveedor,register, requestRubros, restarPassword, setNewPassword, verReseñas
 
 from django.conf import settings
 from django.conf.urls.static import static
@@ -46,7 +46,10 @@ urlpatterns = [
     path('login/restaurar/codigo/<email>', restarPassword),
     path('login/restaurar/setpassword/<email>/<codigo>/<password>', setNewPassword),
 
-    path('search/<tipo>/<dato>', Buscar),    
+    path('search/<tipo>/<dato>', Buscar),
+
+    path('resena/<email>/<cantidad>/<tipo>',verReseñas),
+    
 
     path('orden/ordengeneral', pedirOrdenGeneral), #GENERAR ORDEN POR PARTE DEL CLIENTE   
     path('orden/misordenes/<tipo>/<email>', consultarOrdenes),  #lista de ordenes de un proveedor

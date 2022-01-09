@@ -881,8 +881,7 @@ def Buscar (request , tipo, dato):
         categoria_a_buscar=dato
         categoria_buscada_en_independientes=item.objects.filter(items=categoria_a_buscar).order_by('-qualification')
         categoria_buscada_en_empresa=item_company.objects.filter(items=categoria_a_buscar).order_by('-qualification')
-        print(categoria_buscada_en_independientes)
-
+        
         if categoria_buscada_en_independientes or categoria_buscada_en_empresa:
             arreglo_a_enviar=ListaProveedores(categoria_buscada_en_independientes,categoria_buscada_en_empresa)
             if len(arreglo_a_enviar)== 0:
@@ -907,6 +906,132 @@ def Buscar (request , tipo, dato):
             return JsonResponse(arreglo_a_enviar, safe=False)
     
 
+def verReseñas (request , email, cantidad, tipo):
+    if(email!="" and email!=None):
+        if tipo=="cliente":
+            ordenesGenerales=ordenGeneral.objects.filter(client_email=email)
+            ordenesEmergencias=ordenEmergencia.objects.filter(client_email=email)
+            if ordenesGenerales: 
+                aux=cantidad
+                array=[]
+                for data in ordenesGenerales:
+                    if aux < (cantidad+7):
+                        valores=[{"calificación":data.calificacion_cliente, "reseña":data.resena_al_cliente }]
+                        array.append(valores)
+                        aux=aux+1
+                    else: 
+                        break
+                if aux < (cantidad+7):
+                    if ordenesEmergencias:
+                        for data in ordenesEmergencias:
+                            if aux < (cantidad+7):
+                                valores=[{"calificación":data.calificacion_cliente, "reseña":data.resena_al_cliente }]
+                                array.append(valores)
+                                aux=aux+1
+                            else: 
+                                break
+                if len(array)>0:
+                    return JsonResponse(array, safe=False)
+            elif ordenesEmergencias: 
+                aux=cantidad
+                array=[]
+                for data in ordenesEmergencias:
+                            if aux < (cantidad+7):
+                                valores=[{"calificación":data.calificacion_cliente, "reseña":data.resena_al_cliente }]
+                                array.append(valores)
+                                aux=aux+1
+                            else: 
+                                break
+            
+                if len(array)>0:
+                    return JsonResponse(array, safe=False)
+            else: 
+                return HttpResponse("bad")
+        elif tipo=="Proveedor de servicio independiente":
+            ordenesGenerales=ordenGeneral.objects.filter(proveedor_email=email)
+            ordenesEmergencias=ordenEmergencia.objects.filter(proveedor_email=email)
+            if ordenesGenerales: 
+                aux=cantidad
+                array=[]
+                for data in ordenesGenerales:
+                    if aux < (cantidad+7):
+                        valores=[{"calificación":data.calificacion_proveedor, "reseña":data.resena_al_proveedor }]
+                        array.append(valores)
+                        aux=aux+1
+                    else: 
+                        break
+                if aux < (cantidad+7):
+                    if ordenesEmergencias:
+                        for data in ordenesEmergencias:
+                            if aux < (cantidad+7):
+                                valores=[{"calificación":data.calificacion_proveedor, "reseña":data.resena_al_proveedor }]
+                                array.append(valores)
+                                aux=aux+1
+                            else: 
+                                break
+                if len(array)>0:
+                    return JsonResponse(array, safe=False)
+            elif ordenesEmergencias: 
+                aux=cantidad
+                array=[]
+                for data in ordenesEmergencias:
+                            if aux < (cantidad+7):
+                                valores=[{"calificación":data.calificacion_proveedor, "reseña":data.resena_al_proveedor }]
+                                array.append(valores)
+                                aux=aux+1
+                            else: 
+                                break
+            
+                if len(array)>0:
+                    return JsonResponse(array, safe=False)
+            else: 
+                return HttpResponse("bad")
+        else:
+            ordenesGenerales=ordenGeneral.objects.filter(proveedor_email=email)
+            ordenesEmergencias=ordenEmergencia.objects.filter(proveedor_email=email)
+            if ordenesGenerales: 
+                aux=cantidad
+                array=[]
+                for data in ordenesGenerales:
+                    if aux < (cantidad+7):
+                        valores=[{"calificación":data.calificacion_proveedor, "reseña":data.resena_al_proveedor }]
+                        array.append(valores)
+                        aux=aux+1
+                    else: 
+                        break
+                if aux < (cantidad+7):
+                    if ordenesEmergencias:
+                        for data in ordenesEmergencias:
+                            if aux < (cantidad+7):
+                                valores=[{"calificación":data.calificacion_proveedor, "reseña":data.resena_al_proveedor }]
+                                array.append(valores)
+                                aux=aux+1
+                            else: 
+                                break
+            
+                if len(array)>0:
+                    return JsonResponse(array, safe=False)
+                else: 
+                    return HttpResponse("bad")
+            elif ordenesEmergencias: 
+                aux=cantidad
+                array=[]
+                for data in ordenesEmergencias:
+                            if aux < (cantidad+7):
+                                valores=[{"calificación":data.calificacion_proveedor, "reseña":data.resena_al_proveedor }]
+                                array.append(valores)
+                                aux=aux+1
+                            else: 
+                                break
+            
+                if len(array)>0:
+                    return JsonResponse(array, safe=False)
+            else: 
+                return HttpResponse("bad")
+        
+    
+    else: 
+        return HttpResponse("bad")
             
 ##########################################################################################################
 
@@ -946,6 +1071,7 @@ def pedirOrdenGeneral (request):
                         
                         new.status="ENV"
                         new.rubro=rubro
+                        #new.rubro_company=""
                         new.location_lat= clienteLat
                         new.location_long=clienteLong
                         new.tituloPedido=tituloPedido
@@ -997,7 +1123,8 @@ def pedirOrdenGeneral (request):
                         return HttpResponse("ya hay una orden")
                     else: 
                         new=ordenGeneral()
-                        new.rubro=rubro_company
+                        new.rubro_company=rubro_company
+                        new.rubro=""
                         new.status="ENV"
                         new.location_lat= clienteLat
                         new.location_long=clienteLong
@@ -1112,7 +1239,6 @@ def consultarOrdenes(request , tipo,email):
               if not proveedor:
                   proveedor=company.objects.filter(email=datos.proveedor_email).first()
               if proveedor:
-                print("ENTONCES DEBE LLEGAR AQUI")
                 imagen={}
                 if proveedor.picture:
                     imagen['imagen_proveedor']="data:image/png;base64,"+base64.b64encode(proveedor.picture.read()).decode('ascii')
@@ -1321,7 +1447,6 @@ def cambiarEstadoOrden (request , n_ticket, tipo_orden,nuevo_estado_orden):
 @csrf_exempt
 def agregarFotoOrden(request):
     if request.method == 'POST': 
-        
         imagen1=""
         imagen2=""
         ticket=request.POST.get("ticket")
@@ -1439,6 +1564,7 @@ def finalizarOrdenProveedor(request):
                 cliente.save()
                 if resena!="":
                     orden_General.resena_al_cliente=resena
+                orden_General.calificacion_cliente=calificacion #la calificación en la orden no es igual a la calificación del cliente
                 orden_General.status="RED"
                 orden_General.califico_el_proveedor=True
                 orden_General.save()
@@ -1470,6 +1596,7 @@ def finalizarOrdenCliente(request):
                 proveedor.save()
                 if resena!="":
                     orden_General.resena_al_proveedor=resena
+                orden_General.calificacion_proveedor = calificacion #la calificación en la orden no es igual a la calificación del cliente
                 orden_General.status="RED"
                 orden_General.califico_el_cliente=True
                 orden_General.save()
@@ -1484,6 +1611,8 @@ def finalizarOrdenCliente(request):
                     compania.save()
                     if resena!="":
                         orden_General.resena_al_proveedor=resena
+
+                    orden_General.calificacion_proveedor = calificacion #la calificación en la orden no es igual a la calificación del cliente
                     orden_General.status="RED"
                     orden_General.save() 
                     return HttpResponse("ok")

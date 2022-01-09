@@ -165,8 +165,8 @@ class ordenGeneral (models.Model):
 
     client_email = models.EmailField(blank=True)
     proveedor_email=models.EmailField(blank=True)
-    rubro= models.ForeignKey(item,default=None,on_delete=models.CASCADE)
-    rubro_company = models.ForeignKey(item_company,default=None,on_delete=models.CASCADE)
+    rubro= models.ForeignKey(item,blank=True,default=None,on_delete=models.CASCADE)
+    rubro_company = models.ForeignKey(item_company,blank=True,null=True,on_delete=models.CASCADE)
     tiempo_respuesta_promedio=models.FloatField(default=1000)
 
     fecha_creacion=models.DateField( auto_now_add=True)
@@ -208,6 +208,8 @@ class ordenGeneral (models.Model):
 
     califico_el_cliente=models.BooleanField(default=False)
     califico_el_proveedor=models.BooleanField(default=False)
+    calificacion_proveedor= models.IntegerField(default=0)
+    calificacion_cliente=models.IntegerField(default=0)
     resena_al_proveedor=models.TextField(default = None, blank=True)    
     resena_al_cliente=models.TextField(default = None, blank=True)    
 
@@ -248,10 +250,14 @@ class ordenEmergencia (models.Model):
     picture1=models.ImageField(default=None, blank=True)
     picture2=models.ImageField(default=None,blank=True)
 
+    motivo_rechazo=models.TextField(default=None, blank=True)
+
     califico_el_cliente=models.BooleanField(default=False)
     califico_el_proveedor=models.BooleanField(default=False)
+    calificacion_proveedor= models.IntegerField(default=0)
+    calificacion_cliente=models.IntegerField(default=0)
     resena_al_proveedor=models.TextField(default = None, blank=True)    
-    resena_al_cliente=models.TextField(default = None, blank=True)    
+    resena_al_cliente=models.TextField(default = None, blank=True)  
 
 class chat (models.Model): 
     id = models.AutoField(primary_key=True)
