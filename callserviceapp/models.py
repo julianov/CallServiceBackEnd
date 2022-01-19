@@ -175,7 +175,7 @@ class ordenGeneral (models.Model):
     STATUS = [
         ("ENV","ENVIADA"),
         ("REC","RECIBIDA"),
-        ("ABI","ABIERTA"),
+        ("ABI","ABIERTA"), #que es que esté abierta?
         ("PEI","PEDIDO INFORMACION"), #ESTO LO AGREGO COMO BETA
         ("PRE","PRESUPUESTADA"),
         ("ACE","ACEPTADA"),
@@ -199,7 +199,7 @@ class ordenGeneral (models.Model):
     picture2=models.ImageField(default=None,blank=True)
 
     presupuesto_inicial=models.FloatField(default=0)
-    pedido_mas_información=models.TextField(default=0)
+    pedido_mas_información=models.TextField(default="")
     respuesta_cliente_pedido_mas_información=models.TextField(default=0)
     picture1_mas_información=models.ImageField(default=None, blank=True)
     picture2_mas_información=models.ImageField(default=None,blank=True)

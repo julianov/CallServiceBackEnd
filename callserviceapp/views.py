@@ -906,7 +906,8 @@ def Buscar (request , tipo, dato):
             return JsonResponse(arreglo_a_enviar, safe=False)
     
 
-def verReseñas (request , email, cantidad, tipo):
+def verReseñas (request , email, cantida, tipo):
+    cantidad=int(cantida)
     if(email!="" and email!=None):
         if tipo=="cliente":
             ordenesGenerales=ordenGeneral.objects.filter(client_email=email)
@@ -1054,9 +1055,7 @@ def pedirOrdenGeneral (request):
         if tipoProveedor=="Proveedor de servicio independiente":
             serviceProvider_=serviceProvider.objects.filter(email=ProveedorEmail)
             client_=client.objects.filter(email=clienteEmail)
-            print("ha llegado aquí")
-            print(serviceProvider_)
-            print(client_)
+            
             if serviceProvider_ and client_: 
                 
                 rubro= item.objects.filter(items=itemProveedor, provider=serviceProvider_.first()).first()
@@ -1100,8 +1099,6 @@ def pedirOrdenGeneral (request):
                         new.save()
                     
                         try:
-                            print("el nombre del cliente es: "+client_.first().name)
-                            print("el apellido del cliente es: "+client_.first().last_name)
                             send_proveedor_mail_new_orden(ticket_numero, ProveedorEmail, client_.first().name+" "+client_.first().last_name)
                         except:
                             print("problem found at send proveedor mail new orden")
@@ -1591,9 +1588,12 @@ def finalizarOrdenCliente(request):
             proveedor=serviceProvider.objects.filter(email=email).first()
             if proveedor:
                 calificacion_inicial= orden_General.rubro.qualification
+                print("veamos que tenemos en el rubro")
+                print(orden_General.rubro.qualification)
                 orden_General.rubro.qualification=calificacion_inicial + (int(calificacion)/( (proveedor.cantidad_ordenes_realizadas + proveedor.cantidad_ordenes_rechazadas)+1))
                 proveedor.cantidad_ordenes_realizadas=proveedor.cantidad_ordenes_realizadas+1
                 proveedor.save()
+                orden_General.rubro.save()
                 if resena!="":
                     orden_General.resena_al_proveedor=resena
                 orden_General.calificacion_proveedor = calificacion #la calificación en la orden no es igual a la calificación del cliente
@@ -1609,6 +1609,7 @@ def finalizarOrdenCliente(request):
                     orden_General.rubro_company.qualification=calificacion_inicial + (calificacion/( (compania.cantidad_ordenes_realizadas + compania.cantidad_ordenes_rechazadas)+1))
                     compania.cantidad_ordenes_realizadas=compania.cantidad_ordenes_realizadas+1
                     compania.save()
+                    orden_General.rubro_company.save()
                     if resena!="":
                         orden_General.resena_al_proveedor=resena
 

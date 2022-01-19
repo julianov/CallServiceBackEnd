@@ -48,7 +48,7 @@ urlpatterns = [
 
     path('search/<tipo>/<dato>', Buscar),
 
-    path('resena/<email>/<cantidad>/<tipo>',verReseñas),
+    path('resena/<email>/<cantida>/<tipo>',verReseñas),
     
 
     path('orden/ordengeneral', pedirOrdenGeneral), #GENERAR ORDEN POR PARTE DEL CLIENTE   
