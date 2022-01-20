@@ -917,7 +917,7 @@ def verReseñas (request , email, cantida, tipo):
                 array=[]
                 for data in ordenesGenerales:
                     if aux < (cantidad+7):
-                        valores=[{"calificación":data.calificacion_cliente, "reseña":data.resena_al_cliente }]
+                        valores={"calificación":data.calificacion_cliente, "resena":data.resena_al_cliente }
                         array.append(valores)
                         aux=aux+1
                     else: 
@@ -926,7 +926,7 @@ def verReseñas (request , email, cantida, tipo):
                     if ordenesEmergencias:
                         for data in ordenesEmergencias:
                             if aux < (cantidad+7):
-                                valores=[{"calificación":data.calificacion_cliente, "reseña":data.resena_al_cliente }]
+                                valores={"calificación":data.calificacion_cliente, "resena":data.resena_al_cliente }
                                 array.append(valores)
                                 aux=aux+1
                             else: 
@@ -938,7 +938,7 @@ def verReseñas (request , email, cantida, tipo):
                 array=[]
                 for data in ordenesEmergencias:
                             if aux < (cantidad+7):
-                                valores=[{"calificación":data.calificacion_cliente, "reseña":data.resena_al_cliente }]
+                                valores={"calificación":data.calificacion_cliente, "resena":data.resena_al_cliente }
                                 array.append(valores)
                                 aux=aux+1
                             else: 
@@ -956,7 +956,8 @@ def verReseñas (request , email, cantida, tipo):
                 array=[]
                 for data in ordenesGenerales:
                     if aux < (cantidad+7):
-                        valores=[{"calificación":data.calificacion_proveedor, "reseña":data.resena_al_proveedor }]
+                        print(data.calificacion_proveedor)
+                        valores={"calificación":data.calificacion_proveedor, "resena":data.resena_al_proveedor }
                         array.append(valores)
                         aux=aux+1
                     else: 
@@ -965,7 +966,7 @@ def verReseñas (request , email, cantida, tipo):
                     if ordenesEmergencias:
                         for data in ordenesEmergencias:
                             if aux < (cantidad+7):
-                                valores=[{"calificación":data.calificacion_proveedor, "reseña":data.resena_al_proveedor }]
+                                valores={"calificación":data.calificacion_proveedor, "resena":data.resena_al_proveedor }
                                 array.append(valores)
                                 aux=aux+1
                             else: 
@@ -977,7 +978,7 @@ def verReseñas (request , email, cantida, tipo):
                 array=[]
                 for data in ordenesEmergencias:
                             if aux < (cantidad+7):
-                                valores=[{"calificación":data.calificacion_proveedor, "reseña":data.resena_al_proveedor }]
+                                valores={"calificación":data.calificacion_proveedor, "resena":data.resena_al_proveedor }
                                 array.append(valores)
                                 aux=aux+1
                             else: 
@@ -995,7 +996,7 @@ def verReseñas (request , email, cantida, tipo):
                 array=[]
                 for data in ordenesGenerales:
                     if aux < (cantidad+7):
-                        valores=[{"calificación":data.calificacion_proveedor, "reseña":data.resena_al_proveedor }]
+                        valores={"calificación":data.calificacion_proveedor, "reseña":data.resena_al_proveedor }
                         array.append(valores)
                         aux=aux+1
                     else: 
@@ -1004,7 +1005,7 @@ def verReseñas (request , email, cantida, tipo):
                     if ordenesEmergencias:
                         for data in ordenesEmergencias:
                             if aux < (cantidad+7):
-                                valores=[{"calificación":data.calificacion_proveedor, "reseña":data.resena_al_proveedor }]
+                                valores={"calificación":data.calificacion_proveedor, "reseña":data.resena_al_proveedor }
                                 array.append(valores)
                                 aux=aux+1
                             else: 
@@ -1019,7 +1020,7 @@ def verReseñas (request , email, cantida, tipo):
                 array=[]
                 for data in ordenesEmergencias:
                             if aux < (cantidad+7):
-                                valores=[{"calificación":data.calificacion_proveedor, "reseña":data.resena_al_proveedor }]
+                                valores={"calificación":data.calificacion_proveedor, "reseña":data.resena_al_proveedor }
                                 array.append(valores)
                                 aux=aux+1
                             else: 
@@ -1624,6 +1625,43 @@ def finalizarOrdenCliente(request):
             return HttpResponse("bad")
     else: 
         return HttpResponse("bad") 
+
+def consultarTodasLasOrdenesCliente (request ,email):
+    array= []
+    ordenesGenerales= ordenGeneral.objects.filter(client_email=email).exclude(status="RED").exclude(status="CAN").exclude(status="REX")
+    if ordenesGenerales:
+        for data in ordenesGenerales:
+            if data.rubro:
+                array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion})
+            elif data.rubro_company:
+                array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion})
+    ordenesEmergencia = ordenEmergencia.objects.filter(client_email=email).exclude(status="RED").exclude(status="CAN").exclude(status="REX")
+    if ordenesEmergencia:
+        for data in ordenesEmergencia:
+            if data.rubro:
+                array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion})
+            elif data.rubro_company:
+                array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion})
+    ordenesGenerales= ordenGeneral.objects.filter(client_email=email).exclude(status="ENV").exclude(status="REC").exclude(status="ABI").exclude(status="PEI").exclude(status="PRE").exclude(status="ACE").exclude(status="EVI").exclude(status="ENS")
+    if ordenesGenerales:
+        for data in ordenesGenerales:
+            if data.rubro:
+                array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion})
+            elif data.rubro_company:
+                array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion})
+    ordenesEmergencia = ordenEmergencia.objects.filter(client_email=email).exclude(status="ENV").exclude(status="REC").exclude(status="ACE").exclude(status="EVI").exclude(status="ENS")
+    if ordenesEmergencia:
+        for data in ordenesEmergencia:
+            if data.rubro:
+                array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion})
+            elif data.rubro_company:
+                array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion})
+    if len(array)>0:
+        return JsonResponse(array, safe=False)
+    else: 
+        return HttpResponse("bad")
+
+
 
 '''
 @csrf_exempt
