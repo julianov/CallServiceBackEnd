@@ -16,7 +16,7 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 from django.urls import path
-from callserviceapp.views import Buscar, addRubro, agregarFotoOrden, askPersonalInfo, cambiarEstadoOrden, completeInfo, completeInfoRubros, consultarOrdenes, consultarTodasLasOrdenesCliente, datosCliente, datosProveedor, deleteRubro, finalizarOrdenCliente, finalizarOrdenProveedor, homeCliente, homeClientePedirDatos, login, masInfoOrdenCliente, masInfoOrdenProveedor, modificarRubro, nuevaInfoPersonal, pedirOrdenGeneral, presupuestoCliente, presupuestoProveedor,register, requestRubros, restarPassword, setNewPassword, verReseñas
+from callserviceapp.views import Buscar, addRubro, agregarFotoOrden, askPersonalInfo, cambiarEstadoOrden, completeInfo, completeInfoRubros, consultarOrdenParticular, consultarOrdenes, consultarTodasLasOrdenesCliente, datosCliente, datosProveedor, deleteRubro, finalizarOrdenCliente, finalizarOrdenProveedor, homeCliente, homeClientePedirDatos, login, masInfoOrdenCliente, masInfoOrdenProveedor, modificarRubro, nuevaInfoPersonal, pedirOrdenGeneral, presupuestoCliente, presupuestoProveedor,register, requestRubros, restarPassword, setNewPassword, verReseñas
 
 from django.conf import settings
 from django.conf.urls.static import static
@@ -64,7 +64,8 @@ urlpatterns = [
     path('orden/finalizar/proveedor',finalizarOrdenProveedor),
     path('orden/finalizar/cliente',finalizarOrdenCliente),
 
-    path('orden/consultarOrdenes/<email>', consultarTodasLasOrdenesCliente),  #lista de ordenes de un proveedor
+    path('orden/consultarOrdenes/<email>', consultarTodasLasOrdenesCliente),  #todas las ordenes de un cliente cambiar si se cambian los estados de la orden de emergencia. 
+    path('orden/consultarOrdenParticular/<ticket>', consultarOrdenParticular),   
 
 
 

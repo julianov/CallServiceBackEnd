@@ -1632,34 +1632,77 @@ def consultarTodasLasOrdenesCliente (request ,email):
     if ordenesGenerales:
         for data in ordenesGenerales:
             if data.rubro:
-                array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion})
+                array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
             elif data.rubro_company:
-                array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion})
+                array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
     ordenesEmergencia = ordenEmergencia.objects.filter(client_email=email).exclude(status="RED").exclude(status="CAN").exclude(status="REX")
     if ordenesEmergencia:
         for data in ordenesEmergencia:
             if data.rubro:
-                array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion})
+                array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
             elif data.rubro_company:
-                array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion})
+                array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
     ordenesGenerales= ordenGeneral.objects.filter(client_email=email).exclude(status="ENV").exclude(status="REC").exclude(status="ABI").exclude(status="PEI").exclude(status="PRE").exclude(status="ACE").exclude(status="EVI").exclude(status="ENS")
     if ordenesGenerales:
         for data in ordenesGenerales:
             if data.rubro:
-                array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion})
+                array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
             elif data.rubro_company:
-                array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion})
+                array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
     ordenesEmergencia = ordenEmergencia.objects.filter(client_email=email).exclude(status="ENV").exclude(status="REC").exclude(status="ACE").exclude(status="EVI").exclude(status="ENS")
     if ordenesEmergencia:
         for data in ordenesEmergencia:
             if data.rubro:
-                array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion})
+                array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
             elif data.rubro_company:
-                array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion})
+                array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
     if len(array)>0:
         return JsonResponse(array, safe=False)
     else: 
         return HttpResponse("bad")
+
+
+def consultarOrdenParticular (request, ticket):
+    ordenesGeneral= ordenGeneral.objects.filter(ticket=ticket).first()
+    if ordenesGeneral:
+        nombre=""
+        proveedor=serviceProvider.objects.filter(email=ordenesGeneral.proveedor_email).first()
+        if proveedor: 
+            nombre=proveedor.name +" "+ proveedor.last_name
+            data={"tipo":"Orden general","status":ordenesGeneral.status, "fecha_creacion":ordenesGeneral.fecha_creacion , "ticket":ordenesGeneral.ticket,
+                    "dia":ordenesGeneral.day, "time":ordenesGeneral.time, "titulo":ordenesGeneral.tituloPedido,"descripcion":ordenesGeneral.problem_description,
+                    "proveedor_nombre":nombre, "reseña_al_proveedor": ordenesGeneral.resena_al_proveedor,
+                    "presupuesto":ordenesGeneral.presupuesto_inicial, "pedidoMasInformacion": ordenesGeneral.pedido_mas_información,
+                    "respuesta_cliente_pedido_mas_información":ordenesGeneral.respuesta_cliente_pedido_mas_información,
+                    }
+            return JsonResponse(data, safe=False)
+        else:
+            proveedor=company.objects.filter(email=ordenesGeneral.proveedor_email).first()
+            nombre=proveedor.company_name
+            if proveedor:                     
+                        
+                data={"tipo":"Orden general","status":ordenesGeneral.status, "fecha_creacion":ordenesGeneral.fecha_creacion , "ticket":ordenesGeneral.ticket,
+                    "dia":ordenesGeneral.day, "time":ordenesGeneral.time, "titulo":ordenesGeneral.tituloPedido,"descripcion":ordenesGeneral.problem_description,
+                    "proveedor_nombre":nombre, "reseña_al_proveedor": ordenesGeneral.resena_al_proveedor,
+                    "presupuesto":ordenesGeneral.presupuesto_inicial, "pedidoMasInformacion": ordenesGeneral.pedido_mas_información,
+                    "respuesta_cliente_pedido_mas_información":ordenesGeneral.respuesta_cliente_pedido_mas_información,
+                    }
+                return JsonResponse(data, safe=False)
+            else:
+                return HttpResponse("bad") 
+    else:
+        ordenEmergency=ordenEmergencia.objects.filter(ticket=ticket).first()
+        if ordenEmergency:
+            cliente=client.objects.filter(email=ordenEmergency.client_email).first()
+                                
+            data={"tipo":"Orden de emergencia","status":ordenEmergency.status, "fecha_creacion":ordenEmergency.fecha_creacion , "ticket":ordenEmergency.ticket,
+                "dia":ordenEmergency.day, "time":ordenEmergency.time, "titulo":ordenEmergency.tituloPedido,"descripcion":ordenEmergency.problem_description,
+                
+                 }
+            return JsonResponse(data,safe=False )
+
+        else: 
+            return HttpResponse("bad") 
 
 
 

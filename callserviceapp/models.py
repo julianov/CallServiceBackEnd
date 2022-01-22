@@ -231,19 +231,19 @@ class ordenEmergencia (models.Model):
     ]
     status = models.CharField(max_length=3,choices= STATUS,default= "SO")
 
+    rubro_requerido= models.TextField(blank=True)
     lista_proveedores_independientes = models.ForeignKey (item, default=None ,on_delete=models.CASCADE)
     lista_proveedores_empresa = models.ForeignKey (item_company, default=None ,on_delete=models.CASCADE)
 
     client_email = models.EmailField(blank=True)
     proveedor_email=models.EmailField(blank=True)
-    #rubro= models.ForeignKey(item,on_delete=models.CASCADE)
     tiempo_respuesta_promedio=models.FloatField(default=1000)
     
     fecha_creacion=models.DateField( auto_now_add=True)
     ticket =  models.IntegerField(default=1000, blank=True)
    
-    location_lat = models.FloatField(default=None, blank=True)
-    location_long = models.FloatField(default=None, blank=True)
+    location_cliente_lat = models.FloatField(default=None, blank=True)
+    location_cliente_long = models.FloatField(default=None, blank=True)
    
     tituloPedido = models.TextField(default="Solicitud de pedido")
     problem_description = models.TextField(blank=True)
