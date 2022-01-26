@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.http import JsonResponse
 from json import loads
 
-from callserviceapp.models import  client, item_company, ordenEmergencia, ordenGeneral, serviceProvider, item
+from callserviceapp.models import  chat, client, item_company, ordenEmergencia, ordenGeneral, serviceProvider, item
 from callserviceapp.models import company
 
 from callserviceapp.utils import distanciaEnLaTierra, ordenarProveedores, proveedoresRadio, send_proveedor_mail_new_orden, send_user_mail
@@ -28,7 +28,12 @@ def homeCliente (request , lat, long):
 
     #datos_independiente=item.objects.exclude(radius=0).order_by('-qualification')
     datos_independiente=item.objects.order_by('-publicidad','-qualification')
+    print("aca veo que es lo que tiene datos_independiente")
+    print(datos_independiente)
+    print("-")
     proveedoresRadio(1,array,datos_independiente,lat,long,0,30,6)
+    print("aca el array me tiene que dar 1")
+    print(len(array))
         
     #datos_companias=item_company.objects.exclude(radius=0).order_by('-qualification')
     datos_companias=item_company.objects.order_by('-publicidad','-qualification')
@@ -43,6 +48,33 @@ def homeCliente (request , lat, long):
             return JsonResponse(array, safe=False)
     else:
         return JsonResponse(array, safe=False)
+
+
+def proveedorUbicacion (request , email, lat, long):
+    proveedor=serviceProvider.objects.filter(email=email).first()
+    if proveedor:
+        rubro=item.objects.filter(provider=proveedor).first()
+        if rubro:
+            rubro.posicion_lat=lat
+            rubro.posicion_long=long
+            rubro.save()
+            return HttpResponse("ok")
+        
+        else:
+            return HttpResponse("bad")
+    else: 
+        compania=company.objects.filter(email=email).first()
+        if compania: 
+            rubro=item_company.objects.filter(provider=compania).first()
+            if rubro: 
+                rubro.posicion_lat=lat
+                rubro.posicion_long=long
+                rubro.save()
+                return HttpResponse("ok")
+            else: 
+                return HttpResponse("bad")
+        else:
+            return HttpResponse("bad")
 
 def homeClientePedirDatos (request , email,rubro, tipoPedido,lat, long):  
     
@@ -1704,6 +1736,31 @@ def consultarOrdenParticular (request, ticket):
         else: 
             return HttpResponse("bad") 
 
+
+
+
+def chatMensaje (request, email,ticket,mensaje):
+    if (ticket>=1000):
+        chating=chat()
+        chating.user=email
+        chating.ticket=ticket
+        chating.mensaje=mensaje
+        chating.save()
+    return HttpResponse("ok")
+
+def chatVer (request, ticket):
+    datosChat = chat.objects.filter(ticket=ticket)
+    if (datosChat):
+        array=[]
+        for datos in datosChat:
+            data={"user":datos.user,"mensaje":datos.mensaje, "dia":datos.day, "hora":datos.time}
+            array.append(data)
+            if len(array)>0:
+                return JsonResponse(array,safe=False)
+            else:
+                return HttpResponse("bad")
+    else:
+        return HttpResponse("bad")
 
 
 '''

@@ -16,7 +16,7 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 from django.urls import path
-from callserviceapp.views import Buscar, addRubro, agregarFotoOrden, askPersonalInfo, cambiarEstadoOrden, completeInfo, completeInfoRubros, consultarOrdenParticular, consultarOrdenes, consultarTodasLasOrdenesCliente, datosCliente, datosProveedor, deleteRubro, finalizarOrdenCliente, finalizarOrdenProveedor, homeCliente, homeClientePedirDatos, login, masInfoOrdenCliente, masInfoOrdenProveedor, modificarRubro, nuevaInfoPersonal, pedirOrdenGeneral, presupuestoCliente, presupuestoProveedor,register, requestRubros, restarPassword, setNewPassword, verReseñas
+from callserviceapp.views import Buscar, addRubro, agregarFotoOrden, askPersonalInfo, cambiarEstadoOrden, chatMensaje, chatVer, completeInfo, completeInfoRubros, consultarOrdenParticular, consultarOrdenes, consultarTodasLasOrdenesCliente, datosCliente, datosProveedor, deleteRubro, finalizarOrdenCliente, finalizarOrdenProveedor, homeCliente, homeClientePedirDatos, login, masInfoOrdenCliente, masInfoOrdenProveedor, modificarRubro, nuevaInfoPersonal, pedirOrdenGeneral, presupuestoCliente, presupuestoProveedor, proveedorUbicacion,register, requestRubros, restarPassword, setNewPassword, verReseñas
 
 from django.conf import settings
 from django.conf.urls.static import static
@@ -28,6 +28,9 @@ urlpatterns = [
 
     path('home/cliente/<lat>/<long>', homeCliente),
     path('home/cliente/pedirdatos/<email>/<rubro>/<tipoPedido>/<lat>/<long>', homeClientePedirDatos),
+
+    path('proveedor/ubicacion/<email>/<lat>/<long>', proveedorUbicacion),
+
     
     path('registro/<type>/<email>/<password>', register),
 
@@ -50,7 +53,6 @@ urlpatterns = [
 
     path('resena/<email>/<cantida>/<tipo>',verReseñas),
     
-
     path('orden/ordengeneral', pedirOrdenGeneral), #GENERAR ORDEN POR PARTE DEL CLIENTE   
     path('orden/misordenes/<tipo>/<email>', consultarOrdenes),  #lista de ordenes de un proveedor
     path('orden/datocliente/<n_ticket>/<tipo_orden>',datosCliente),
@@ -67,7 +69,8 @@ urlpatterns = [
     path('orden/consultarOrdenes/<email>', consultarTodasLasOrdenesCliente),  #todas las ordenes de un cliente cambiar si se cambian los estados de la orden de emergencia. 
     path('orden/consultarOrdenParticular/<ticket>', consultarOrdenParticular),   
 
-
+    path('chat/<email>/<ticket>/<mensaje>', chatMensaje),
+    path('chat/<ticket>', chatVer),
 
 
 

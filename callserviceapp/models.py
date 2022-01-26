@@ -261,12 +261,11 @@ class ordenEmergencia (models.Model):
 
 class chat (models.Model): 
     id = models.AutoField(primary_key=True)
-
     mensaje=models.TextField(blank=True)
-    cliente=models.EmailField(blank=True)
-    proveedor=models.EmailField(blank=True)
-    day = models.DateField()
-    time = models.TimeField()
+    user= models.EmailField(blank=True)
+    ticket = models.IntegerField(default=1000, blank=True) 
+    day = models.DateField(auto_now_add=True)
+    time = models.TimeField(auto_now_add=True)
   
 
 ################################################################################################

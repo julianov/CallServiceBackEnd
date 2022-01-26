@@ -49,14 +49,34 @@ def distanciaEnLaTierra(lon1, lat1, lon2, lat2):
 #De cada proveedor obtiene la distancia hasta el cliente. Si está dentro del radio devuleve la lista de proveedor
 def proveedoresRadio(tipo, array, proveedores, lat, long, radio1, radio2, cantidad_proveedores_maxima):
     
+    print("proveedores")
+    print(proveedores)
+    print("latitud")
+    print(lat)
+    print("longitud")
+    print(long)
+    print("radio1")
+    print(radio1)
+    print("radio2")
+    print(radio2)
+    print ("cantidad maxima de proveedores")
+    print(cantidad_proveedores_maxima)
+    print ("******************************************************")
+
     if proveedores:
         datos_de_proveedores=[]
         distancias=[]
         i=0
         for data in proveedores:
             #distance = math.sqrt(math.pow(data.posicion_lat-float(lat), 2) + math.pow(data.posicion_long-float(long), 2) )
-            distance=distanciaEnLaTierra(float(data.posicion_long),float(data.posicion_lat),float(long),float(lat))
+            print("la longitud del proveedor es:")
+            print(data.posicion_long)
+            print("la latitud del proveedor es:")
+            print(data.posicion_lat)
             
+            distance=distanciaEnLaTierra(float(data.posicion_long),float(data.posicion_lat),float(long),float(lat))
+            print("la distancia es: ")
+            print(distance)
             if radio1 <= distance and distance < radio2:
                 datos_de_proveedores.append(data)
                 distancias.append(distance)
@@ -66,6 +86,8 @@ def proveedoresRadio(tipo, array, proveedores, lat, long, radio1, radio2, cantid
         
         if tipo==1: 
             j=0
+            print("aca tengo que ver que proveedores hay")
+            print(datos_de_proveedores)
             for datos in datos_de_proveedores:
                 personales=datos.provider
                 imagenes={}
