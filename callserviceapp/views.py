@@ -1740,7 +1740,8 @@ def consultarOrdenParticular (request, ticket):
 
 
 def chatMensaje (request, email,ticket,mensaje):
-    if (ticket>=1000):
+    print("llego a chat")
+    if (ticket>=str(1000)):
         chating=chat()
         chating.user=email
         chating.ticket=ticket
@@ -1749,16 +1750,18 @@ def chatMensaje (request, email,ticket,mensaje):
     return HttpResponse("ok")
 
 def chatVer (request, ticket):
+    array=[]
     datosChat = chat.objects.filter(ticket=ticket)
+    print(datosChat)
     if (datosChat):
-        array=[]
+        
         for datos in datosChat:
             data={"user":datos.user,"mensaje":datos.mensaje, "dia":datos.day, "hora":datos.time}
             array.append(data)
-            if len(array)>0:
-                return JsonResponse(array,safe=False)
-            else:
-                return HttpResponse("bad")
+        if len(array)>0:
+            return JsonResponse(array,safe=False)
+        else:
+            return HttpResponse("bad")
     else:
         return HttpResponse("bad")
 
