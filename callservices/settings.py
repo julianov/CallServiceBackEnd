@@ -114,7 +114,7 @@ LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
 
-DATE_INPUT_FORMATS =  ['%d/%m/%Y']
+DATE_INPUT_FORMATS =  ['DD/%MM/%YYYY']
 
 USE_I18N = True
 

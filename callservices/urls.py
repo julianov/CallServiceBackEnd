@@ -69,7 +69,7 @@ urlpatterns = [
     path('orden/consultarOrdenes/<email>', consultarTodasLasOrdenesCliente),  #todas las ordenes de un cliente cambiar si se cambian los estados de la orden de emergencia. 
     path('orden/consultarOrdenParticular/<ticket>', consultarOrdenParticular),   
 
-    path('chat/mensaje/<email>/<ticket>/<mensaje>', chatMensaje),
+    path('chat/mensaje/<email>/<ticket>/<mensaje>/<dia>/<hora>', chatMensaje),
     path('chat/<ticket>', chatVer),
 
 

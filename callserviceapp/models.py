@@ -1,3 +1,4 @@
+from sqlite3 import Timestamp
 from django.db import models
 from django.db.models.fields import DateField, DateTimeField
 
@@ -264,8 +265,10 @@ class chat (models.Model):
     mensaje=models.TextField(blank=True)
     user= models.EmailField(blank=True)
     ticket = models.IntegerField(default=1000, blank=True) 
-    day = models.DateField(auto_now_add=True)
-    time = models.TimeField(auto_now_add=True)
+    day = models.TextField(blank=True,  null=True)
+    time = models.TextField(blank=True, null=True)
+    timestamp = models.TimeField(auto_now_add=True)
+    daystamp = models.DateField(auto_now_add=True)
   
 
 ################################################################################################

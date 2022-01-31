@@ -1739,19 +1739,21 @@ def consultarOrdenParticular (request, ticket):
 
 
 
-def chatMensaje (request, email,ticket,mensaje):
-    print("llego a chat")
+def chatMensaje (request, email,ticket,mensaje,dia,hora):
     if (ticket>=str(1000)):
         chating=chat()
         chating.user=email
         chating.ticket=ticket
         chating.mensaje=mensaje
+        chating.day=dia
+        chating.time=hora
         chating.save()
     return HttpResponse("ok")
 
 def chatVer (request, ticket):
     array=[]
-    datosChat = chat.objects.filter(ticket=ticket)
+    datosChat = chat.objects.filter(ticket=ticket).all().order_by('daystamp','timestamp')
+    print("los datos son: ")
     print(datosChat)
     if (datosChat):
         
