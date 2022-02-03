@@ -1510,7 +1510,7 @@ def agregarFotoOrden(request):
 
 @csrf_exempt
 def masInfoOrdenProveedor (request):
-    print("bueno llego a pedir más info")
+    
     if request.method == 'POST':
         ticket=request.POST.get("ticket")
         tipo_orden=request.POST.get("tipoOrden")
@@ -1520,7 +1520,6 @@ def masInfoOrdenProveedor (request):
                 orden_General.pedido_mas_información=request.POST.get("masInfo")
                 orden_General.status="PEI"
                 orden_General.save()
-                print("bueno debería haberse guardado todo bien")
                 return HttpResponse("ok")
         else:
             return HttpResponse("bad")
