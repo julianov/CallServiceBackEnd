@@ -4,6 +4,7 @@ from django.core.mail import EmailMultiAlternatives, send_mail
 import base64
 
 
+
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'servidor.ssmtp@gmail.com'
 EMAIL_HOST_PASSWORD = 'lgdi xmko ztgk vipm' #past the key or password app here
@@ -49,34 +50,15 @@ def distanciaEnLaTierra(lon1, lat1, lon2, lat2):
 #De cada proveedor obtiene la distancia hasta el cliente. Si está dentro del radio devuleve la lista de proveedor
 def proveedoresRadio(tipo, array, proveedores, lat, long, radio1, radio2, cantidad_proveedores_maxima):
     
-    print("proveedores")
-    print(proveedores)
-    print("latitud")
-    print(lat)
-    print("longitud")
-    print(long)
-    print("radio1")
-    print(radio1)
-    print("radio2")
-    print(radio2)
-    print ("cantidad maxima de proveedores")
-    print(cantidad_proveedores_maxima)
-    print ("******************************************************")
-
     if proveedores:
         datos_de_proveedores=[]
         distancias=[]
         i=0
         for data in proveedores:
             #distance = math.sqrt(math.pow(data.posicion_lat-float(lat), 2) + math.pow(data.posicion_long-float(long), 2) )
-            print("la longitud del proveedor es:")
-            print(data.posicion_long)
-            print("la latitud del proveedor es:")
-            print(data.posicion_lat)
-            
+                        
             distance=distanciaEnLaTierra(float(data.posicion_long),float(data.posicion_lat),float(long),float(lat))
-            print("la distancia es: ")
-            print(distance)
+            
             if radio1 <= distance and distance < radio2:
                 datos_de_proveedores.append(data)
                 distancias.append(distance)
@@ -140,3 +122,60 @@ def ordenarProveedores(array):
     #ahora si ordenar y obtener uno
 
 
+#Toma el tipo de proveedor, un arreglo de proveedores, la latitud y longitud del cliente y un rango de radio 
+#De cada proveedor obtiene la distancia hasta el cliente. Si está dentro del radio devuleve la lista de proveedor
+def proveedoresRadioOrdenEmergencia(tipo, array, proveedores, lat, long, radio1, radio2, cantidad_proveedores_maxima):
+    if proveedores:
+        datos_de_proveedores=[]
+        distancias=[]
+        i=0
+        for data in proveedores:
+            #distance = math.sqrt(math.pow(data.posicion_lat-float(lat), 2) + math.pow(data.posicion_long-float(long), 2) )
+                        
+            distance=distanciaEnLaTierra(float(data.posicion_long),float(data.posicion_lat),float(long),float(lat))
+            
+            if radio1 <= distance and distance < radio2:
+                datos_de_proveedores.append(data)
+                distancias.append(distance)
+                i=i+1
+                if i==cantidad_proveedores_maxima:
+                    break
+        
+        if tipo==1: 
+            j=0
+            print("aca tengo que ver que proveedores hay")
+            print(datos_de_proveedores)
+            for datos in datos_de_proveedores:
+                personales=datos.provider
+                imagenes={}
+            
+                if personales.picture:
+                    imagenes['picture']= "data:image/png;base64,"+base64.b64encode(personales.picture.read()).decode('ascii')
+                else:
+                    imagenes['picture']=""
+
+                first={"item":datos.items,"certificado":imagenes['picture'] ,"distancia":distancias[j],
+            "calificacion":datos.qualification,
+                "nombre":personales.name, "apellido":personales.last_name, "email":personales.email, "tipo":"Proveedor de servicio independiente" }
+
+                array.append(first)
+                j=j+1
+                                
+        else: 
+            j=0
+            for datos in datos_de_proveedores:
+                personales=datos.provider
+                imagenes={}
+            
+                if personales.picture:
+                    imagenes['picture']= "data:image/png;base64,"+base64.b64encode(personales.picture.read()).decode('ascii')
+                else:
+                    imagenes['picture']=""
+
+                first={"item":datos.items,"certificado":imagenes['picture'] ,"distancia":distancias[j],
+            "calificacion":datos.qualification,
+                "nombre":personales.company_name, "apellido":personales.company_description, "email":personales.email, "tipo":"Empresa proveedora de servicio" }
+
+                array.append(first)
+                j=j+1
+        return array

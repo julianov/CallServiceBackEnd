@@ -1,6 +1,5 @@
 from sqlite3 import Timestamp
 from django.db import models
-from django.db.models.fields import DateField, DateTimeField
 
 # Create your models here.
 
@@ -46,17 +45,23 @@ class item (models.Model):
     ("CARPINTERÍA","CARPINTERÍA"),
     ("CERRAJERÍA","CERRAJERÍA"),
     ("CONSTRUCCIÓN","CONSTRUCCIÓN"),
+    ("CONTADURÍA","CONTADURÍA"),
     ("ELECTRICIDAD","ELECTRICIDAD"),
     ("ELECTRÓNICA","ELECTRÓNICA"),
+    ("ESTÉTICA","ESTÉTICA"),
     ("FLETE","FLETE"),
+    ("FUMIGACIÓN","FUMIGACIÓN"),
     ("GASISTA","GASISTA"),
     ("HERRERÍA","HERRERÍA"),
     ("INFORMÁTICA","INFORMÁTICA"),
     ("JARDINERÍA","JARDINERÍA"),
     ("MECÁNICA","MECÁNICA"),
-    ("PLOMERÍA","PLOMERÍA"),
+    ("MODA","MODA"),
+    ("PASEADOR DE MASCOTAS","PASEADOR DE MASCOTAS"),
+    ("PINTOR","PINTOR"),
     ("REFRIGERACIÓN","REFRIGERACIÓN"),
     ("REMOLQUES - GRÚAS","REMOLQUES"),
+    ("PLOMERÍA","PLOMERÍA"), 
     ("TELEFONÍA CELULAR","TELEFONÍA CELULAR"),
     ("TEXTIL","TEXTIL"),
     ]
@@ -70,6 +75,8 @@ class item (models.Model):
     radius = models.FloatField(default=None)
     qualification=models.IntegerField(default=0)
     publicidad=models.IntegerField(default=0) #valor que dependerá de si pagó publicidad
+
+    hace_orden_emergencia = models.BooleanField(default=False)
 
     pais= models.TextField(blank = True)
     provincia= models.TextField(blank = True)
@@ -116,14 +123,20 @@ class item_company (models.Model):
     ("CARPINTERÍA","CARPINTERÍA"),
     ("CERRAJERÍA","CERRAJERÍA"),
     ("CONSTRUCCIÓN","CONSTRUCCIÓN"),
+    ("CONTADURÍA","CONTADURÍA"),
     ("ELECTRICIDAD","ELECTRICIDAD"),
     ("ELECTRÓNICA","ELECTRÓNICA"),
+    ("ESTÉTICA","ESTÉTICA"),
     ("FLETE","FLETE"),
+    ("FUMIGACIÓN","FUMIGACIÓN"),
     ("GASISTA","GASISTA"),
     ("HERRERÍA","HERRERÍA"),
     ("INFORMÁTICA","INFORMÁTICA"),
     ("JARDINERÍA","JARDINERÍA"),
     ("MECÁNICA","MECÁNICA"),
+    ("MODA","MODA"),
+    ("PASEADOR DE MASCOTAS","PASEADOR DE MASCOTAS"),
+    ("PINTOR","PINTOR"),
     ("REFRIGERACIÓN","REFRIGERACIÓN"),
     ("REMOLQUES - GRÚAS","REMOLQUES"),
     ("PLOMERÍA","PLOMERÍA"), 
@@ -141,6 +154,8 @@ class item_company (models.Model):
     radius = models.FloatField(default=None)
     qualification=models.IntegerField(default=0)
     publicidad=models.IntegerField(default=0) #valor que dependerá de si pagó publicidad
+
+    hace_orden_emergencia = models.BooleanField(default=False)
 
     pais= models.TextField(blank = True)
     provincia= models.TextField(blank = True)
@@ -215,6 +230,11 @@ class ordenGeneral (models.Model):
     resena_al_cliente=models.TextField(default = None, blank=True)    
 
     
+class listraProveedoresOrdenEmergencia (models.Model):
+    id = models.AutoField(primary_key=True)
+    ticket =  models.IntegerField(default=1000, blank=True)
+    proveedor_email=models.EmailField(blank=True)
+
 
 class ordenEmergencia (models.Model):
 
@@ -233,8 +253,7 @@ class ordenEmergencia (models.Model):
     status = models.CharField(max_length=3,choices= STATUS,default= "SO")
 
     rubro_requerido= models.TextField(blank=True)
-    lista_proveedores_independientes = models.ForeignKey (item, default=None ,on_delete=models.CASCADE)
-    lista_proveedores_empresa = models.ForeignKey (item_company, default=None ,on_delete=models.CASCADE)
+    lista_proveedores = models.ForeignKey (listraProveedoresOrdenEmergencia, default=None ,on_delete=models.CASCADE)
 
     client_email = models.EmailField(blank=True)
     proveedor_email=models.EmailField(blank=True)
@@ -270,6 +289,11 @@ class chat (models.Model):
     timestamp = models.TimeField(auto_now_add=True)
     daystamp = models.DateField(auto_now_add=True)
   
+class nuevo_chat (models.Model): 
+    notify_to=models.EmailField(blank=True)
+    message_from=models.EmailField(blank=True)
+    ticket = models.IntegerField(default=1000, blank=True) 
+
 
 ################################################################################################
 

@@ -16,7 +16,7 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 from django.urls import path
-from callserviceapp.views import Buscar, addRubro, agregarFotoOrden, askPersonalInfo, cambiarEstadoOrden, chatMensaje, chatVer, completeInfo, completeInfoRubros, consultarOrdenParticular, consultarOrdenes, consultarTodasLasOrdenesCliente, datosCliente, datosProveedor, deleteRubro, finalizarOrdenCliente, finalizarOrdenProveedor, homeCliente, homeClientePedirDatos, login, masInfoOrdenCliente, masInfoOrdenProveedor, modificarRubro, nuevaInfoPersonal, pedirOrdenGeneral, presupuestoCliente, presupuestoProveedor, proveedorUbicacion,register, requestRubros, restarPassword, setNewPassword, verReseñas
+from callserviceapp.views import Buscar, addRubro, agregarFotoOrden, askPersonalInfo, cambiarEstadoOrden, chatMensaje, chatSinLeer, chatVer, completeInfo, completeInfoRubros, consultarOrdenParticular, consultarOrdenes, consultarTodasLasOrdenes, consultarTodasLasOrdenesCanceladas, consultarTodasLasOrdenesCurso, consultarTodasLasOrdenesFinalizadas, datosCliente, datosProveedor, deleteRubro, finalizarOrdenCliente, finalizarOrdenProveedor, homeCliente, homeClientePedirDatos, login, masInfoOrdenCliente, masInfoOrdenProveedor, modificarRubro, nuevaInfoPersonal, pedirOrdenEmergencia, pedirOrdenGeneral, presupuestoCliente, presupuestoProveedor, proveedorUbicacion,register, requestRubros, restarPassword, setNewPassword, verReseñas
 
 from django.conf import settings
 from django.conf.urls.static import static
@@ -30,7 +30,6 @@ urlpatterns = [
     path('home/cliente/pedirdatos/<email>/<rubro>/<tipoPedido>/<lat>/<long>', homeClientePedirDatos),
 
     path('proveedor/ubicacion/<email>/<lat>/<long>', proveedorUbicacion),
-
     
     path('registro/<type>/<email>/<password>', register),
 
@@ -66,11 +65,20 @@ urlpatterns = [
     path('orden/finalizar/proveedor',finalizarOrdenProveedor),
     path('orden/finalizar/cliente',finalizarOrdenCliente),
 
-    path('orden/consultarOrdenes/<email>', consultarTodasLasOrdenesCliente),  #todas las ordenes de un cliente cambiar si se cambian los estados de la orden de emergencia. 
+    path('orden/consultarOrdenes/<tipo>/<email>', consultarTodasLasOrdenes),  #todas las ordenes de un cliente cambiar si se cambian los estados de la orden de emergencia. 
+    path('orden/consultarOrdenesCanceladas/<tipo>/<email>', consultarTodasLasOrdenesCanceladas),  #todas las ordenes de un cliente cambiar si se cambian los estados de la orden de emergencia. 
+    path('orden/consultarOrdenesCurso/<tipo>/<email>', consultarTodasLasOrdenesCurso),  #todas las ordenes de un cliente cambiar si se cambian los estados de la orden de emergencia. 
+    path('orden/consultarOrdenesFinalizadas/<tipo>/<email>', consultarTodasLasOrdenesFinalizadas),  #todas las ordenes de un cliente cambiar si se cambian los estados de la orden de emergencia. 
+
+    
     path('orden/consultarOrdenParticular/<ticket>', consultarOrdenParticular),   
 
+
     path('chat/mensaje/<email>/<ticket>/<mensaje>/<dia>/<hora>', chatMensaje),
-    path('chat/<ticket>', chatVer),
+    path('chat/<ticket>/<email>', chatVer),
+    path('chatsinleer/<email>', chatSinLeer),
+
+    path('orden/ordenEmergencia', pedirOrdenEmergencia), #GENERAR ORDEN POR PARTE DEL CLIENTE   
 
 
 
