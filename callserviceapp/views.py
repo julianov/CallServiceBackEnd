@@ -51,13 +51,14 @@ def proveedorUbicacion (request , email, lat, long):
     if proveedor:
         rubro=item.objects.filter(provider=proveedor).first()
         if rubro:
+            print("llega a rubro")
             rubro.posicion_lat=lat
             rubro.posicion_long=long
             rubro.save()
             return HttpResponse("ok")
         
         else:
-            return HttpResponse("bad")
+            return HttpResponse("sin rubro")
     else: 
         compania=company.objects.filter(email=email).first()
         if compania: 
@@ -68,7 +69,7 @@ def proveedorUbicacion (request , email, lat, long):
                 rubro.save()
                 return HttpResponse("ok")
             else: 
-                return HttpResponse("bad")
+                return HttpResponse("sin rubro")
         else:
             return HttpResponse("bad")
 
@@ -565,18 +566,14 @@ def requestRubros(request, tipo,email,rubro):
                 else: 
                     images['imagen3'] =""
 
-                data = [{"item": datos.items, "radius": str(datos.radius),
-                "description": datos.description, "qualification":str(datos.qualification)},
-                
-                {"days_of_works": datos.days_of_works,
-                "hour_init": str(datos.hour_init), "hour_end": str(datos.hour_end)},
-                
-                {"certificate": images['certificado'],
-                "picture1": images['imagen1'],
-                "picture2": images['imagen2'],
-                "picture3": images['imagen3']},
-                {"pais":datos.pais, "provincia":datos.provincia, "ciudad":datos.ciudad, 
-                "calle":datos.domicilio_calle, "numeracion":datos.domicilio_numeracion}]
+                data = {"rubro": datos.items, "radius": str(datos.radius),
+                "description":datos.description,"hace_orden_emergencia":"no",
+                "qualification":str(datos.qualification),
+                "pais":datos.pais, "provincia":datos.provincia, "ciudad":datos.ciudad,
+                "calle":datos.domicilio_calle, "numeracion":datos.domicilio_numeracion,
+                "days_of_works": datos.days_of_works,"hour_init": str(datos.hour_init),
+                "hour_end": str(datos.hour_end),"certificate":images['certificado'],
+                "picture1":images['imagen1'],"picture2": images['imagen2'],"picture3": images['imagen3'] }
                 
                 return JsonResponse(data, safe=False)
                 #return HttpResponse(data)
@@ -608,18 +605,14 @@ def requestRubros(request, tipo,email,rubro):
                 else: 
                     images['imagen3'] =""
                 
-                data = [{"item": datos.items, "radius": str(datos.radius),
-                "description": datos.description,"qualification":str(datos.qualification)},
-                
-                {"days_of_works": datos.days_of_works,
-                "hour_init": str(datos.hour_init), "hour_end": str(datos.hour_end)},
-                
-                {"certificate": images['certificado'],
-                "picture1": images['imagen1'],
-                "picture2": images['imagen2'],
-                "picture3": images['imagen3']},
-                {"pais":datos.pais, "provincia":datos.provincia, "ciudad":datos.ciudad, 
-                "calle":datos.domicilio_calle, "numeracion":datos.domicilio_numeracion}]
+                data = {"rubro": datos.items, "radius": str(datos.radius),
+                "description":datos.description,"hace_orden_emergencia":"no",
+                "qualification":str(datos.qualification),
+                "pais":datos.pais, "provincia":datos.provincia, "ciudad":datos.ciudad,
+                "calle":datos.domicilio_calle, "numeracion":datos.domicilio_numeracion,
+                "days_of_works": datos.days_of_works,"hour_init": str(datos.hour_init),
+                "hour_end": str(datos.hour_end),"certificate":images['certificado'],
+                "picture1":images['imagen1'],"picture2": images['imagen2'],"picture3": images['imagen3'] }
 
                 return JsonResponse(data, safe=False)
             else:
