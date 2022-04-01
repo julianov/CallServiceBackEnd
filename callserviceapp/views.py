@@ -16,9 +16,6 @@ import base64
 import datetime
 import datetime
 
-
-
-
 # Create your views here.
 
 
@@ -418,6 +415,7 @@ def completeInfoRubros (request,modo,tipo,email):
                 else:                    
                     x=[]
                     for i in range(0, len(rubros)):
+                        
                         x.append(rubros[i].items+"-")
                     return HttpResponse(x)
                     #aca tengo que devolver los tipos de rubros cargados
@@ -442,12 +440,21 @@ def completeInfoRubros (request,modo,tipo,email):
 
 @csrf_exempt 
 def addRubro (request):
+    print("----------------------------------")
+    print(request.method)
+    print(request.POST.get("tipo"))
+    print(request.POST.get("email"))
+    print(request.POST.get("posicion"))
+    print(request.POST.get("ordenEmergencia"))
+    print("----------------------------------")
     if request.method == 'POST': 
         if request.POST.get("tipo")=="2":
             proveedores=serviceProvider.objects.filter(email=request.POST.get("email"))
             if not proveedores:
+                print("no detecto proveedor")
                 return HttpResponse("No usuario registrado")
             else:
+                print("bueno vamos por buen camino ahora")
                 proveedor=proveedores.first()
                 rubros=item.objects.filter(provider=proveedor)
                 print("la cantidad de rubros que tiene es: "+str(len(rubros)))
@@ -620,8 +627,15 @@ def requestRubros(request, tipo,email,rubro):
         else: 
             return HttpResponse ("incongruencia de datos")
 
+
 @csrf_exempt 
 def deleteRubro (request):
+    print("------------------------")
+    print(request.POST.get("tipo"))
+    print(request.POST.get("email"))
+    print(request.POST.get("item"))
+    print("------------------------")
+
     if request.method == 'POST':
         if(request.POST.get("tipo")=="2"):
             proveedores=serviceProvider.objects.filter(email=request.POST.get("email"))
@@ -1192,7 +1206,7 @@ def consultarOrdenes(request , tipo,email):
                 else:
                     imagen['picture2_mas_información']=""
                     
-                array.append({"tipo":"Orden general","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
+                array.append({"rubro":datos.rubro.items,"tipo":"Orden general","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
                 "dia":datos.day, "time":datos.time, "titulo":datos.tituloPedido,"descripcion":datos.problem_description,
                 "location_lat":datos.location_lat,"location_long":datos.location_long, "email_cliente":cliente.email,
                 "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_cliente":imagen['imagen_Cliente'],
@@ -1219,7 +1233,7 @@ def consultarOrdenes(request , tipo,email):
                 else:
                     imagen['picture2']=""
                     
-                array.append({"tipo":"Orden de emergencia","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
+                array.append({"rubro":datos.rubro.items,"tipo":"Orden de emergencia","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
                 "dia":datos.day, "time":datos.time, "titulo":datos.tituloPedido,"descripcion":datos.problem_description,
                 "location_lat":datos.location_lat,"location_long":datos.location_long,"email_cliente":cliente.email,
                 "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_cliente":imagen['imagen_Cliente'] })
@@ -1228,6 +1242,7 @@ def consultarOrdenes(request , tipo,email):
             return JsonResponse(array, safe=False)
         else: 
             return HttpResponse("bad")
+            
     elif tipo=="cliente":
         ordenesGenerales= ordenGeneral.objects.filter(client_email=email).exclude(status="CAN").exclude( status="REX").exclude(califico_el_cliente=True)
         ordenesEmergencia= ordenEmergencia.objects.filter(client_email=email).exclude(status="CAN").exclude( status="REX").exclude(califico_el_cliente=True)
@@ -1262,7 +1277,7 @@ def consultarOrdenes(request , tipo,email):
                     imagen['picture2_mas_información']=""
 
                 
-                array.append({"tipo":"Orden general","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
+                array.append({"rubro":datos.rubro.items,"tipo":"Orden general","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
                 "dia":datos.day, "time":datos.time, "titulo":datos.tituloPedido,"descripcion":datos.problem_description,
                 "location_lat":datos.location_lat,"location_long":datos.location_long, "email_proveedor":proveedor.email,
                 "presupuesto":str(datos.presupuesto_inicial), "pedidoMasInformacion": datos.pedido_mas_información,
@@ -1910,20 +1925,22 @@ def chatSinLeer (request,email):
 @csrf_exempt
 def pedirOrdenEmergencia (request):
     if request.method == 'POST':
+
         categoria=request.POST.get("categoria")
         clienteEmail=request.POST.get("clienteEmail")
         clienteLat=request.POST.get("clienteLat")
         clienteLong=request.POST.get("clienteLong")
         tituloPedido=request.POST.get("tituloPedido")
         descripcion_problema=request.POST.get("descripcion_problema")
+
         if categoria and clienteEmail and clienteLat and clienteLong and tituloPedido and descripcion_problema:
+            
             array=[]
 
-            datos_independiente=item.objects.exclude(radius=0).order_by('-publicidad','-qualification')
-            
+            datos_independiente=item.objects.exclude(radius=0).exclude(hace_orden_emergencia=False).order_by('-publicidad','-qualification')
             proveedoresRadio(1,array,datos_independiente,clienteLat,clienteLong,0,30,6)
                    
-            datos_companias=item_company.objects.exclude(radius=0).order_by('-publicidad','-qualification')
+            datos_companias=item_company.objects.exclude(radius=0).exclude(hace_orden_emergencia=False).order_by('-publicidad','-qualification')
             proveedoresRadio(2,array,datos_companias,clienteLat,clienteLong,0,30,6)
             
             if len(array)<=5:
@@ -1935,6 +1952,13 @@ def pedirOrdenEmergencia (request):
                     return HttpResponse("aca tiene que ir algo y no hacer algo en el model")
         else:
             return HttpResponse("bad")
+
+
+
+
+
+
+
 '''
 @csrf_exempt
 def pedirOrdenEmergencia (request):
