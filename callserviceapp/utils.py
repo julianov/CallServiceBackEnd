@@ -3,31 +3,7 @@ from django.conf import settings
 from django.core.mail import EmailMultiAlternatives, send_mail
 import base64
 
-
-
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'servidor.ssmtp@gmail.com'
-EMAIL_HOST_PASSWORD = 'lgdi xmko ztgk vipm' #past the key or password app here
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
-DEFAULT_FROM_EMAIL = 'default from email'
-
-def send_user_mail(randomNumber, email):
-    subject = 'Validación de e-mail - ServicesYA'
-    cuerpo="Su número de validación es: "+str(randomNumber)
-
-    #message.attach_alternative(content, 'text/html')
-    send_mail(subject, cuerpo ,'servidor.ssmtp@gmail.com', [email],fail_silently = False) #Destinatario)
-    return 1
-
-def send_proveedor_mail_new_orden(ticket, email, usuario):
-    subject = "Nueva orden de servicio - Ticket: "+str(ticket)+" - ServicesYA!"
-    cuerpo = "Posee nueva solicitud de trabajo."+'\n'+'\n' + "Solicitud creada por: "+str(usuario)+'\n'
-
-    #message.attach_alternative(content, 'text/html')
-    send_mail(subject, cuerpo,'servidor.ssmtp@gmail.com', [email],fail_silently = False) #Destinatario)
-    return 1
+from celery import Task, shared_task
 
 
 def distanciaEnLaTierra(lon1, lat1, lon2, lat2):

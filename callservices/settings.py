@@ -43,6 +43,9 @@ INSTALLED_APPS = [
     'callserviceapp.apps.CallserviceappConfig',
 ]
 
+
+CELERY_BROKER_URL = 'amqp://localhost'
+
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -165,3 +168,4 @@ SESSION_COOKIE_SECURE           = False
 CSRF_COOKIE_SECURE              = False
 SECURE_HSTS_SECONDS             = None
 SECURE_HSTS_INCLUDE_SUBDOMAINS  = False
+

@@ -7,14 +7,17 @@ from json import loads
 
 from callserviceapp.models import  chat, client, item_company, nuevo_chat, ordenEmergencia, ordenGeneral, serviceProvider, item
 from callserviceapp.models import company
+from callserviceapp.tasks import send_user_mail, send_proveedor_mail_new_orden
 
-from callserviceapp.utils import distanciaEnLaTierra, proveedoresRadio,proveedoresRadioOrdenEmergencia, send_proveedor_mail_new_orden, send_user_mail
+from callserviceapp.utils import distanciaEnLaTierra, proveedoresRadio,proveedoresRadioOrdenEmergencia
 import random
 
 import base64
 
 import datetime
 import datetime
+
+from callservices.celery import debug_task
 
 # Create your views here.
 
@@ -170,7 +173,7 @@ def register (request, type, email, password):
         if not (cliente and proveedor_independiente and proveedor_empresa):
            
             randomNumber = random.randint(1, 99999)
-            send_user_mail(randomNumber, email)
+            send_user_mail.delay(randomNumber, email)
             b = client( email=email, password=password)
             b.save()
             return HttpResponse(randomNumber)
@@ -184,7 +187,7 @@ def register (request, type, email, password):
         
         if not (cliente and proveedor_independiente and proveedor_empresa):
             randomNumber = random.randint(1, 99999)
-            send_user_mail(randomNumber, email)
+            send_user_mail.delay(randomNumber, email)
             b = serviceProvider( email=email, password=password)
             b.save()
             return HttpResponse(randomNumber)
@@ -198,7 +201,7 @@ def register (request, type, email, password):
         
         if not (cliente and proveedor_independiente and proveedor_empresa):
             randomNumber = random.randint(1, 99999)
-            send_user_mail(randomNumber, email)
+            send_user_mail.delay(randomNumber, email)
             b = company( email=email, password=password)
             b.save()
             return HttpResponse(randomNumber)
@@ -783,13 +786,13 @@ def restarPassword(request, email):
         nuevo=client_.first()
         nuevo.random_number=randomNumber
         nuevo.save()
-        send_user_mail(randomNumber, email)
+        send_user_mail.delay(randomNumber, email)
         return HttpResponse(randomNumber)
     else:
         serviceProvider_=serviceProvider.objects.filter(email=email)
         if serviceProvider_:
             randomNumber = random.randint(1, 99999)
-            send_user_mail(randomNumber, email)
+            send_user_mail.delay(randomNumber, email)
             nuevo=serviceProvider_.first()
             nuevo.random_number=randomNumber
             nuevo.save()
@@ -798,7 +801,7 @@ def restarPassword(request, email):
             company_=company.objects.filter(email=email)
             if company_:
                 randomNumber = random.randint(1, 99999)
-                send_user_mail(randomNumber, email)
+                send_user_mail.delay(randomNumber, email)
                 nuevo=company_.first()
                 nuevo.random_number=randomNumber
                 nuevo.save()
@@ -1118,7 +1121,7 @@ def pedirOrdenGeneral (request):
                         new.save()
                     
                         try:
-                            send_proveedor_mail_new_orden(ticket_numero, ProveedorEmail, client_.first().name+" "+client_.first().last_name)
+                            send_proveedor_mail_new_orden.delay(ticket_numero, ProveedorEmail, client_.first().name+" "+client_.first().last_name)
                         except:
                             print("problem found at send proveedor mail new orden")
                         return HttpResponse(ticket_numero) 
@@ -1165,7 +1168,7 @@ def pedirOrdenGeneral (request):
                         new.save()
 
                         try:
-                            send_proveedor_mail_new_orden(ticket_numero, ProveedorEmail, client_.name+" "+client_.last_name)
+                            send_proveedor_mail_new_orden.delay(ticket_numero, ProveedorEmail, client_.name+" "+client_.last_name)
                         except:
                             print("problem found at send proveedor mail new orden")
                         return HttpResponse(ticket_numero) 
