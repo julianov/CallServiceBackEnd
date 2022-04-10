@@ -169,9 +169,8 @@ def register (request, type, email, password):
         cliente=client.objects.filter(email=email)
         proveedor_independiente=serviceProvider.objects.filter(email=email)
         proveedor_empresa=company.objects.filter(email=email)
-
-        if not (cliente and proveedor_independiente and proveedor_empresa):
-           
+        
+        if not (cliente or proveedor_independiente or proveedor_empresa):      
             randomNumber = random.randint(1, 99999)
             send_user_mail.delay(randomNumber, email)
             b = client( email=email, password=password)
