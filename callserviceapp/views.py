@@ -1429,26 +1429,39 @@ def cambiarEstadoOrden (request , n_ticket, tipo_orden,nuevo_estado_orden):
     if tipo_orden=="Orden general": 
         ordenesGenerales= ordenGeneral.objects.filter(ticket=n_ticket).first()
         if ordenesGenerales:
+           
             if nuevo_estado_orden=="CAN":
+                print("aca el nuevo estado es cancelarla")
                 email_cliente=ordenesGenerales.client_email
                 cliente=client.objects.filter(email=email_cliente).first()
                 cliente.cantidad_ordenes_canceladas=cliente.cantidad_ordenes_canceladas+1
                 cliente.save()
+                ordenesGenerales.status=nuevo_estado_orden
+                ordenesGenerales.save()
+                return HttpResponse("ok")
             elif nuevo_estado_orden=="REX":
                 email_proveedor=ordenesGenerales.proveedor_email
                 proveedor=serviceProvider.objects.filter(email=email_proveedor).first()
                 if proveedor:
                     proveedor.cantidad_ordenes_rechazadas=proveedor.cantidad_ordenes_rechazadas+1 
                     proveedor.save()
+                    ordenesGenerales.status=nuevo_estado_orden
+                    ordenesGenerales.save()
+                    return HttpResponse("ok")
                 else:
                     compania=company.objects.filter(email=email_proveedor).first()
                     if compania: 
                         compania.cantidad_ordenes_rechazadas= compania.cantidad_ordenes_rechazadas+1
                         compania.save()
-
+                        ordenesGenerales.status=nuevo_estado_orden
+                        ordenesGenerales.save()
+                        return HttpResponse("ok")
+                    else: 
+                        return HttpResponse("bad")
             ordenesGenerales.status=nuevo_estado_orden
             ordenesGenerales.save()
             return HttpResponse("ok")
+            
         else: 
             return HttpResponse("bad")
     elif tipo_orden=="Orden de emergencia":
