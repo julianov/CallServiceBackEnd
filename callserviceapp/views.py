@@ -7,7 +7,7 @@ from json import loads
 
 from callserviceapp.models import  chat, client, item_company, nuevo_chat, ordenEmergencia, ordenGeneral, serviceProvider, item
 from callserviceapp.models import company
-from callserviceapp.tasks import send_user_mail, send_proveedor_mail_new_orden
+from callserviceapp.tasks import send_orden_emergencia_varios, send_user_mail, send_proveedor_mail_new_orden
 
 from callserviceapp.utils import distanciaEnLaTierra, proveedoresRadio,proveedoresRadioOrdenEmergencia
 import random
@@ -525,6 +525,7 @@ def addRubro (request):
                     else: 
                         new.hace_orden_emergencia=True
 
+                    
                     new.radius=request.POST.get("radius")
                     new.qualification=0
                     new.publicidad=0
@@ -533,8 +534,14 @@ def addRubro (request):
                     new.ciudad=request.POST.get("ciudad")
                     new.domicilio_calle= request.POST.get("calle") 
                     new.domicilio_numeracion=request.POST.get("calle-numeracion")
-                    new.posicion_lat= posicion_global[0]
-                    new.posicion_long= posicion_global[1]                    
+
+                    if len (posicion_global) > 1:
+                        new.posicion_lat= posicion_global[0]
+                        new.posicion_long= posicion_global[1]
+                    else:
+                        new.posicion_lat=0
+                        new.posicion_long=0
+                  
                     new.description=request.POST.get("description")
                     new.days_of_works=request.POST.get("days_of_works")
                     new.hour_init=request.POST.get("hour_init")
@@ -1084,11 +1091,54 @@ def pedirOrdenGeneral (request):
                 if not rubro:
                     return HttpResponse("bad")
                 else:
-                    if ordenGeneral.objects.filter(client_email=clienteEmail, proveedor_email=ProveedorEmail).exclude(status="CAN").exclude( status="REX").exclude( status="RED"):
-                        return HttpResponse("ya hay una orden")
+                    print("bueno llego aquì")
+                    print(itemProveedor)
+                    print("asdfasdf")
+                    print (ordenGeneral.objects.filter(client_email=clienteEmail, proveedor_email=ProveedorEmail).exclude(status="CAN").exclude( status="REX").exclude( status="RED").first())
+                    print("/////////////////////////////////////////////////////////////")
+                    if ordenGeneral.objects.filter(client_email=clienteEmail, proveedor_email=ProveedorEmail).exclude(status="CAN").exclude( status="REX").exclude( status="RED").first():
+                        if ordenGeneral.objects.filter(client_email=clienteEmail, proveedor_email=ProveedorEmail).exclude(status="CAN").exclude( status="REX").exclude( status="RED").first().rubro.items==itemProveedor:
+                            print("deberia decir que ya hay una orden aqui")
+                            return HttpResponse("ya hay una orden")
+                        else:
+                            new=ordenGeneral()
+                            new.status="ENV"
+                            new.rubro=rubro
+                            #new.rubro_company=""
+                            new.location_lat= clienteLat
+                            new.location_long=clienteLong
+                            new.tituloPedido=tituloPedido
+                            if diaPedido and diaPedido!=None:
+                                new.day=diaPedido
+                            else: 
+                                new.day=datetime.date(1997, 10, 19)
+                            if horaPedido and horaPedido!=None:
+                                new.time=horaPedido
+                            else: 
+                                new.time=datetime.time(0, 0, 0)
+                            new.problem_description=descripcion_problema
+                            new.direccion=direccion_pedido
+                            if request.FILES.get("imagen1"):
+                                new.picture1= request.FILES.get("imagen1")
+                            if request.FILES.get("imagen2"):
+                                new.picture2=request.FILES.get("imagen2")
+
+                            new.client_email=clienteEmail
+                            new.proveedor_email=ProveedorEmail
+                            ticket_numero=ordenGeneral.objects.count()+ordenEmergencia.objects.count()+1000
+                            new.ticket=ticket_numero
+                            new.motivo_rechazo=""
+                            new.resena_al_proveedor=""
+                            new.resena_al_cliente=""
+                            new.save()
+                        
+                            try:
+                                send_proveedor_mail_new_orden.delay(ticket_numero, ProveedorEmail, client_.first().name+" "+client_.first().last_name)
+                            except:
+                                print("problem found at send proveedor mail new orden")
+                            return HttpResponse(ticket_numero) 
                     else:
                         new=ordenGeneral()
-                        
                         new.status="ENV"
                         new.rubro=rubro
                         #new.rubro_company=""
@@ -1939,141 +1989,72 @@ def chatSinLeer (request,email):
 
 @csrf_exempt
 def pedirOrdenEmergencia (request):
+    return HttpResponse("es lo que ba abajo")
+'''
+@csrf_exempt
+def pedirOrdenEmergencia (request):
     if request.method == 'POST':
 
+        picture1=""
+        picture2=""
         categoria=request.POST.get("categoria")
         clienteEmail=request.POST.get("clienteEmail")
         clienteLat=request.POST.get("clienteLat")
         clienteLong=request.POST.get("clienteLong")
         tituloPedido=request.POST.get("tituloPedido")
         descripcion_problema=request.POST.get("descripcion_problema")
+        if request.FILES.get("imagen1"):
+            picture1= request.FILES.get("imagen1")
+        if request.FILES.get("imagen2"):
+            picture2=request.FILES.get("imagen2")
 
         if categoria and clienteEmail and clienteLat and clienteLong and tituloPedido and descripcion_problema:
             
             array=[]
 
             datos_independiente=item.objects.exclude(radius=0).exclude(hace_orden_emergencia=False).order_by('-publicidad','-qualification')
-            proveedoresRadio(1,array,datos_independiente,clienteLat,clienteLong,0,30,6)
+            proveedoresRadio(1,array,datos_independiente,clienteLat,clienteLong,0,30,3)
                    
             datos_companias=item_company.objects.exclude(radius=0).exclude(hace_orden_emergencia=False).order_by('-publicidad','-qualification')
-            proveedoresRadio(2,array,datos_companias,clienteLat,clienteLong,0,30,6)
+            proveedoresRadio(2,array,datos_companias,clienteLat,clienteLong,0,30,3)
             
-            if len(array)<=5:
+            if len(array)<=3:
                 proveedoresRadio(1,array,datos_independiente,clienteLat,clienteLong,30,50,6)        
                 proveedoresRadio(2,array,datos_companias,clienteLat,clienteLong,30,50,6)
                 if len(array)==0:
                     return HttpResponse("bad")
                 else:
                     return HttpResponse("aca tiene que ir algo y no hacer algo en el model")
+            else: 
+
         else:
             return HttpResponse("bad")
 
 
+def pedirOE(array_proveedores, categoria, clienteEmail, clienteLat, clienteLong, tituloPedido,descripcion_problema, picture1,picture2): 
+    new=ordenEmergencia()
+    new.status ="ENV"
+    new.rubro= categoria
+    new.client_email = clienteEmail
+    new.proveedor_email=
+    new.fecha_creacion=
+    new.ticket =  ordenGeneral.objects.count()+ordenEmergencia.objects.count()+1000
+    new.location_cliente_lat = clienteLat
+    new.location_cliente_long = clienteLong
+    new.tituloPedido = tituloPedido
+    new.problem_description = descripcion_problema
+    if picture1!="":
+        new.picture1=picture1
+    if picture2!="":
+        new.picture2=picture2
+                        
+    new.save()
 
-
-
+    try:
+        send_orden_emergencia_varios.delay(ticket_numero, array_proveedores, client_.name+" "+client_.last_name)
+    except:
+        print("problem found at send proveedor mail new orden")
+    return HttpResponse(ticket_numero) 
 
 
 '''
-@csrf_exempt
-def pedirOrdenEmergencia (request):
-
-    if request.method == 'POST': 
-    
-        
-        clienteEmail=request.POST.get("clienteEmail")
-        vieneADomicilio=request.POST.get("vieneADomicilio")
-        itemProveedor=request.POST.get("itemProveedor")
-        clienteLat=request.POST.get("clienteLat")
-        clienteLong=request.POST.get("clienteLong")
-        tituloPedido=request.POST.get("tituloPedido")
-        descripcion_problema=request.POST.get("descripcion_problema")
-
-        client_=client.objects.filter(email=clienteEmail)
-        array=[]
-        
-        if vieneADomicilio:
-            #si vieneADomicilio es igual a true entonces la solicitud es solo a proveedores que van a los lugares de los clientes.
-            proveedoresindependientes=item.objects.filter(items=itemProveedor).filter(radius_gt=10).order_by('-publicidad','-qualification')
-            proveedorescompanias=item_company.objects.filter(items=itemProveedor).filter(radius_gt=10).order_by('-publicidad','-qualification')
-            proveedoresRadio(1,array,proveedoresindependientes,clienteLat,clienteLong,0,30,3)
-            proveedoresRadio(2,array,proveedorescompanias,clienteLat,clienteLong,0,30,3)
-
-            proveedorSleccionado=ordenarProveedores(array)
-
-            proveedor= Proveedor ()
-            proveedor.proveedor_company=proveedorSleccionado
-            proveedor.item=itemProveedor
-            proveedor.save()
-
-            new=ordenEmergencia()
-                
-            new.status=order.ENV
-            new.location_lat= clienteLat
-            new.location_long=clienteLong
-            new.tituloPedido=tituloPedido
-            new.problem_description=descripcion_problema
-            if request.FILES.get("imagen1"):
-                new.picture1= request.FILES.get("imagen1")
-            if request.FILES.get("imagen2"):
-                new.picture2=request.FILES.get("imagen2")
-            new.save()
-
-            og=order()
-            og.client=client_.first()
-            og.proveedor=proveedor
-                
-            ticket_numero=order.objects.count()+1000
-            og.ticket=ticket_numero 
-            og.orden_general=new
-            og.save()
-
-            try:
-                send_proveedor_mail_new_orden(ticket_numero, proveedorSleccionado.email, client_.name+" "+client_.last_name)
-            except:
-                print("problem found at send proveedor mail new orden")
-            return JsonResponse(proveedorSleccionado, safe=False)
-
-        else:
-            proveedoresindependientes=item.objects.filter(items=itemProveedor).order_by('-publicidad','-qualification')
-            proveedorescompanias=item_company.objects.filter(items=itemProveedor).order_by('-publicidad','-qualification')
-            proveedoresRadio(1,array,proveedoresindependientes,clienteLat,clienteLong,0,30,3)
-            proveedoresRadio(2,array,proveedorescompanias,clienteLat,clienteLong,0,30,3)
-
-            proveedorSleccionado=ordenarProveedores(array)
-
-            proveedor= Proveedor ()
-            proveedor.proveedor_company=proveedorSleccionado
-            proveedor.item=itemProveedor
-            proveedor.save()
-
-            new=ordenEmergencia()
-                
-            new.status=order.ENV
-            new.location_lat= clienteLat
-            new.location_long=clienteLong
-            new.tituloPedido=tituloPedido
-            new.problem_description=descripcion_problema
-            if request.FILES.get("imagen1"):
-                new.picture1= request.FILES.get("imagen1")
-            if request.FILES.get("imagen2"):
-                new.picture2=request.FILES.get("imagen2")
-            new.save()
-
-            og=order()
-            og.client=client_.first()
-            og.proveedor=proveedor
-                
-            ticket_numero=order.objects.count()+1000
-            og.ticket=ticket_numero 
-            og.orden_general=new
-            og.save()
-            
-            try:
-                send_proveedor_mail_new_orden(ticket_numero, proveedorSleccionado.email, client_.name+" "+client_.last_name)
-            except:
-                print("problem found at send proveedor mail new orden")
-            return JsonResponse(proveedorSleccionado, safe=False)
-'''
-    
-

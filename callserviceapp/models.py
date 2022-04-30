@@ -252,12 +252,11 @@ class ordenEmergencia (models.Model):
     ]
     status = models.CharField(max_length=3,choices= STATUS,default= "SO")
 
-    rubro_requerido= models.TextField(blank=True)
+    rubro= models.TextField(blank=True)
     lista_proveedores = models.ForeignKey (listraProveedoresOrdenEmergencia, default=None ,on_delete=models.CASCADE)
 
     client_email = models.EmailField(blank=True)
     proveedor_email=models.EmailField(blank=True)
-    tiempo_respuesta_promedio=models.FloatField(default=1000)
     
     fecha_creacion=models.DateField( auto_now_add=True)
     ticket =  models.IntegerField(default=1000, blank=True)

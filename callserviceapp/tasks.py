@@ -17,7 +17,6 @@ DEFAULT_FROM_EMAIL = 'default from email'
 
 @shared_task()
 def send_user_mail(randomNumber, email):
-    print("hola")
     subject = 'Validación de e-mail - ServicesYA'
     cuerpo="Su número de validación es: "+str(randomNumber)
 
@@ -27,10 +26,24 @@ def send_user_mail(randomNumber, email):
 
 @shared_task()
 def send_proveedor_mail_new_orden(ticket, email, usuario):
-    print("se ejecutó con celery")
     subject = "Nueva orden de servicio - Ticket: "+str(ticket)+" - ServicesYA!"
     cuerpo = "Posee nueva solicitud de trabajo."+'\n'+'\n' + "Solicitud creada por: "+str(usuario)+'\n'
 
     #message.attach_alternative(content, 'text/html')
     send_mail(subject, cuerpo,'servidor.ssmtp@gmail.com', [email],fail_silently = False) #Destinatario)
     return 1
+
+
+
+@shared_task()
+def send_orden_emergencia_varios(ticket, email , usuario):
+    
+    for e in email:
+
+        subject = "Orden de EMERGENCIA - Ticket: "+str(ticket)+" - ServicesYA!"
+        cuerpo = "Orden de emergencia"+'\n'+'\n'+"Posee nueva solicitud de trabajo."+'\n'+'\n' + "Solicitud creada por: "+str(usuario)+'\n'
+
+        #message.attach_alternative(content, 'text/html')
+        send_mail(subject, cuerpo,'servidor.ssmtp@gmail.com', [e],fail_silently = False) #Destinatario)
+    return 1
+
