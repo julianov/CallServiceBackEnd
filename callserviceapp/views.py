@@ -1990,19 +1990,20 @@ def chatSinLeer (request,email):
 @csrf_exempt
 def pedirOrdenEmergencia (request):
     return HttpResponse("es lo que ba abajo")
-'''
+
 @csrf_exempt
 def pedirOrdenEmergencia (request):
     if request.method == 'POST':
-
+        
         picture1=""
         picture2=""
-        categoria=request.POST.get("categoria")
         clienteEmail=request.POST.get("clienteEmail")
         clienteLat=request.POST.get("clienteLat")
         clienteLong=request.POST.get("clienteLong")
+        categoria=request.POST.get("categoria")
         tituloPedido=request.POST.get("tituloPedido")
         descripcion_problema=request.POST.get("descripcion_problema")
+        
         if request.FILES.get("imagen1"):
             picture1= request.FILES.get("imagen1")
         if request.FILES.get("imagen2"):
@@ -2024,14 +2025,23 @@ def pedirOrdenEmergencia (request):
                 if len(array)==0:
                     return HttpResponse("bad")
                 else:
-                    return HttpResponse("aca tiene que ir algo y no hacer algo en el model")
+                    #aca tiene que ir algo, tenemos proveedores. Que podemos hacer, bueno lo que va en la fucnion, nuevaOrdenEmergencia
+                    nuevaOrdenEmergencia(array, categoria, clienteEmail, clienteLat, clienteLong, tituloPedido, descripcion_problema, picture1, picture2)
+                    #return HttpResponse("aca tiene que ir algo y no hacer algo en el model")
             else: 
+                #aca tengo que poner algo
+                nuevaOrdenEmergencia(array, categoria, clienteEmail, clienteLat, clienteLong, tituloPedido, descripcion_problema, picture1, picture2)
 
         else:
             return HttpResponse("bad")
 
+        
 
-def pedirOE(array_proveedores, categoria, clienteEmail, clienteLat, clienteLong, tituloPedido,descripcion_problema, picture1,picture2): 
+def nuevaOrdenEmergencia(array_proveedores, categoria, clienteEmail, clienteLat, clienteLong, tituloPedido,descripcion_problema, picture1,picture2): 
+    array=[]
+    for proveedor in array_proveedores: 
+        array.append(proveedor.email)
+        aca lo mejor es crear nuevo modelo de base de datos.
     new=ordenEmergencia()
     new.status ="ENV"
     new.rubro= categoria
@@ -2046,7 +2056,7 @@ def pedirOE(array_proveedores, categoria, clienteEmail, clienteLat, clienteLong,
     if picture1!="":
         new.picture1=picture1
     if picture2!="":
-        new.picture2=picture2
+        new.pict ure2=picture2
                         
     new.save()
 
