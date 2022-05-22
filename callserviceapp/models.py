@@ -253,7 +253,6 @@ class ordenEmergencia (models.Model):
     status = models.CharField(max_length=3,choices= STATUS,default= "SO")
 
     rubro= models.TextField(blank=True)
-    lista_proveedores = models.ForeignKey (listraProveedoresOrdenEmergencia, default=None ,on_delete=models.CASCADE)
 
     client_email = models.EmailField(blank=True)
     proveedor_email=models.EmailField(blank=True)
@@ -277,6 +276,21 @@ class ordenEmergencia (models.Model):
     calificacion_cliente=models.IntegerField(default=0)
     resena_al_proveedor=models.TextField(default = None, blank=True)    
     resena_al_cliente=models.TextField(default = None, blank=True)  
+
+
+class ordenEmergenciaLista (models.Model):
+    STATUS = [
+        ("CE","CORREO ENVIADO"),
+        ("CR","CORREO RECIBIDO"),
+        ("OA","ORDEN ACEPTADA"),
+        ("OR","ORDEN RECHAZADA"),
+        ("OD","ORDEN DESACTIVADA"),
+    ]
+
+    ticket = models.IntegerField(default=1000, blank=True) 
+    proveedor_email=models.EmailField(blank=True)
+    status = models.CharField(max_length=3,choices= STATUS,default= "SO")
+
 
 class chat (models.Model): 
     id = models.AutoField(primary_key=True)

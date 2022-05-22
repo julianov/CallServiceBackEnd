@@ -5,11 +5,11 @@ from django.http import HttpResponse
 from django.http import JsonResponse
 from json import loads
 
-from callserviceapp.models import  chat, client, item_company, nuevo_chat, ordenEmergencia, ordenGeneral, serviceProvider, item
+from callserviceapp.models import  chat, client, item_company, nuevo_chat, ordenEmergencia, ordenEmergenciaLista, ordenGeneral, serviceProvider, item
 from callserviceapp.models import company
-from callserviceapp.tasks import send_orden_emergencia_varios, send_user_mail, send_proveedor_mail_new_orden
+from callserviceapp.tasks import send_orden_emergencia, send_user_mail, send_proveedor_mail_new_orden
 
-from callserviceapp.utils import distanciaEnLaTierra, proveedoresRadio,proveedoresRadioOrdenEmergencia
+from callserviceapp.utils import distanciaEnLaTierra, proveedoresRadio
 import random
 
 import base64
@@ -18,6 +18,9 @@ import datetime
 import datetime
 
 from callservices.celery import debug_task
+
+from django.views.decorators.csrf import csrf_exempt
+
 
 # Create your views here.
 
@@ -162,52 +165,63 @@ def homeClientePedirDatos (request , email,rubro, tipoPedido,lat, long):
             else: 
                 return HttpResponse("bad")
 
+@csrf_exempt 
+def register (request):
+    print("llego aca")
+    if request.method == 'POST': 
+        print("paso por aca")
+        type=request.POST.get("tipo")
+        email=request.POST.get("email")
+        password =request.POST.get("password")
 
-def register (request, type, email, password):
-    if type == '1':
-        #nuevo usuario
-        cliente=client.objects.filter(email=email)
-        proveedor_independiente=serviceProvider.objects.filter(email=email)
-        proveedor_empresa=company.objects.filter(email=email)
-        
-        if not (cliente or proveedor_independiente or proveedor_empresa):      
-            randomNumber = random.randint(1, 99999)
-            send_user_mail.delay(randomNumber, email)
-            b = client( email=email, password=password)
-            b.save()
-            return HttpResponse(randomNumber)
+        print(email)
+        print(password)
+        if type == '1':
+            print("es usuario comun")
+            #nuevo usuario
+            cliente=client.objects.filter(email=email)
+            proveedor_independiente=serviceProvider.objects.filter(email=email)
+            proveedor_empresa=company.objects.filter(email=email)
+            
+            if not (cliente or proveedor_independiente or proveedor_empresa):     
+                print("entramos aqui") 
+                randomNumber = random.randint(1, 99999)
+                send_user_mail.delay(randomNumber, email)
+                b = client( email=email, password=password)
+                b.save()
+                return HttpResponse(randomNumber)
+            else:
+                return HttpResponse("User alredy taken")
+        if type == '2':
+            #nuevo proveedor de servicios
+            cliente=client.objects.filter(email=email)
+            proveedor_independiente=serviceProvider.objects.filter(email=email)
+            proveedor_empresa=company.objects.filter(email=email)
+            
+            if not (cliente and proveedor_independiente and proveedor_empresa):
+                randomNumber = random.randint(1, 99999)
+                send_user_mail.delay(randomNumber, email)
+                b = serviceProvider( email=email, password=password)
+                b.save()
+                return HttpResponse(randomNumber)
+            else:
+                return HttpResponse("User alredy taken")
+        if type == '3':
+            #nueva empresa
+            cliente=client.objects.filter(email=email)
+            proveedor_independiente=serviceProvider.objects.filter(email=email)
+            proveedor_empresa=company.objects.filter(email=email)
+            
+            if not (cliente and proveedor_independiente and proveedor_empresa):
+                randomNumber = random.randint(1, 99999)
+                send_user_mail.delay(randomNumber, email)
+                b = company( email=email, password=password)
+                b.save()
+                return HttpResponse(randomNumber)
+            else:
+                return HttpResponse("User alredy taken")
         else:
-            return HttpResponse("User alredy taken")
-    if type == '2':
-        #nuevo proveedor de servicios
-        cliente=client.objects.filter(email=email)
-        proveedor_independiente=serviceProvider.objects.filter(email=email)
-        proveedor_empresa=company.objects.filter(email=email)
-        
-        if not (cliente and proveedor_independiente and proveedor_empresa):
-            randomNumber = random.randint(1, 99999)
-            send_user_mail.delay(randomNumber, email)
-            b = serviceProvider( email=email, password=password)
-            b.save()
-            return HttpResponse(randomNumber)
-        else:
-            return HttpResponse("User alredy taken")
-    if type == '3':
-        #nueva empresa
-        cliente=client.objects.filter(email=email)
-        proveedor_independiente=serviceProvider.objects.filter(email=email)
-        proveedor_empresa=company.objects.filter(email=email)
-        
-        if not (cliente and proveedor_independiente and proveedor_empresa):
-            randomNumber = random.randint(1, 99999)
-            send_user_mail.delay(randomNumber, email)
-            b = company( email=email, password=password)
-            b.save()
-            return HttpResponse(randomNumber)
-        else:
-            return HttpResponse("User alredy taken")
-    else:
-        return HttpResponse("No es cliente normal")
+            return HttpResponse("No es cliente normal")
 
 def askPersonalInfo(request,type,email):
     if type=="1":
@@ -2037,34 +2051,27 @@ def pedirOrdenEmergencia (request):
 
         
 
-def nuevaOrdenEmergencia(array_proveedores, categoria, clienteEmail, clienteLat, clienteLong, tituloPedido,descripcion_problema, picture1,picture2): 
+def nuevaOrdenEmergencia(array_proveedores, categoria, tituloPedido,descripcion_problema): 
     array=[]
+    ticket =  ordenGeneral.objects.count()+ordenEmergencia.objects.count()+1000
+
     for proveedor in array_proveedores: 
-        array.append(proveedor.email)
-        aca lo mejor es crear nuevo modelo de base de datos.
-    new=ordenEmergencia()
-    new.status ="ENV"
-    new.rubro= categoria
-    new.client_email = clienteEmail
-    new.proveedor_email=
-    new.fecha_creacion=
-    new.ticket =  ordenGeneral.objects.count()+ordenEmergencia.objects.count()+1000
-    new.location_cliente_lat = clienteLat
-    new.location_cliente_long = clienteLong
-    new.tituloPedido = tituloPedido
-    new.problem_description = descripcion_problema
-    if picture1!="":
-        new.picture1=picture1
-    if picture2!="":
-        new.pict ure2=picture2
-                        
-    new.save()
-
-    try:
-        send_orden_emergencia_varios.delay(ticket_numero, array_proveedores, client_.name+" "+client_.last_name)
-    except:
-        print("problem found at send proveedor mail new orden")
-    return HttpResponse(ticket_numero) 
+        new=ordenEmergenciaLista()
+        new.ticket=ticket
+        new.status="CE"
+        new.proveedor_email=proveedor.email
+        print("**************************************")
+        print("el email del proveedor es:")
+        print(proveedor.email)
+        print("**************************************")
+        try:
+            send_orden_emergencia.delay(ticket, proveedor.email, tituloPedido, categoria,descripcion_problema)
+        except:
+            print("problem found at send proveedor mail new orden")
+        new.save()
 
 
-'''
+    return HttpResponse(ticket) 
+
+
+

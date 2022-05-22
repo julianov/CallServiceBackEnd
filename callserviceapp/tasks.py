@@ -36,14 +36,12 @@ def send_proveedor_mail_new_orden(ticket, email, usuario):
 
 
 @shared_task()
-def send_orden_emergencia_varios(ticket, email , usuario):
+def send_orden_emergencia(ticket, email ,tituloPedido, categoria,descripcion_problema):
     
-    for e in email:
+    subject = "ORDEN DE EMERGENCIA - Ticket: "+str(ticket)+" - ServicesYA!"
+    cuerpo = "Orden de emergencia"+'\n'+'\n'+"Posee nueva solicitud de trabajo."+'\n'+'\n' + "Categoría: "+str(categoria)+'\n'+'\n'+str(tituloPedido)+'\n'+'\n'+descripcion_problema
 
-        subject = "Orden de EMERGENCIA - Ticket: "+str(ticket)+" - ServicesYA!"
-        cuerpo = "Orden de emergencia"+'\n'+'\n'+"Posee nueva solicitud de trabajo."+'\n'+'\n' + "Solicitud creada por: "+str(usuario)+'\n'
-
-        #message.attach_alternative(content, 'text/html')
-        send_mail(subject, cuerpo,'servidor.ssmtp@gmail.com', [e],fail_silently = False) #Destinatario)
+    #message.attach_alternative(content, 'text/html')
+    send_mail(subject, cuerpo,'servidor.ssmtp@gmail.com', [email],fail_silently = False) #Destinatario)
     return 1
 

@@ -31,7 +31,7 @@ urlpatterns = [
 
     path('proveedor/ubicacion/<email>/<lat>/<long>', proveedorUbicacion),
     
-    path('registro/<type>/<email>/<password>', register),
+    path('registro/', register),
 
     path('completarinfo/completar',completeInfo),
     path('cambiarInfoPersonal', nuevaInfoPersonal),
