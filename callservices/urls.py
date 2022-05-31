@@ -16,10 +16,11 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 from django.urls import path
-from callserviceapp.views import Buscar, addRubro, agregarFotoOrden, askPersonalInfo, cambiarEstadoOrden, chatMensaje, chatSinLeer, chatVer, completeInfo, completeInfoRubros, consultarOrdenParticular, consultarOrdenes, consultarTodasLasOrdenes, consultarTodasLasOrdenesCanceladas, consultarTodasLasOrdenesCurso, consultarTodasLasOrdenesFinalizadas, datosCliente, datosProveedor, deleteRubro, finalizarOrdenCliente, finalizarOrdenProveedor, homeCliente, homeClientePedirDatos, login, masInfoOrdenCliente, masInfoOrdenProveedor, modificarRubro, nuevaInfoPersonal, pedirOrdenEmergencia, pedirOrdenGeneral, presupuestoCliente, presupuestoProveedor, proveedorUbicacion,register, requestRubros, restarPassword, setNewPassword, verReseñas
 
 from django.conf import settings
 from django.conf.urls.static import static
+
+from callserviceapp.views import Buscar, addRubro, agregarFotoOrden, askPersonalInfo, cambiarEstadoOrden, chatMensaje, chatSinLeer, chatVer, completeInfo, completeInfoRubros, consultarOrdenParticular, consultarOrdenes, consultarTodasLasOrdenes, consultarTodasLasOrdenesCanceladas, consultarTodasLasOrdenesCurso, consultarTodasLasOrdenesFinalizadas, datosCliente, datosProveedor, deleteRubro, finalizarOrdenCliente, finalizarOrdenProveedor, homeCliente, homeClientePedirDatos, login, masInfoOrdenCliente, masInfoOrdenProveedor, modificarRubro, nuevaInfoPersonal, pedirOrdenEmergencia, pedirOrdenGeneral, presupuestoCliente, presupuestoProveedor, proveedorUbicacion, register, requestRubros, restarPassword, setNewPassword, verReseñas
 
 
 urlpatterns = [
@@ -31,7 +32,7 @@ urlpatterns = [
 
     path('proveedor/ubicacion/<email>/<lat>/<long>', proveedorUbicacion),
     
-    path('registro/', register),
+    path('registro', register),
 
     path('completarinfo/completar',completeInfo),
     path('cambiarInfoPersonal', nuevaInfoPersonal),

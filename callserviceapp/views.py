@@ -167,7 +167,6 @@ def homeClientePedirDatos (request , email,rubro, tipoPedido,lat, long):
 
 @csrf_exempt 
 def register (request):
-    print("llego aca")
     if request.method == 'POST': 
         print("paso por aca")
         type=request.POST.get("tipo")
@@ -189,6 +188,8 @@ def register (request):
                 send_user_mail.delay(randomNumber, email)
                 b = client( email=email, password=password)
                 b.save()
+                print("entramos aqui") 
+
                 return HttpResponse(randomNumber)
             else:
                 return HttpResponse("User alredy taken")
@@ -203,6 +204,7 @@ def register (request):
                 send_user_mail.delay(randomNumber, email)
                 b = serviceProvider( email=email, password=password)
                 b.save()
+                print("debe enviar numero random")
                 return HttpResponse(randomNumber)
             else:
                 return HttpResponse("User alredy taken")
@@ -300,16 +302,10 @@ def askPersonalInfo(request,type,email):
     else:
         return HttpResponse("Problema de sistema")
 
-
-
-
-
-from django.views.decorators.csrf import csrf_exempt
-
 @csrf_exempt 
 def completeInfo (request): 
     if request.method == 'POST': 
-        if(request.POST.get("tipo")=="1"):
+        if request.POST.get("tipo")=="1":
             objetos=client.objects.filter(email=request.POST.get("email"))
             if objetos:
                 modelo=objetos.first()
@@ -321,10 +317,8 @@ def completeInfo (request):
                 return HttpResponse("todo ok")
             else: 
                 return HttpResponse("no usuario registrado")
-        if(request.POST.get("tipo")=="2"):
-            objetos=serviceProvider.objects.filter(email=request.POST.get("email"))
-            
-            
+        if request.POST.get("tipo")=="2":
+            objetos=serviceProvider.objects.filter(email=request.POST.get("email"))            
             if objetos:
                 modelo=objetos.first()
                 modelo.name=request.POST.get("nombre")
@@ -336,7 +330,7 @@ def completeInfo (request):
                 return HttpResponse("todo ok")
             else: 
                 return HttpResponse("no usuario registrado")
-        if(request.POST.get("tipo")=="3"):
+        if request.POST.get("tipo")=="3":
             objetos=company.objects.filter(email=request.POST.get("email"))
             if objetos:
                 modelo=objetos.first()
@@ -354,10 +348,8 @@ def completeInfo (request):
 
 @csrf_exempt 
 def nuevaInfoPersonal (request): 
-    if request.method == 'POST':
-        
-
-        if(request.POST.get("tipo")=="1"):
+    if request.method == 'POST': 
+        if request.POST.get("tipo")=="1":
             objetos=client.objects.filter(email=request.POST.get("email"))
             if not objetos:
                 return HttpResponse("no ha sido posible")
@@ -374,10 +366,8 @@ def nuevaInfoPersonal (request):
                 new.qualification=request.POST.get("calificacion")
                 new.save() 
                 return HttpResponse("ok")
-
-        if(request.POST.get("tipo")=="2"):
+        elif request.POST.get("tipo")=="2":
             objetos_=serviceProvider.objects.filter(email=request.POST.get("email"))
-            
             if not objetos_:
                 return HttpResponse("no ha sido posible")
             else: 
@@ -390,13 +380,11 @@ def nuevaInfoPersonal (request):
                 new.name=request.POST.get("nombre")
                 new.last_name=request.POST.get("apellido")
                 new.picture= request.FILES.get("image")
-               # new.imagen_promocional= request.FILES.get("imagenPromocional")
+                # new.imagen_promocional= request.FILES.get("imagenPromocional")
                 new.save() 
                 return HttpResponse("ok")
-
-        if(request.POST.get("tipo")=="3"):
+        elif request.POST.get("tipo")=="3":
             objetos=company.objects.filter(email=request.POST.get("email"))
-           
             if not objetos:
                 return HttpResponse("no ha sido posible")
             else: 
@@ -409,15 +397,18 @@ def nuevaInfoPersonal (request):
                 new.company_name=request.POST.get("nombre")
                 new.company_description=request.POST.get("descripcion")
                 new.picture= request.FILES.get("image")
-               # new.imagen_promocional= request.FILES.get("imagenPromocional")
+                # new.imagen_promocional= request.FILES.get("imagenPromocional")
                 new.save()
                 return HttpResponse("ok")
+        else: 
+            return HttpResponse("bad")
+    else:
+        return HttpResponse("bad")
 
 #aca tira un error che en complete inforubros por algo relacionado al item publicidad
 
 @csrf_exempt 
 def completeInfoRubros (request,modo,tipo,email):
-   
     if modo=="pedir":
         if tipo=="2":
             proveedores=serviceProvider.objects.filter(email=email)
