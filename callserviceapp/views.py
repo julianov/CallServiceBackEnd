@@ -1992,14 +1992,10 @@ def chatSinLeer (request,email):
     else:
         return HttpResponse("bad")
 
-@csrf_exempt
-def pedirOrdenEmergencia (request):
-    return HttpResponse("es lo que ba abajo")
 
 @csrf_exempt
 def pedirOrdenEmergencia (request):
     if request.method == 'POST':
-        
         picture1=""
         picture2=""
         clienteEmail=request.POST.get("clienteEmail")
@@ -2065,4 +2061,14 @@ def nuevaOrdenEmergencia(array_proveedores, categoria, tituloPedido,descripcion_
     return HttpResponse(ticket) 
 
 
+def aceptarOrdenEmergenciaProveedor (request): 
+    if request.method == 'POST':
+        email_proveedor=request.POST.get("emailProveedor")
+        ticket = request.POST.get("ticket")
+        
+        new = ordenEmergencia ()
+        new.status="ACE"
+        proveedor_email=email_proveedor
+        aca deberia ver donde mas se guarda lo de la ordenEmergencia y como se borra lo de la ordenList
+    
 
