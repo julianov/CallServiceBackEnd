@@ -242,7 +242,6 @@ class ordenEmergencia (models.Model):
 
     STATUS = [
         ("ENV","ENVIADA"),
-        ("REC","RECIBIDA"),
         ("ACE","ACEPTADA"),
         ("EVI","EN VIAJE"),
         ("ENS","EN SITIO"),

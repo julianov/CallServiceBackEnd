@@ -2026,21 +2026,45 @@ def pedirOrdenEmergencia (request):
                 if len(array)==0:
                     return HttpResponse("bad")
                 else:
-                    #aca tiene que ir algo, tenemos proveedores. Que podemos hacer, bueno lo que va en la fucnion, nuevaOrdenEmergencia
-                    nuevaOrdenEmergencia(array, categoria, clienteEmail, clienteLat, clienteLong, tituloPedido, descripcion_problema, picture1, picture2)
-                    #return HttpResponse("aca tiene que ir algo y no hacer algo en el model")
+                    ticket =  ordenGeneral.objects.count()+ordenEmergencia.objects.count()+1000
+                    new=ordenEmergencia()
+                    new.status="ENV"
+                    new.rubro= categoria
+                    new.client_email =clienteEmail
+                    #proveedor_email=models.EmailField(blank=True)
+                    #fecha_creacion=models.DateField( auto_now_add=True)
+                    new.ticket =  ticket
+                    new.location_cliente_lat =  clienteLat
+                    new.location_cliente_long = clienteLong 
+                    new.tituloPedido = tituloPedido
+                    new.problem_description = descripcion_problema
+                    new.picture1=picture1
+                    new.picture2=picture2
+                    nuevaOrdenEmergencia(ticket, array, categoria, clienteEmail, clienteLat, clienteLong, tituloPedido, descripcion_problema, picture1, picture2)
             else: 
-                #aca tengo que poner algo
-                nuevaOrdenEmergencia(array, categoria, clienteEmail, clienteLat, clienteLong, tituloPedido, descripcion_problema, picture1, picture2)
+                ticket =  ordenGeneral.objects.count()+ordenEmergencia.objects.count()+1000
+                new=ordenEmergencia()
+                new.status="ENV"
+                new.rubro= categoria
+                new.client_email =clienteEmail
+                #proveedor_email=models.EmailField(blank=True)
+                #fecha_creacion=models.DateField( auto_now_add=True)
+                new.ticket =  ticket
+                new.location_cliente_lat =  clienteLat
+                new.location_cliente_long = clienteLong 
+                new.tituloPedido = tituloPedido
+                new.problem_description = descripcion_problema
+                new.picture1=picture1
+                new.picture2=picture2
+                nuevaOrdenEmergencia(ticket, array, categoria, clienteEmail, clienteLat, clienteLong, tituloPedido, descripcion_problema, picture1, picture2)
 
         else:
             return HttpResponse("bad")
 
         
 
-def nuevaOrdenEmergencia(array_proveedores, categoria, tituloPedido,descripcion_problema): 
+def nuevaOrdenEmergencia(ticket, array_proveedores, categoria, tituloPedido,descripcion_problema): 
     array=[]
-    ticket =  ordenGeneral.objects.count()+ordenEmergencia.objects.count()+1000
 
     for proveedor in array_proveedores: 
         new=ordenEmergenciaLista()
@@ -2053,22 +2077,26 @@ def nuevaOrdenEmergencia(array_proveedores, categoria, tituloPedido,descripcion_
         print("**************************************")
         try:
             send_orden_emergencia.delay(ticket, proveedor.email, tituloPedido, categoria,descripcion_problema)
+            new.save()
+            return HttpResponse(ticket) 
+
         except:
             print("problem found at send proveedor mail new orden")
-        new.save()
-
-
-    return HttpResponse(ticket) 
+            return HttpResponse("bad") 
+        
 
 
 def aceptarOrdenEmergenciaProveedor (request): 
     if request.method == 'POST':
         email_proveedor=request.POST.get("emailProveedor")
         ticket = request.POST.get("ticket")
-        
-        new = ordenEmergencia ()
-        new.status="ACE"
-        proveedor_email=email_proveedor
-        aca deberia ver donde mas se guarda lo de la ordenEmergencia y como se borra lo de la ordenList
+        orden=ordenEmergencia.objects.filter(ticket=ticket).first()
+        if orden: 
+            orden.status="ACE"
+            orden.proveedor_email=email_proveedor
+            orden.save()
+            return HttpResponse("ok")
+        else: 
+            return HttpResponse("bad")
     
 
