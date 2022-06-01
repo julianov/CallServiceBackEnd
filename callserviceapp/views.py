@@ -2099,4 +2099,18 @@ def aceptarOrdenEmergenciaProveedor (request):
         else: 
             return HttpResponse("bad")
     
+def rechazarOrdenEmergenciaDeProveedor (request): 
+    if request.method == 'POST':
+        email_proveedor=request.POST.get("emailProveedor")
+        ticket = request.POST.get("ticket")
+        orden=ordenEmergencia.objects.filter(ticket=ticket).first()
+        if orden: 
+            orden.status="ENV"
+            orden.proveedor_email=email_proveedor
+            orden.save()
+            aca poner que cuando se rechaza algo
+        else:
+            return HttpResponse("bad")
+
+
 
