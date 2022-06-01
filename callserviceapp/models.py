@@ -230,10 +230,6 @@ class ordenGeneral (models.Model):
     resena_al_cliente=models.TextField(default = None, blank=True)    
 
     
-class listraProveedoresOrdenEmergencia (models.Model):
-    id = models.AutoField(primary_key=True)
-    ticket =  models.IntegerField(default=1000, blank=True)
-    proveedor_email=models.EmailField(blank=True)
 
 
 class ordenEmergencia (models.Model):

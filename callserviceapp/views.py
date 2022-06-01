@@ -165,6 +165,13 @@ def homeClientePedirDatos (request , email,rubro, tipoPedido,lat, long):
             else: 
                 return HttpResponse("bad")
 
+
+
+
+
+########################################################################################3
+#Registro
+
 @csrf_exempt 
 def register (request):
     if request.method == 'POST': 
@@ -303,50 +310,6 @@ def askPersonalInfo(request,type,email):
         return HttpResponse("Problema de sistema")
 
 @csrf_exempt 
-def completeInfo (request): 
-    if request.method == 'POST': 
-        if request.POST.get("tipo")=="1":
-            objetos=client.objects.filter(email=request.POST.get("email"))
-            if objetos:
-                modelo=objetos.first()
-                modelo.name=request.POST.get("nombre")
-                modelo.last_name=request.POST.get("apellido")
-                modelo.picture= request.FILES.get("image")
-                modelo.qualification=0
-                modelo.save()
-                return HttpResponse("todo ok")
-            else: 
-                return HttpResponse("no usuario registrado")
-        if request.POST.get("tipo")=="2":
-            objetos=serviceProvider.objects.filter(email=request.POST.get("email"))            
-            if objetos:
-                modelo=objetos.first()
-                modelo.name=request.POST.get("nombre")
-                modelo.last_name=request.POST.get("apellido")
-                modelo.picture= request.FILES.get("image")
-               # modelo.imagen_promocional= request.FILES.get("imagenPromocional")
-                modelo.qualification=0
-                modelo.save()
-                return HttpResponse("todo ok")
-            else: 
-                return HttpResponse("no usuario registrado")
-        if request.POST.get("tipo")=="3":
-            objetos=company.objects.filter(email=request.POST.get("email"))
-            if objetos:
-                modelo=objetos.first()
-                modelo.company_name=request.POST.get("nombre")
-                modelo.company_description=request.POST.get("descripcion")
-                modelo.picture= request.FILES.get("image")
-              #  modelo.imagen_promocional= request.FILES.get("imagenPromocional")
-                modelo.qualification=0
-                modelo.save()
-                return HttpResponse("todo ok")
-            else: 
-                return HttpResponse("no usuario registrado")  
-        else:
-            return HttpResponse("no usuario registrado")
-
-@csrf_exempt 
 def nuevaInfoPersonal (request): 
     if request.method == 'POST': 
         if request.POST.get("tipo")=="1":
@@ -405,45 +368,52 @@ def nuevaInfoPersonal (request):
     else:
         return HttpResponse("bad")
 
-#aca tira un error che en complete inforubros por algo relacionado al item publicidad
-
 @csrf_exempt 
-def completeInfoRubros (request,modo,tipo,email):
-    if modo=="pedir":
-        if tipo=="2":
-            proveedores=serviceProvider.objects.filter(email=email)
-            if not proveedores:
-                return HttpResponse("No usuario registrado")
-            else:
-                rubros=item.objects.filter(provider=proveedores.first())
-                
-                if not rubros:
-                    return HttpResponse ("No hay rubros cargados")
-                else:                    
-                    x=[]
-                    for i in range(0, len(rubros)):
-                        
-                        x.append(rubros[i].items+"-")
-                    return HttpResponse(x)
-                    #aca tengo que devolver los tipos de rubros cargados
-        if tipo=="3":
-            empresa=company.objects.filter(email=email)
-            if not empresa:
-                return HttpResponse("No usuario registrado")
-            else:
-                rubros=item_company.objects.filter(provider=empresa.first())
-                
-                if not rubros:
-                    return HttpResponse ("No hay rubros cargados")
-                else:
-                    x=[]
-                    for i in range(0, len(rubros)):
-                        x.append(rubros[i].items+"-")
-                        
-                    return HttpResponse(x)
-    return HttpResponse("No usuario registrado")
+def completeInfo (request): 
+    if request.method == 'POST': 
+        if request.POST.get("tipo")=="1":
+            objetos=client.objects.filter(email=request.POST.get("email"))
+            if objetos:
+                modelo=objetos.first()
+                modelo.name=request.POST.get("nombre")
+                modelo.last_name=request.POST.get("apellido")
+                modelo.picture= request.FILES.get("image")
+                modelo.qualification=0
+                modelo.save()
+                return HttpResponse("todo ok")
+            else: 
+                return HttpResponse("no usuario registrado")
+        if request.POST.get("tipo")=="2":
+            objetos=serviceProvider.objects.filter(email=request.POST.get("email"))            
+            if objetos:
+                modelo=objetos.first()
+                modelo.name=request.POST.get("nombre")
+                modelo.last_name=request.POST.get("apellido")
+                modelo.picture= request.FILES.get("image")
+               # modelo.imagen_promocional= request.FILES.get("imagenPromocional")
+                modelo.qualification=0
+                modelo.save()
+                return HttpResponse("todo ok")
+            else: 
+                return HttpResponse("no usuario registrado")
+        if request.POST.get("tipo")=="3":
+            objetos=company.objects.filter(email=request.POST.get("email"))
+            if objetos:
+                modelo=objetos.first()
+                modelo.company_name=request.POST.get("nombre")
+                modelo.company_description=request.POST.get("descripcion")
+                modelo.picture= request.FILES.get("image")
+              #  modelo.imagen_promocional= request.FILES.get("imagenPromocional")
+                modelo.qualification=0
+                modelo.save()
+                return HttpResponse("todo ok")
+            else: 
+                return HttpResponse("no usuario registrado")  
+        else:
+            return HttpResponse("no usuario registrado")
 
-
+###############################################
+#RUBROS
 
 @csrf_exempt 
 def addRubro (request):
@@ -561,6 +531,44 @@ def addRubro (request):
                     return HttpResponse("rubro cargado")
                 else:
                     return HttpResponse("ha cargado la cantidad maxima de items")
+
+
+@csrf_exempt 
+def completeInfoRubros (request,modo,tipo,email):
+    if modo=="pedir":
+        if tipo=="2":
+            proveedores=serviceProvider.objects.filter(email=email)
+            if not proveedores:
+                return HttpResponse("No usuario registrado")
+            else:
+                rubros=item.objects.filter(provider=proveedores.first())
+                
+                if not rubros:
+                    return HttpResponse ("No hay rubros cargados")
+                else:                    
+                    x=[]
+                    for i in range(0, len(rubros)):
+                        
+                        x.append(rubros[i].items+"-")
+                    return HttpResponse(x)
+                    #aca tengo que devolver los tipos de rubros cargados
+        if tipo=="3":
+            empresa=company.objects.filter(email=email)
+            if not empresa:
+                return HttpResponse("No usuario registrado")
+            else:
+                rubros=item_company.objects.filter(provider=empresa.first())
+                
+                if not rubros:
+                    return HttpResponse ("No hay rubros cargados")
+                else:
+                    x=[]
+                    for i in range(0, len(rubros)):
+                        x.append(rubros[i].items+"-")
+                        
+                    return HttpResponse(x)
+    return HttpResponse("No usuario registrado")
+
 
 def requestRubros(request, tipo,email,rubro):
     if tipo=="2":
@@ -1070,6 +1078,106 @@ def verReseñas (request , email, cantida, tipo):
             
 ##########################################################################################################
 
+def datosCliente(request , n_ticket, tipo_orden):
+    if tipo_orden=="Orden general": 
+        
+        ordenesGenerales= ordenGeneral.objects.filter(ticket=n_ticket).first()
+        if ordenesGenerales:
+            cliente= client.objects.filter(email=ordenesGenerales.client_email).first()
+            if cliente:
+                imagen=""
+                if cliente.picture:
+                    imagen="data:image/png;base64,"+base64.b64encode(cliente.picture.read()).decode('ascii') 
+                return JsonResponse( {"nombre":cliente.name,"apellido":cliente.last_name, 
+                "imagen":imagen, "calificacion":cliente.qualification}, safe=False)
+
+            else: 
+                return HttpResponse("bad") 
+        else: 
+            return HttpResponse ("bad")
+    elif tipo_orden=="Orden de emergencia":
+        ordenesEmergencia= ordenEmergencia.objects.filter(ticket=n_ticket)
+        if ordenesEmergencia:
+            cliente= client.objects.filter(email=ordenesEmergencia.client_email).first()
+            if cliente:
+                imagen=""
+                if cliente.picture:
+                    imagen="data:image/png;base64,"+base64.b64encode(cliente.picture.read()).decode('ascii') 
+                return JsonResponse( {"nombre":cliente.name,"apellido":cliente.last_name, 
+                "imagen":imagen, "calificacion":cliente.qualification}, safe=False)
+
+            else: 
+                return HttpResponse("bad") 
+        else: 
+            return HttpResponse ("bad")
+    else: 
+        return HttpResponse("bad")
+
+
+def datosProveedor(request , n_ticket, tipo_orden):
+    if tipo_orden=="Orden general": 
+        ordenesGenerales= ordenGeneral.objects.filter(ticket=n_ticket).first()
+        if ordenesGenerales:
+            proveedor_independiente= serviceProvider.objects.filter(email=ordenesGenerales.proveedor_email).first()
+            if proveedor_independiente:
+                imagen=""
+                if proveedor_independiente.picture:
+                    imagen="data:image/png;base64,"+base64.b64encode(proveedor_independiente.picture.read()).decode('ascii') 
+                
+                rubro=item.objects.filter(provider=proveedor_independiente).first()
+                if rubro:
+                    calificacion=rubro.qualification
+                else: 
+                    calificacion="-"
+                return JsonResponse( {"nombre":proveedor_independiente.name,"apellido":proveedor_independiente.last_name, 
+                "imagen":imagen, "calificacion":calificacion}, safe=False)
+            else:
+                compania= company.objects.filter(email=ordenesGenerales.proveedor_email).first()
+                if compania:
+                    imagen=""
+                    if compania.picture:
+                        imagen="data:image/png;base64,"+base64.b64encode(compania.picture.read()).decode('ascii') 
+                    rubro=item_company.objects.filter(provider=proveedor_independiente).first()
+                    if rubro:
+                        calificacion=rubro.qualification
+                    else: 
+                        calificacion="-"
+                    return JsonResponse( {"nombre":compania.name,"apellido":compania.last_name, 
+                "imagen":imagen, "calificacion":calificacion}, safe=False)
+                else: 
+                    return HttpResponse("bad") 
+        else: 
+            return HttpResponse ("bad")
+
+    elif tipo_orden=="Orden de emergencia":
+        ordenesEmergencia= ordenEmergencia.objects.filter(ticket=n_ticket)
+        if ordenesEmergencia:
+            proveedor_independiente= serviceProvider.objects.filter(email=ordenesEmergencia.proveedor_email).first()
+            if proveedor_independiente:
+                imagen=""
+                if proveedor_independiente.picture:
+                    imagen="data:image/png;base64,"+base64.b64encode(proveedor_independiente.picture.read()).decode('ascii') 
+                return JsonResponse( {"nombre":proveedor_independiente.name,"apellido":proveedor_independiente.last_name, 
+                "imagen":imagen, "calificacion":proveedor_independiente.qualification}, safe=False)
+            else:
+                compania= company.objects.filter(email=ordenesEmergencia.proveedor_email).first()
+                if compania:
+                    imagen=""
+                    if compania.picture:
+                        imagen="data:image/png;base64,"+base64.b64encode(compania.picture.read()).decode('ascii') 
+                
+                    return JsonResponse( {"nombre":compania.name,"apellido":compania.last_name, 
+                "imagen":imagen, "calificacion":compania.qualification}, safe=False)
+                else: 
+                    return HttpResponse("bad") 
+        else: 
+            return HttpResponse ("bad")
+    else: 
+        return HttpResponse("bad")
+
+###########################################################################################
+#ORDEN GENERAL 
+
 @csrf_exempt
 def pedirOrdenGeneral (request):
     if request.method == 'POST': 
@@ -1230,6 +1338,7 @@ def pedirOrdenGeneral (request):
             else: 
                 return HttpResponse("bad")
 
+
 def consultarOrdenes(request , tipo,email):
     if tipo=="proveedor": 
         
@@ -1380,105 +1489,6 @@ def consultarOrdenes(request , tipo,email):
             return HttpResponse("bad")
     else:
         return HttpResponse("bad") 
-
-
-def datosCliente(request , n_ticket, tipo_orden):
-    if tipo_orden=="Orden general": 
-        
-        ordenesGenerales= ordenGeneral.objects.filter(ticket=n_ticket).first()
-        if ordenesGenerales:
-            cliente= client.objects.filter(email=ordenesGenerales.client_email).first()
-            if cliente:
-                imagen=""
-                if cliente.picture:
-                    imagen="data:image/png;base64,"+base64.b64encode(cliente.picture.read()).decode('ascii') 
-                return JsonResponse( {"nombre":cliente.name,"apellido":cliente.last_name, 
-                "imagen":imagen, "calificacion":cliente.qualification}, safe=False)
-
-            else: 
-                return HttpResponse("bad") 
-        else: 
-            return HttpResponse ("bad")
-    elif tipo_orden=="Orden de emergencia":
-        ordenesEmergencia= ordenEmergencia.objects.filter(ticket=n_ticket)
-        if ordenesEmergencia:
-            cliente= client.objects.filter(email=ordenesEmergencia.client_email).first()
-            if cliente:
-                imagen=""
-                if cliente.picture:
-                    imagen="data:image/png;base64,"+base64.b64encode(cliente.picture.read()).decode('ascii') 
-                return JsonResponse( {"nombre":cliente.name,"apellido":cliente.last_name, 
-                "imagen":imagen, "calificacion":cliente.qualification}, safe=False)
-
-            else: 
-                return HttpResponse("bad") 
-        else: 
-            return HttpResponse ("bad")
-    else: 
-        return HttpResponse("bad")
-
-
-def datosProveedor(request , n_ticket, tipo_orden):
-    if tipo_orden=="Orden general": 
-        ordenesGenerales= ordenGeneral.objects.filter(ticket=n_ticket).first()
-        if ordenesGenerales:
-            proveedor_independiente= serviceProvider.objects.filter(email=ordenesGenerales.proveedor_email).first()
-            if proveedor_independiente:
-                imagen=""
-                if proveedor_independiente.picture:
-                    imagen="data:image/png;base64,"+base64.b64encode(proveedor_independiente.picture.read()).decode('ascii') 
-                
-                rubro=item.objects.filter(provider=proveedor_independiente).first()
-                if rubro:
-                    calificacion=rubro.qualification
-                else: 
-                    calificacion="-"
-                return JsonResponse( {"nombre":proveedor_independiente.name,"apellido":proveedor_independiente.last_name, 
-                "imagen":imagen, "calificacion":calificacion}, safe=False)
-            else:
-                compania= company.objects.filter(email=ordenesGenerales.proveedor_email).first()
-                if compania:
-                    imagen=""
-                    if compania.picture:
-                        imagen="data:image/png;base64,"+base64.b64encode(compania.picture.read()).decode('ascii') 
-                    rubro=item_company.objects.filter(provider=proveedor_independiente).first()
-                    if rubro:
-                        calificacion=rubro.qualification
-                    else: 
-                        calificacion="-"
-                    return JsonResponse( {"nombre":compania.name,"apellido":compania.last_name, 
-                "imagen":imagen, "calificacion":calificacion}, safe=False)
-                else: 
-                    return HttpResponse("bad") 
-        else: 
-            return HttpResponse ("bad")
-
-    elif tipo_orden=="Orden de emergencia":
-        ordenesEmergencia= ordenEmergencia.objects.filter(ticket=n_ticket)
-        if ordenesEmergencia:
-            proveedor_independiente= serviceProvider.objects.filter(email=ordenesEmergencia.proveedor_email).first()
-            if proveedor_independiente:
-                imagen=""
-                if proveedor_independiente.picture:
-                    imagen="data:image/png;base64,"+base64.b64encode(proveedor_independiente.picture.read()).decode('ascii') 
-                return JsonResponse( {"nombre":proveedor_independiente.name,"apellido":proveedor_independiente.last_name, 
-                "imagen":imagen, "calificacion":proveedor_independiente.qualification}, safe=False)
-            else:
-                compania= company.objects.filter(email=ordenesEmergencia.proveedor_email).first()
-                if compania:
-                    imagen=""
-                    if compania.picture:
-                        imagen="data:image/png;base64,"+base64.b64encode(compania.picture.read()).decode('ascii') 
-                
-                    return JsonResponse( {"nombre":compania.name,"apellido":compania.last_name, 
-                "imagen":imagen, "calificacion":compania.qualification}, safe=False)
-                else: 
-                    return HttpResponse("bad") 
-        else: 
-            return HttpResponse ("bad")
-    else: 
-        return HttpResponse("bad")
-
 
 def cambiarEstadoOrden (request , n_ticket, tipo_orden,nuevo_estado_orden):
     if tipo_orden=="Orden general": 
@@ -1923,7 +1933,8 @@ def consultarOrdenParticular (request, ticket):
             return HttpResponse("bad") 
 
 
-
+#####################################################################################3
+#CHAT
 
 def chatMensaje (request, email,ticket,mensaje,dia,hora):
     if (ticket>=str(1000)):
@@ -1992,6 +2003,8 @@ def chatSinLeer (request,email):
     else:
         return HttpResponse("bad")
 
+################################################################################################
+#ORDEN DE EMERGENCIA 
 
 @csrf_exempt
 def pedirOrdenEmergencia (request):
@@ -2065,7 +2078,6 @@ def pedirOrdenEmergencia (request):
 
 def nuevaOrdenEmergencia(ticket, array_proveedores, categoria, tituloPedido,descripcion_problema): 
     array=[]
-
     for proveedor in array_proveedores: 
         new=ordenEmergenciaLista()
         new.ticket=ticket
@@ -2106,9 +2118,11 @@ def rechazarOrdenEmergenciaDeProveedor (request):
         orden=ordenEmergencia.objects.filter(ticket=ticket).first()
         if orden: 
             orden.status="ENV"
-            orden.proveedor_email=email_proveedor
+            orden.proveedor_email=""
             orden.save()
-            aca poner que cuando se rechaza algo
+            ordenLista=ordenEmergenciaLista.objects.filter(ticket=ticket).filter(proveedor_email=email_proveedor).first()
+            ordenLista.delete()
+            ahora aca que prosiga con los de la lista!
         else:
             return HttpResponse("bad")
 
