@@ -2098,7 +2098,7 @@ def nuevaOrdenEmergencia(ticket, array_proveedores, categoria, tituloPedido,desc
         
 
 
-def aceptarOrdenEmergenciaProveedor (request): 
+def aceptarOrdenEmergenciaDeProveedor (request): 
     if request.method == 'POST':
         email_proveedor=request.POST.get("emailProveedor")
         ticket = request.POST.get("ticket")
@@ -2110,6 +2110,7 @@ def aceptarOrdenEmergenciaProveedor (request):
             return HttpResponse("ok")
         else: 
             return HttpResponse("bad")
+
     
 def rechazarOrdenEmergenciaDeProveedor (request): 
     if request.method == 'POST':
@@ -2122,7 +2123,8 @@ def rechazarOrdenEmergenciaDeProveedor (request):
             orden.save()
             ordenLista=ordenEmergenciaLista.objects.filter(ticket=ticket).filter(proveedor_email=email_proveedor).first()
             ordenLista.delete()
-            ahora aca que prosiga con los de la lista!
+            nuevo_proveedor=ordenEmergenciaLista.objects.filter(ticket=ticket)
+            ahora aca tenemos que seleccionar el proveedor que este mas cerca!
         else:
             return HttpResponse("bad")
 
