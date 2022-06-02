@@ -2098,7 +2098,7 @@ def notificarProveedoresOrdenEmergencia(ticket, array_proveedores, categoria, ti
         
 
 
-def aceptarOrdenEmergenciaDeProveedor (request): 
+def proveedorAceptaOrdenEmergencia (request): 
     if request.method == 'POST':
         email_proveedor=request.POST.get("emailProveedor")
         ticket = request.POST.get("ticket")
@@ -2112,7 +2112,7 @@ def aceptarOrdenEmergenciaDeProveedor (request):
             return HttpResponse("bad")
 
     
-def rechazarOrdenEmergenciaDeProveedor (request): 
+def proveedorRechazaOrdenEmergencia (request): 
     if request.method == 'POST':
         email_proveedor=request.POST.get("emailProveedor")
         ticket = request.POST.get("ticket")
