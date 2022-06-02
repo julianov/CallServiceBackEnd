@@ -2053,7 +2053,7 @@ def pedirOrdenEmergencia (request):
                     new.problem_description = descripcion_problema
                     new.picture1=picture1
                     new.picture2=picture2
-                    notificarProveedoresOE(ticket, array, categoria, clienteEmail, clienteLat, clienteLong, tituloPedido, descripcion_problema, picture1, picture2)
+                    notificarProveedoresOrdenEmergencia(ticket, array, categoria, clienteEmail, clienteLat, clienteLong, tituloPedido, descripcion_problema, picture1, picture2)
             else: 
                 ticket =  ordenGeneral.objects.count()+ordenEmergencia.objects.count()+1000
                 new=ordenEmergencia()
@@ -2069,14 +2069,14 @@ def pedirOrdenEmergencia (request):
                 new.problem_description = descripcion_problema
                 new.picture1=picture1
                 new.picture2=picture2
-                notificarProveedoresOE(ticket, array, categoria, clienteEmail, clienteLat, clienteLong, tituloPedido, descripcion_problema, picture1, picture2)
+                notificarProveedoresOrdenEmergencia(ticket, array, categoria, clienteEmail, clienteLat, clienteLong, tituloPedido, descripcion_problema, picture1, picture2)
 
         else:
             return HttpResponse("bad")
 
         
 
-def notificarProveedoresOE(ticket, array_proveedores, categoria, tituloPedido,descripcion_problema): 
+def notificarProveedoresOrdenEmergencia(ticket, array_proveedores, categoria, tituloPedido,descripcion_problema): 
     array=[]
     for proveedor in array_proveedores: 
         new=ordenEmergenciaLista()
