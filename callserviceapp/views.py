@@ -2123,8 +2123,9 @@ def proveedorRechazaOrdenEmergencia (request):
             orden.save()
             ordenLista=ordenEmergenciaLista.objects.filter(ticket=ticket).filter(proveedor_email=email_proveedor).first()
             ordenLista.delete()
-            nuevo_proveedor=ordenEmergenciaLista.objects.filter(ticket=ticket)
-            ahora aca tenemos que seleccionar el proveedor que este mas cerca!
+            si ahora no hay proveedores en ordenLista se debe eliminar ordenEmergencia y notificar cliente sino seguir con los proveedores
+            #nuevo_proveedor=ordenEmergenciaLista.objects.filter(ticket=ticket)
+            
         else:
             return HttpResponse("bad")
 
