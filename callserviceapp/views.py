@@ -2129,5 +2129,21 @@ def proveedorRechazaOrdenEmergencia (request):
         else:
             return HttpResponse("bad")
 
+def clienteRechazaOrdenEmergencia (request): 
+    if request.method == 'POST':
+        ticket = request.POST.get("ticket")
+        motivo_rechazo=request.POST.get("motivo_rechazo")
+        orden=ordenEmergencia.objects.filter(ticket=ticket).first()
+        if orden: 
+            orden.motivo_rechazo= motivo_rechazo
+            orden.status="CAN"
+            orden.picture1=""
+            orden.picture2=""
+            orden.save()
+            return HttpResponse("ok")
+        else: 
+            return HttpResponse("bad")
+    else: 
+        return HttpResponse("bad")
 
 
