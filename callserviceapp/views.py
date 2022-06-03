@@ -1,24 +1,17 @@
 from django.db.models.fields import DateTimeCheckMixin, DateTimeField
 from django.shortcuts import render
 from django.http import HttpResponse
-
 from django.http import JsonResponse
 from json import loads
-
 from callserviceapp.models import  chat, client, item_company, nuevo_chat, ordenEmergencia, ordenEmergenciaLista, ordenGeneral, serviceProvider, item
 from callserviceapp.models import company
 from callserviceapp.tasks import send_orden_emergencia, send_user_mail, send_proveedor_mail_new_orden
-
 from callserviceapp.utils import distanciaEnLaTierra, proveedoresRadio
 import random
-
 import base64
-
 import datetime
 import datetime
-
 from callservices.celery import debug_task
-
 from django.views.decorators.csrf import csrf_exempt
 
 
@@ -28,13 +21,10 @@ from django.views.decorators.csrf import csrf_exempt
 def homeCliente (request , lat, long):
     array=[]
 
-    #datos_independiente=item.objects.exclude(radius=0).order_by('-qualification')
     datos_independiente=item.objects.order_by('-publicidad','-qualification')
     
     proveedoresRadio(1,array,datos_independiente,lat,long,0,30,6)
     
-        
-    #datos_companias=item_company.objects.exclude(radius=0).order_by('-qualification')
     datos_companias=item_company.objects.order_by('-publicidad','-qualification')
     proveedoresRadio(2,array,datos_companias,lat,long,0,30,6)
     
@@ -2075,7 +2065,7 @@ def pedirOrdenEmergencia (request):
             return HttpResponse("bad")
 
         
-
+@csrf_exempt
 def notificarProveedoresOrdenEmergencia(ticket, array_proveedores, categoria, tituloPedido,descripcion_problema): 
     array=[]
     for proveedor in array_proveedores: 
@@ -2091,7 +2081,8 @@ def notificarProveedoresOrdenEmergencia(ticket, array_proveedores, categoria, ti
         except:
             print("problem found at send proveedor mail new orden")
             return HttpResponse("bad") 
-        
+     
+@csrf_exempt    
 def proveedorAceptaOrdenEmergencia (request): 
     if request.method == 'POST':
         email_proveedor=request.POST.get("emailProveedor")
@@ -2105,7 +2096,7 @@ def proveedorAceptaOrdenEmergencia (request):
         else: 
             return HttpResponse("bad")
 
-    
+@csrf_exempt    
 def proveedorRechazaOrdenEmergencia (request): 
     if request.method == 'POST':
         email_proveedor=request.POST.get("emailProveedor")
@@ -2129,6 +2120,7 @@ def proveedorRechazaOrdenEmergencia (request):
         else:
             return HttpResponse("bad")
 
+@csrf_exempt
 def clienteRechazaOrdenEmergencia (request): 
     if request.method == 'POST':
         ticket = request.POST.get("ticket")
@@ -2145,5 +2137,10 @@ def clienteRechazaOrdenEmergencia (request):
             return HttpResponse("bad")
     else: 
         return HttpResponse("bad")
+    
+    
+@csrf_exempt
+def checkOrdenesEmergencia (request): 
+    if reques
 
 
