@@ -2083,10 +2083,6 @@ def notificarProveedoresOrdenEmergencia(ticket, array_proveedores, categoria, ti
         new.ticket=ticket
         new.status="CE"
         new.proveedor_email=proveedor.email
-        print("**************************************")
-        print("el email del proveedor es:")
-        print(proveedor.email)
-        print("**************************************")
         try:
             send_orden_emergencia.delay(ticket, proveedor.email, tituloPedido, categoria,descripcion_problema)
             new.save()
@@ -2096,8 +2092,6 @@ def notificarProveedoresOrdenEmergencia(ticket, array_proveedores, categoria, ti
             print("problem found at send proveedor mail new orden")
             return HttpResponse("bad") 
         
-
-
 def proveedorAceptaOrdenEmergencia (request): 
     if request.method == 'POST':
         email_proveedor=request.POST.get("emailProveedor")
@@ -2123,9 +2117,15 @@ def proveedorRechazaOrdenEmergencia (request):
             orden.save()
             ordenLista=ordenEmergenciaLista.objects.filter(ticket=ticket).filter(proveedor_email=email_proveedor).first()
             ordenLista.delete()
-            si ahora no hay proveedores en ordenLista se debe eliminar ordenEmergencia y notificar cliente sino seguir con los proveedores
-            #nuevo_proveedor=ordenEmergenciaLista.objects.filter(ticket=ticket)
-            
+            lista=ordenEmergenciaLista.objects.filter(ticket=ticket)
+            cantidad=lista.count()
+            if (cantidad-1)!=0:
+                array=[]
+                for proveedores in lista: 
+                    send_orden_emergencia.delay(ticket, proveedores.proveedor_email, orden.tituloPedido, orden.rubro,orden.problem_description)
+                return HttpResponse("ok")
+            else:
+                return HttpResponse("ok")
         else:
             return HttpResponse("bad")
 
