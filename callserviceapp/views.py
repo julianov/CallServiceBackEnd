@@ -2172,4 +2172,130 @@ def checkTodasOrdenesEmergenciaAbiertas (request):
             return HttpResponse("bad")
 
 
+@csrf_exempt
+def checkTodasOrdenesEmergenciaFinalizadas (request): 
+    if request.method == 'POST':
+        email = request.POST.get("email")
+        tipo= request.POST.get("tipo")
+        if tipo=="cliente":
+            orden=ordenEmergencia.objects.filter(client_email=email).exclude(status="CAN").exclude(status="REX").exclude(status="ENV").exclude(status="ACE").exclude(status="EVI").exclude(status="ENS")
+            if orden:
+                array=[]
+                for datosOrden in orden:
+                    array.append({"rubro":datosOrden.rubro,"tipo":"Orden emergencia","status":datosOrden.status, "ticket":datosOrden.ticket})
+                if len(array)>0:
+                    return JsonResponse(array,safe=False)  
+                else:
+                    return HttpResponse("bad")         
+            else: 
+                return HttpResponse("bad")
+        elif tipo=="proveedor":
+            orden=ordenEmergencia.objects.filter(proveedor_email=email).exclude(status="CAN").exclude(status="REX").exclude(status="ENV").exclude(status="ACE").exclude(status="EVI").exclude(status="ENS")
+            if orden:
+                array=[]
+                for datosOrden in orden:
+                    array.append({"rubro":datosOrden.rubro,"tipo":"Orden emergencia","status":datosOrden.status, "ticket":datosOrden.ticket})
+                if len(array)>0:
+                    return JsonResponse(array,safe=False)  
+                else:
+                    return HttpResponse("bad")         
+            else: 
+                return HttpResponse("bad")
+        else: 
+            return HttpResponse("bad")
 
+@csrf_exempt
+def checkTodasOrdenesEmergenciaCanceladas (request): 
+    if request.method == 'POST':
+        email = request.POST.get("email")
+        tipo= request.POST.get("tipo")
+        if tipo=="cliente":
+            orden=ordenEmergencia.objects.filter(client_email=email).exclude(status="RED").exclude(status="ENV").exclude(status="ACE").exclude(status="EVI").exclude(status="ENS")
+            if orden:
+                array=[]
+                for datosOrden in orden:
+                    array.append({"rubro":datosOrden.rubro,"tipo":"Orden emergencia","status":datosOrden.status, "ticket":datosOrden.ticket})
+                if len(array)>0:
+                    return JsonResponse(array,safe=False)  
+                else:
+                    return HttpResponse("bad")         
+            else: 
+                return HttpResponse("bad")
+        elif tipo=="proveedor":
+            orden=ordenEmergencia.objects.filter(proveedor_email=email).exclude(status="RED").exclude(status="ENV").exclude(status="ACE").exclude(status="EVI").exclude(status="ENS")
+            if orden:
+                array=[]
+                for datosOrden in orden:
+                    array.append({"rubro":datosOrden.rubro,"tipo":"Orden emergencia","status":datosOrden.status, "ticket":datosOrden.ticket})
+                if len(array)>0:
+                    return JsonResponse(array,safe=False)  
+                else:
+                    return HttpResponse("bad")         
+            else: 
+                return HttpResponse("bad")
+        else: 
+            return HttpResponse("bad")
+
+@csrf_exempt
+def checkOrdenEmergenciaParticular (request): 
+        
+        ticket = request.POST.get("ticket")
+        tipo= request.POST.get("tipo")
+        if tipo=="cliente":
+            orden=ordenEmergencia.objects.filter(ticket=ticket).first()
+            if orden:
+                imagen={}
+                if orden.picture1:
+                    imagen['picture1']="data:image/png;base64,"+base64.b64encode(orden.picture1.read()).decode('ascii')
+                else: 
+                    imagen['picture1']=""
+                if orden.picture2: 
+                    imagen['picture2']="data:image/png;base64,"+base64.b64encode(orden.picture2.read()).decode('ascii')
+                else:
+                    imagen['picture2']=""
+                                         
+                    data={"tipo":"Orden de emergencia","rubro":orden.rubro,"status":orden.status, "fecha_creacion":orden.fecha_creacion , "ticket":orden.ticket,
+                    "titulo":orden.tituloPedido,"descripcion":orden.problem_description,
+                    "location_cliente_lat":orden.location_cliente_lat,"locatlocation_cliente_longion_long":orden.location_cliente_long,"proveedor_email":orden.proveedor_email,
+                    "picture1":imagen['picture1'], "picture2":imagen['picture2'],"califico_el_cliente":orden.califico_el_cliente,
+                    "califico_el_proveedor":orden.califico_el_proveedor,
+                    "calificacion_proveedor":orden.calificacion_proveedor,
+                    "calificacion_cliente":orden.calificacion_cliente,
+                    "resena_al_proveedor":orden.resena_al_proveedor,
+                    "resena_al_cliente":orden.resena_al_cliente  }
+
+                    return JsonResponse(data,safe=False)  
+
+            else:
+                return HttpResponse("bad")
+        elif tipo=="proveedor":
+            orden=ordenEmergencia.objects.filter(ticket=ticket).first()
+            if orden:
+                imagen={}
+                if orden.picture1:
+                    imagen['picture1']="data:image/png;base64,"+base64.b64encode(orden.picture1.read()).decode('ascii')
+                else: 
+                    imagen['picture1']=""
+                if orden.picture2: 
+                    imagen['picture2']="data:image/png;base64,"+base64.b64encode(orden.picture2.read()).decode('ascii')
+                else:
+                    imagen['picture2']=""
+                                         
+                    data={"tipo":"Orden de emergencia","rubro":orden.rubro,"status":orden.status, "fecha_creacion":orden.fecha_creacion , "ticket":orden.ticket,
+                    "titulo":orden.tituloPedido,"descripcion":orden.problem_description,
+                    "location_cliente_lat":orden.location_cliente_lat,"locatlocation_cliente_longion_long":orden.location_cliente_long,"client_email":orden.client_email,
+                    "picture1":imagen['picture1'], "picture2":imagen['picture2'],
+                    "califico_el_cliente":orden.califico_el_cliente,
+                    "califico_el_proveedor":orden.califico_el_proveedor,
+                    "calificacion_proveedor":orden.calificacion_proveedor,
+                    "calificacion_cliente":orden.calificacion_cliente,
+                    "resena_al_proveedor":orden.resena_al_proveedor,
+                    "resena_al_cliente":orden.resena_al_cliente  }
+
+                    return JsonResponse(data,safe=False)  
+
+            else:
+                return HttpResponse("bad")
+           
+        else: 
+            return HttpResponse("bad")
