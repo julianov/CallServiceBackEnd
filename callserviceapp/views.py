@@ -2140,7 +2140,36 @@ def clienteRechazaOrdenEmergencia (request):
     
     
 @csrf_exempt
-def checkOrdenesEmergencia (request): 
-    if reques
+def checkTodasOrdenesEmergenciaAbiertas (request): 
+    if request.method == 'POST':
+        email = request.POST.get("email")
+        tipo= request.POST.get("tipo")
+        if tipo=="cliente":
+            orden=ordenEmergencia.objects.filter(client_email=email).exclude(status="CAN").exclude(status="REX").exclude(status="RED")
+            if orden:
+                array=[]
+                for datosOrden in orden:
+                    array.append({"rubro":datosOrden.rubro,"tipo":"Orden emergencia","status":datosOrden.status, "ticket":datosOrden.ticket})
+                if len(array)>0:
+                    return JsonResponse(array,safe=False)  
+                else:
+                    return HttpResponse("bad")         
+            else: 
+                return HttpResponse("bad")
+        elif tipo=="proveedor":
+            orden=ordenEmergencia.objects.filter(proveedor_email=email).exclude(status="CAN").exclude(status="REX").exclude(status="RED")
+            if orden:
+                array=[]
+                for datosOrden in orden:
+                    array.append({"rubro":datosOrden.rubro,"tipo":"Orden emergencia","status":datosOrden.status, "ticket":datosOrden.ticket})
+                if len(array)>0:
+                    return JsonResponse(array,safe=False)  
+                else:
+                    return HttpResponse("bad")         
+            else: 
+                return HttpResponse("bad")
+        else: 
+            return HttpResponse("bad")
+
 
 
