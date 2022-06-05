@@ -258,7 +258,6 @@ class ordenEmergencia (models.Model):
     location_cliente_lat = models.FloatField(default=None, blank=True)
     location_cliente_long = models.FloatField(default=None, blank=True)
    
-    tituloPedido = models.TextField(default="Solicitud de pedido")
     problem_description = models.TextField(blank=True)
     picture1=models.ImageField(default=None, blank=True)
     picture2=models.ImageField(default=None,blank=True)

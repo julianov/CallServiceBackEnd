@@ -32,7 +32,7 @@ urlpatterns = [
 
     path('proveedor/ubicacion/<email>/<lat>/<long>', proveedorUbicacion),
     
-    path('registro', register),
+    path('registro/', register),
 
     path('completarinfo/completar',completeInfo),
     path('cambiarInfoPersonal', nuevaInfoPersonal),
@@ -79,7 +79,7 @@ urlpatterns = [
     path('chat/<ticket>/<email>', chatVer),
     path('chatsinleer/<email>', chatSinLeer),
 
-    path('orden/ordenEmergencia', pedirOrdenEmergencia), #GENERAR ORDEN POR PARTE DEL CLIENTE   
+    path('orden/ordenEmergencia/', pedirOrdenEmergencia), #GENERAR ORDEN POR PARTE DEL CLIENTE   
 
 
 

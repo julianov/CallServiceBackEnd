@@ -1,3 +1,4 @@
+import json
 from django.db.models.fields import DateTimeCheckMixin, DateTimeField
 from django.shortcuts import render
 from django.http import HttpResponse
@@ -1331,11 +1332,11 @@ def pedirOrdenGeneral (request):
 
 def consultarOrdenes(request , tipo,email):
     if tipo=="proveedor": 
-        
         ordenesGenerales= ordenGeneral.objects.filter(proveedor_email=email).exclude(status="CAN").exclude( status="REX").exclude( califico_el_proveedor=True)
         ordenesEmergencia= ordenEmergencia.objects.filter(proveedor_email=email).exclude(status="CAN").exclude( status="REX").exclude(califico_el_proveedor=True)
+        EmergenciaLista=ordenEmergenciaLista.objects.filter(proveedor_email=email)
+       
         array=[]
-        #print(ordenesGenerales.first())
         if ordenesGenerales:
             for datos in ordenesGenerales:
               cliente=client.objects.filter(email=datos.client_email).first()
@@ -1393,7 +1394,13 @@ def consultarOrdenes(request , tipo,email):
                 "dia":datos.day, "time":datos.time, "titulo":datos.tituloPedido,"descripcion":datos.problem_description,
                 "location_lat":datos.location_lat,"location_long":datos.location_long,"email_cliente":cliente.email,
                 "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_cliente":imagen['imagen_Cliente'] })
-        
+
+        if EmergenciaLista:
+            for datos in EmergenciaLista:
+                ordenesEmergencia= ordenEmergencia.objects.filter(ticket=datos.ticket)
+
+                array.append({"tipo":"Orden de emergencia","status":datos.status, "ticket":datos.ticket})
+
         if len(array)>0:
             return JsonResponse(array, safe=False)
         else: 
@@ -1402,6 +1409,10 @@ def consultarOrdenes(request , tipo,email):
     elif tipo=="cliente":
         ordenesGenerales= ordenGeneral.objects.filter(client_email=email).exclude(status="CAN").exclude( status="REX").exclude(califico_el_cliente=True)
         ordenesEmergencia= ordenEmergencia.objects.filter(client_email=email).exclude(status="CAN").exclude( status="REX").exclude(califico_el_cliente=True)
+        print("*********************")
+        print(ordenesEmergencia)
+        print("********************")
+        
         array=[]
        
         if ordenesGenerales:
@@ -1442,41 +1453,42 @@ def consultarOrdenes(request , tipo,email):
                 "picture1_mas_información": imagen['picture1_mas_información'],
                 "picture2_mas_información": imagen['picture2_mas_información'] })
 
-            if len(array)>0:
-                return JsonResponse(array, safe=False)
-            else: 
-                return HttpResponse("bad")
+            
         if ordenesEmergencia: 
-            for datos in ordenesGenerales:
+            for datos in ordenesEmergencia:
                 proveedor=serviceProvider.objects.filter(email=datos.proveedor_email).first()
                 if not proveedor:
                     proveedor=company.objects.filter(email=datos.proveedor_email).first()
+                
+                imagen={}
+                proveedor_email=""
                 if proveedor:
-                    imagen={}
                     if proveedor.picture:
                         imagen['imagen_proveedor']="data:image/png;base64,"+base64.b64encode(proveedor.picture.read()).decode('ascii')
-                    else: 
-                        imagen['imagen_proveedor']=""
-                    if datos.picture1: 
-                        imagen['picture1']="data:image/png;base64,"+base64.b64encode(datos.picture1.read()).decode('ascii')
-                    else:
-                        imagen['picture1']=""
-                    if datos.picture2: 
-                        imagen['picture2']="data:image/png;base64,"+base64.b64encode(datos.picture2.read()).decode('ascii')
-                    else:
-                        imagen['picture2']=""
+                    proveedor_email=proveedor.email
+                else: 
+                    imagen['imagen_proveedor']=""
+                if datos.picture1: 
+                    imagen['picture1']="data:image/png;base64,"+base64.b64encode(datos.picture1.read()).decode('ascii')
+                else:
+                    imagen['picture1']=""
+                if datos.picture2: 
+                    imagen['picture2']="data:image/png;base64,"+base64.b64encode(datos.picture2.read()).decode('ascii')
+                else:
+                    imagen['picture2']=""
                         
-                    array.append({"tipo":"Orden de emergencia","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
-                    "dia":datos.day, "time":datos.time, "titulo":datos.tituloPedido,"descripcion":datos.problem_description,
-                    "location_lat":datos.location_lat,"location_long":datos.location_long,"email_cliente":proveedor.email,
-                    "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_proveedor":imagen['imagen_proveedor'] })
+                array.append({"tipo":"Orden de emergencia","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
+                "problem_description":datos.problem_description,
+                "location_cliente_lat":datos.location_cliente_lat,"location_cliente_long":datos.location_cliente_long,"email_proveedor":proveedor_email,
+                "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_proveedor":imagen['imagen_proveedor'] })
             
-            if len(array)>0:
-                return JsonResponse(array, safe=False)
-            else: 
-                return HttpResponse("bad")
-        else:
-            return HttpResponse("bad")
+        print("array length")
+        print(len(array))
+        if len(array)>0:
+            return JsonResponse(array, safe=False)
+        else: 
+            return HttpResponse("bad")   
+        
     else:
         return HttpResponse("bad") 
 
@@ -2005,7 +2017,6 @@ def pedirOrdenEmergencia (request):
         clienteLat=request.POST.get("clienteLat")
         clienteLong=request.POST.get("clienteLong")
         categoria=request.POST.get("categoria")
-        tituloPedido=request.POST.get("tituloPedido")
         descripcion_problema=request.POST.get("descripcion_problema")
         
         if request.FILES.get("imagen1"):
@@ -2013,7 +2024,7 @@ def pedirOrdenEmergencia (request):
         if request.FILES.get("imagen2"):
             picture2=request.FILES.get("imagen2")
 
-        if categoria and clienteEmail and clienteLat and clienteLong and tituloPedido and descripcion_problema:
+        if categoria and clienteEmail and clienteLat and clienteLong and descripcion_problema:
             
             array=[]
 
@@ -2039,13 +2050,23 @@ def pedirOrdenEmergencia (request):
                     new.ticket =  ticket
                     new.location_cliente_lat =  clienteLat
                     new.location_cliente_long = clienteLong 
-                    new.tituloPedido = tituloPedido
                     new.problem_description = descripcion_problema
                     new.picture1=picture1
                     new.picture2=picture2
-                    notificarProveedoresOrdenEmergencia(ticket, array, categoria, clienteEmail, clienteLat, clienteLong, tituloPedido, descripcion_problema, picture1, picture2)
+                    new.motivo_rechazo=""
+                    new.resena_al_proveedor=""    
+                    new.resena_al_cliente=""  
+
+                    new.save()
+                
+                val=notificarProveedoresOrdenEmergencia(ticket, array, categoria, descripcion_problema)
+                if val==1:
+                    print("devolvio 1")
+                    return HttpResponse(ticket)
+                else: 
+                    return HttpResponse("bad")
             else: 
-                ticket =  ordenGeneral.objects.count()+ordenEmergencia.objects.count()+1000
+                ticket= ordenGeneral.objects.count()+ordenEmergencia.objects.count()+1000
                 new=ordenEmergencia()
                 new.status="ENV"
                 new.rubro= categoria
@@ -2055,32 +2076,39 @@ def pedirOrdenEmergencia (request):
                 new.ticket =  ticket
                 new.location_cliente_lat =  clienteLat
                 new.location_cliente_long = clienteLong 
-                new.tituloPedido = tituloPedido
                 new.problem_description = descripcion_problema
                 new.picture1=picture1
                 new.picture2=picture2
-                notificarProveedoresOrdenEmergencia(ticket, array, categoria, clienteEmail, clienteLat, clienteLong, tituloPedido, descripcion_problema, picture1, picture2)
-
+                new.motivo_rechazo=""
+                new.resena_al_proveedor=""    
+                new.resena_al_cliente=""  
+                new.save()
+                val=notificarProveedoresOrdenEmergencia(ticket, array, categoria, descripcion_problema)
+                if val==1:
+                    return HttpResponse(ticket)
+                else: 
+                    return HttpResponse("bad")
         else:
             return HttpResponse("bad")
 
         
 @csrf_exempt
-def notificarProveedoresOrdenEmergencia(ticket, array_proveedores, categoria, tituloPedido,descripcion_problema): 
+def notificarProveedoresOrdenEmergencia(ticket, array_proveedores, categoria,descripcion_problema): 
     array=[]
     for proveedor in array_proveedores: 
         new=ordenEmergenciaLista()
         new.ticket=ticket
         new.status="CE"
-        new.proveedor_email=proveedor.email
+        new.proveedor_email=proveedor["email"]
         try:
-            send_orden_emergencia.delay(ticket, proveedor.email, tituloPedido, categoria,descripcion_problema)
+            send_orden_emergencia.delay(ticket, proveedor["email"], categoria,descripcion_problema)
             new.save()
-            return HttpResponse(ticket) 
+            print("hallegadoooooopa")
+            return 1 
 
         except:
             print("problem found at send proveedor mail new orden")
-            return HttpResponse("bad") 
+            return 0
      
 @csrf_exempt    
 def proveedorAceptaOrdenEmergencia (request): 
@@ -2113,7 +2141,7 @@ def proveedorRechazaOrdenEmergencia (request):
             if (cantidad-1)!=0:
                 array=[]
                 for proveedores in lista: 
-                    send_orden_emergencia.delay(ticket, proveedores.proveedor_email, orden.tituloPedido, orden.rubro,orden.problem_description)
+                    send_orden_emergencia.delay(ticket, proveedores.proveedor_email, orden.rubro,orden.problem_description)
                 return HttpResponse("ok")
             else:
                 return HttpResponse("ok")
@@ -2255,7 +2283,7 @@ def checkOrdenEmergenciaParticular (request):
                     imagen['picture2']=""
                                          
                     data={"tipo":"Orden de emergencia","rubro":orden.rubro,"status":orden.status, "fecha_creacion":orden.fecha_creacion , "ticket":orden.ticket,
-                    "titulo":orden.tituloPedido,"descripcion":orden.problem_description,
+                    "descripcion":orden.problem_description,
                     "location_cliente_lat":orden.location_cliente_lat,"locatlocation_cliente_longion_long":orden.location_cliente_long,"proveedor_email":orden.proveedor_email,
                     "picture1":imagen['picture1'], "picture2":imagen['picture2'],"califico_el_cliente":orden.califico_el_cliente,
                     "califico_el_proveedor":orden.califico_el_proveedor,
@@ -2281,8 +2309,7 @@ def checkOrdenEmergenciaParticular (request):
                 else:
                     imagen['picture2']=""
                                          
-                    data={"tipo":"Orden de emergencia","rubro":orden.rubro,"status":orden.status, "fecha_creacion":orden.fecha_creacion , "ticket":orden.ticket,
-                    "titulo":orden.tituloPedido,"descripcion":orden.problem_description,
+                    data={"tipo":"Orden de emergencia","rubro":orden.rubro,"status":orden.status, "fecha_creacion":orden.fecha_creacion , "ticket":orden.ticket,"descripcion":orden.problem_description,
                     "location_cliente_lat":orden.location_cliente_lat,"locatlocation_cliente_longion_long":orden.location_cliente_long,"client_email":orden.client_email,
                     "picture1":imagen['picture1'], "picture2":imagen['picture2'],
                     "califico_el_cliente":orden.califico_el_cliente,
