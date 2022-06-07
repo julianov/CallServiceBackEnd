@@ -408,13 +408,6 @@ def completeInfo (request):
 
 @csrf_exempt 
 def addRubro (request):
-    print("----------------------------------")
-    print(request.method)
-    print(request.POST.get("tipo"))
-    print(request.POST.get("email"))
-    print(request.POST.get("posicion"))
-    print(request.POST.get("ordenEmergencia"))
-    print("----------------------------------")
     if request.method == 'POST': 
         if request.POST.get("tipo")=="2":
             proveedores=serviceProvider.objects.filter(email=request.POST.get("email"))
@@ -691,6 +684,14 @@ def modificarRubro (request):
                 latitud=rubro.posicion_lat
                 longitud=rubro.posicion_long
                 calificacion=rubro.qualification
+                if rubro.picture1: 
+                    os.remove(rubro.picture1.path)
+                if rubro.picture2: 
+                    os.remove(rubro.picture2.path)
+                if rubro.picture3: 
+                    os.remove(rubro.picture3.path)
+                if rubro. certificate: 
+                    os.remove(rubro.certificate.path)
                 rubro.delete()
                    
                 new = item()
@@ -728,6 +729,14 @@ def modificarRubro (request):
                 latitud=rubro.posicion_lat
                 longitud=rubro.posicion_long
                 calificacion=rubro.qualification
+                if rubro.picture1: 
+                    os.remove(rubro.picture1.path)
+                if rubro.picture2: 
+                    os.remove(rubro.picture2.path)
+                if rubro.picture3: 
+                    os.remove(rubro.picture3.path)
+                if rubro. certificate: 
+                    os.remove(rubro.certificate.path)
                 rubro.delete()
                    
                 new = item()
