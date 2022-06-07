@@ -2303,6 +2303,8 @@ def checkOrdenEmergenciaParticular (request):
         
         ticket = request.POST.get("ticket")
         tipo= request.POST.get("tipo")
+        email=request.POST.get("email")
+        
         if tipo=="cliente":
             orden=ordenEmergencia.objects.filter(ticket=ticket).first()
             if orden:
@@ -2331,7 +2333,7 @@ def checkOrdenEmergenciaParticular (request):
             else:
                 return HttpResponse("bad")
         elif tipo=="proveedor":
-            orden=ordenEmergencia.objects.filter(ticket=ticket).first()
+            orden=ordenEmergencia.objects.filter(ticket=ticket).filter(proveedor_email=email).first()
             if orden:
                 imagen={}
                 if orden.picture1:
