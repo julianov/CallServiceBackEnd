@@ -2187,8 +2187,12 @@ def clienteRechazaOrdenEmergencia (request):
         if orden: 
             orden.motivo_rechazo= motivo_rechazo
             orden.status="CAN"
-            orden.picture1=""
-            orden.picture2=""
+            if orden.picture1: 
+                os.remove(orden.picture1.path)
+                orden.picture1=""
+            if orden.picture2:
+                os.remove(orden.picture2.path)
+                orden.picture2=""
             orden.save()
             return HttpResponse("ok")
         else: 
