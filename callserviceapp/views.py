@@ -643,24 +643,36 @@ def requestRubros(request, tipo,email,rubro):
 
 @csrf_exempt 
 def deleteRubro (request):
-    print("------------------------")
-    print(request.POST.get("tipo"))
-    print(request.POST.get("email"))
-    print(request.POST.get("item"))
-    print("------------------------")
-
     if request.method == 'POST':
         if(request.POST.get("tipo")=="2"):
             proveedores=serviceProvider.objects.filter(email=request.POST.get("email"))
             if proveedores:
-                item.objects.filter(provider=proveedores.first()).filter(items=request.POST.get("item")).delete()
+                rubro=item.objects.filter(provider=proveedores.first()).filter(items=request.POST.get("item")).first()
+                if rubro.picture1: 
+                    os.remove(rubro.picture1.path)
+                if rubro.picture2: 
+                    os.remove(rubro.picture2.path)
+                if rubro.picture3: 
+                    os.remove(rubro.picture3.path)
+                if rubro. certificate: 
+                    os.remove(rubro.certificate.path) 
+                rubro.delete()
                 return HttpResponse("rubro elimnado")
             else:
                 return HttpResponse("no ha sido posible eliminar el rubro")
         elif (request.POST.get("tipo")=="3"):
             proveedores=company.objects.filter(email=request.POST.get("email"))
             if proveedores:
-                item_company.objects.filter(provider=proveedores.first()).filter(items=request.POST.get("item")).delete()
+                rubro=item_company.objects.filter(provider=proveedores.first()).filter(items=request.POST.get("item")).first()
+                if rubro.picture1: 
+                    os.remove(rubro.picture1.path)
+                if rubro.picture2: 
+                    os.remove(rubro.picture2.path)
+                if rubro.picture3: 
+                    os.remove(rubro.picture3.path)
+                if rubro. certificate: 
+                    os.remove(rubro.certificate.path) 
+                rubro.delete()
                 return HttpResponse("rubro elimnado")
             else:
                 return HttpResponse("no ha sido posible eliminar el rubro")
