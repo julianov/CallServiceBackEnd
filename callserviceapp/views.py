@@ -310,7 +310,10 @@ def nuevaInfoPersonal (request):
             else: 
                 email=objetos.first().email
                 password=objetos.first().password
-                objetos.first().delete()
+                persona=objetos.first()
+                if persona.picture: 
+                    os.remove(persona.picture.path)
+                persona.delete()
                 new=client()
                 new.email=email
                 new.password=password
@@ -327,7 +330,10 @@ def nuevaInfoPersonal (request):
             else: 
                 email=objetos_.first().email
                 password=objetos_.first().password
-                objetos_.first().delete()
+                persona=objetos_.first()
+                if persona.picture:
+                    os.remove(persona.picture.path)
+                persona.delete()
                 new=serviceProvider()
                 new.email=email
                 new.password=password
@@ -344,7 +350,10 @@ def nuevaInfoPersonal (request):
             else: 
                 email=objetos.first().email
                 password=objetos.first().password
-                objetos.first().delete()
+                compania=objetos.first()
+                if compania.picture:
+                    os.remove(compania.picture.path)
+                compania.delete()
                 new=company()
                 new.email=email
                 new.password=password
