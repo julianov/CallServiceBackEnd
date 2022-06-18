@@ -15,7 +15,6 @@ import datetime
 from callservices.celery import debug_task
 from django.views.decorators.csrf import csrf_exempt
 
-
 # Create your views here.
 
 
@@ -312,7 +311,7 @@ def nuevaInfoPersonal (request):
                 password=objetos.first().password
                 persona=objetos.first()
                 if persona.picture: 
-                    os.remove(persona.picture.path)
+                    os.remove(persona.picture)
                 persona.delete()
                 new=client()
                 new.email=email
@@ -1769,9 +1768,9 @@ def consultarTodasLasOrdenes (request, tipo, email):
         if ordenesEmergencia:
             for data in ordenesEmergencia:
                 if data.rubro:
-                    array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
+                    array.append({"rubro":data.rubro,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
                 elif data.rubro_company:
-                    array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
+                    array.append({"rubro":data.rubro,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
         ordenesGenerales= ordenGeneral.objects.filter(client_email=email).exclude(status="ENV").exclude(status="REC").exclude(status="ABI").exclude(status="PEI").exclude(status="PRE").exclude(status="ACE").exclude(status="EVI").exclude(status="ENS")
         if ordenesGenerales:
             for data in ordenesGenerales:
@@ -1850,9 +1849,9 @@ def consultarTodasLasOrdenesCurso(request, tipo, email):
         if ordenesEmergencia:
             for data in ordenesEmergencia:
                 if data.rubro:
-                    array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
+                    array.append({"rubro":data.rubro,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
                 elif data.rubro_company:
-                    array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
+                    array.append({"rubro":data.rubro,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
         if len(array)>0:
             return JsonResponse(array, safe=False)
         else: 
@@ -1870,9 +1869,9 @@ def consultarTodasLasOrdenesCurso(request, tipo, email):
         if ordenesEmergencia:
             for data in ordenesEmergencia:
                 if data.rubro:
-                    array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
+                    array.append({"rubro":data.rubro,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
                 elif data.rubro_company:
-                    array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
+                    array.append({"rubro":data.rubro,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
         if len(array)>0:
             return JsonResponse(array, safe=False)
         else: 

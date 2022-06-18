@@ -189,17 +189,17 @@ class ordenGeneral (models.Model):
     ticket =  models.IntegerField(default=1000, blank=True)
 
     STATUS = [
-        ("ENV","ENVIADA"),
-        ("REC","RECIBIDA"),
-        ("ABI","ABIERTA"), #que es que esté abierta?
-        ("PEI","PEDIDO INFORMACION"), #ESTO LO AGREGO COMO BETA
-        ("PRE","PRESUPUESTADA"),
-        ("ACE","ACEPTADA"),
-        ("EVI","EN VIAJE"),
-        ("ENS","EN SITIO"),
-        ("RED","REALIZADA"),
-        ("CAN","CANCELADA"),
-        ("REX","RECHAZADA"),
+        ("ENV","ENVIADA"), #Generada por el cliente
+        ("REC","RECIBIDA"), # la vio el proveedor
+        ("PEI","PEDIDO INFORMACION"), #el proveedor pide mas info
+        ("RES", "RESPUESTA DEL CLIENTE"), #EL CLIENTE RESPONDIO
+        ("PRE","PRESUPUESTADA"), #PRESUPUESTADA POR EL PROVEEDOR
+        ("ACE","ACEPTADA"), #ACEPTADA POR EL CLIENTE
+        ("EVI","EN VIAJE"), #EL PROVEEDOR EN VIAJE
+        ("ENS","EN SITIO"), # EL PROVEEDOR EN SITIO
+        ("RED","REALIZADA"), #REALIZADA
+        ("CAN","CANCELADA"), #CANCELADA
+        ("REX","RECHAZADA"), #RECHAZADA
     ]
     status = models.CharField(max_length=3,choices= STATUS,default= "SO")
        
@@ -237,13 +237,13 @@ class ordenEmergencia (models.Model):
     id = models.AutoField(primary_key=True)
 
     STATUS = [
-        ("ENV","ENVIADA"),
-        ("ACE","ACEPTADA"),
-        ("EVI","EN VIAJE"),
-        ("ENS","EN SITIO"),
-        ("RED","REALIZADA"),
-        ("CAN","CANCELADA"),
-        ("REX","RECHAZADA"),
+        ("ENV","ENVIADA"), #GENERADA POR EL CLIENTE - BUSCANDO PROVEEDORES
+        ("ACE","ACEPTADA"), #ACEPTADA POR PROVEEDOR
+        ("EVI","EN VIAJE"), #PROVEEDOR EN VIAJE
+        ("ENS","EN SITIO"), #PROVEEDOR EN SITIO
+        ("RED","REALIZADA"), #ORDEN REALIZADA
+        ("CAN","CANCELADA"), #ORDEN CANCELADA POR CLIENTE
+        ("REX","RECHAZADA"), #ORDEN RECHAZADA POR PROVEEDOR
     ]
     status = models.CharField(max_length=3,choices= STATUS,default= "SO")
 
