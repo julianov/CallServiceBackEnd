@@ -20,7 +20,7 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 
-from callserviceapp.views import Buscar, addRubro, agregarFotoOrden, askPersonalInfo, cambiarEstadoOrden, chatMensaje, chatSinLeer, chatVer, completeInfo, completeInfoRubros, consultarOrdenParticular, consultarOrdenes, consultarTodasLasOrdenes, consultarTodasLasOrdenesCanceladas, consultarTodasLasOrdenesCurso, consultarTodasLasOrdenesFinalizadas, datosCliente, datosProveedor, deleteRubro, finalizarOrdenCliente, finalizarOrdenProveedor, homeCliente, homeClientePedirDatos, login, masInfoOrdenCliente, masInfoOrdenProveedor, modificarRubro, nuevaInfoPersonal, pedirOrdenEmergencia, pedirOrdenGeneral, presupuestoCliente, presupuestoProveedor, proveedorUbicacion, register, requestRubros, restarPassword, setNewPassword, verReseñas
+from callserviceapp.views import Buscar, addRubro, agregarFotoOrden, askPersonalInfo, cambiarEstadoOrden, cambiarfechaordengeneral, chatMensaje, chatSinLeer, chatVer, completeInfo, completeInfoRubros, consultarOrdenParticular, consultarOrdenes, consultarTodasLasOrdenes, consultarTodasLasOrdenesCanceladas, consultarTodasLasOrdenesCurso, consultarTodasLasOrdenesFinalizadas, datosCliente, datosProveedor, deleteRubro, finalizarOrdenCliente, finalizarOrdenProveedor, homeCliente, homeClientePedirDatos, login, masInfoOrdenCliente, masInfoOrdenProveedor, modificarRubro, nuevaInfoPersonal, pedirOrdenEmergencia, pedirOrdenGeneral, presupuestoCliente, presupuestoProveedor, proveedorUbicacion, register, requestRubros, restarPassword, setNewPassword, verReseñas
 
 
 urlpatterns = [
@@ -64,6 +64,7 @@ urlpatterns = [
     path('orden/presupuesto/proveedor',presupuestoProveedor),
     path('orden/presupuesto/cliente',presupuestoCliente),
     path('orden/finalizar/proveedor',finalizarOrdenProveedor),
+    path('orden/cambiarfecharubrogeneral',cambiarfechaordengeneral),
     path('orden/finalizar/cliente',finalizarOrdenCliente),
 
     path('orden/consultarOrdenes/<tipo>/<email>', consultarTodasLasOrdenes),  #todas las ordenes de un cliente cambiar si se cambian los estados de la orden de emergencia. 

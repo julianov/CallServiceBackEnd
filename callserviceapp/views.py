@@ -1631,7 +1631,7 @@ def masInfoOrdenCliente(request):
         orden_General= ordenGeneral.objects.filter(ticket=ticket).first()
         if orden_General:
             orden_General.respuesta_cliente_pedido_mas_información=request.POST.get("respuesta_informacion")
-            orden_General.status="PEI"
+            orden_General.status="RES"
             orden_General.picture1_mas_información= request.FILES.get("imagen1")
             orden_General.picture2_mas_información= request.FILES.get("imagen2")
             orden_General.save()
@@ -1650,6 +1650,8 @@ def presupuestoProveedor(request):
             orden_General= ordenGeneral.objects.filter(ticket=ticket).first()
             if orden_General:
                 orden_General.presupuesto_inicial=request.POST.get("precio")
+                orden_General.day=request.POST.get("dia")
+                orden_General.time=request.POST.get("hora")
                 orden_General.status="PRE"
                 orden_General.save()
                 return HttpResponse("ok")
@@ -1664,7 +1666,6 @@ def presupuestoCliente(request):
         ticket=request.POST.get("ticket")
         orden_General= ordenGeneral.objects.filter(ticket=ticket).first()
         if orden_General:
-            
             orden_General.status="ACE"
             orden_General.save()
             return HttpResponse("ok")
@@ -1672,6 +1673,23 @@ def presupuestoCliente(request):
             return HttpResponse("bad")
     else: 
         return HttpResponse("bad")    
+
+
+@csrf_exempt
+def cambiarfechaordengeneral (request): 
+    if request.method == 'POST':
+        ticket=request.POST.get("ticket")
+        print(request.POST.get("hora"))
+        orden_General= ordenGeneral.objects.filter(ticket=ticket).first()
+        if orden_General:
+            orden_General.day=request.POST.get("dia")
+            orden_General.time=request.POST.get("hora")
+            orden_General.save()
+            return HttpResponse("ok")
+        else:
+            return HttpResponse("bad")
+    else: 
+        return HttpResponse("bad") 
 
 @csrf_exempt
 def finalizarOrdenProveedor(request):

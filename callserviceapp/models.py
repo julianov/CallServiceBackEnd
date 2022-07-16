@@ -205,8 +205,9 @@ class ordenGeneral (models.Model):
        
     location_lat = models.FloatField(default=None, blank=True)
     location_long = models.FloatField(default=None, blank=True)
-    day = models.TextField(default="Lunes Martes Miercoles Jueves Viernes")
-    time = models.TimeField(default=None, blank=True)
+    
+    day = models.TextField(default="")
+    time = models.TextField(default="")
    
     tituloPedido = models.TextField(default="Solicitud de pedido")
     problem_description = models.TextField(default=None, blank=True)
