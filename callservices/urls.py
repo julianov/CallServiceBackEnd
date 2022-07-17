@@ -1,18 +1,3 @@
-"""callservices URL Configuration
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/2.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.conf.urls import url
 from django.contrib import admin
 from django.urls import path
@@ -20,8 +5,9 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 
-from callserviceapp.views import Buscar, addRubro, agregarFotoOrden, askPersonalInfo, cambiarEstadoOrden, cambiarfechaordengeneral, chatMensaje, chatSinLeer, chatVer, completeInfo, completeInfoRubros, consultarOrdenParticular, consultarOrdenes, consultarTodasLasOrdenes, consultarTodasLasOrdenesCanceladas, consultarTodasLasOrdenesCurso, consultarTodasLasOrdenesFinalizadas, datosCliente, datosProveedor, deleteRubro, finalizarOrdenCliente, finalizarOrdenProveedor, homeCliente, homeClientePedirDatos, login, masInfoOrdenCliente, masInfoOrdenProveedor, modificarRubro, nuevaInfoPersonal, pedirOrdenEmergencia, pedirOrdenGeneral, presupuestoCliente, presupuestoProveedor, proveedorUbicacion, register, requestRubros, restarPassword, setNewPassword, verReseñas
+from callserviceapp.views import agregarFotoOrden, askPersonalInfo, buscar, cambiarEstadoOrden, cambiarfechaordengeneral, chatMensaje, chatSinLeer, chatVer, completeInfo, completeInfoRubros, consultarOrdenParticular, consultarOrdenes, consultarTodasLasOrdenes, consultarTodasLasOrdenesCanceladas, consultarTodasLasOrdenesCurso, consultarTodasLasOrdenesFinalizadas, datosCliente, datosProveedor, deleteRubro, finalizarOrdenCliente, finalizarOrdenProveedor, homeCliente, homeClientePedirDatos, login, masInfoOrdenCliente, masInfoOrdenProveedor, modificarRubro, nuevaInfoPersonal, pedirOrdenEmergencia, pedirOrdenGeneral, presupuestoCliente, presupuestoProveedor, proveedorUbicacion, register, requestRubros, restarPassword, setNewPassword, verReseñas,addRubro 
 
+from callserviceapp import views
 
 urlpatterns = [
     # ... the rest of your URLconf goes here ...
@@ -49,7 +35,7 @@ urlpatterns = [
     path('login/restaurar/codigo/<email>', restarPassword),
     path('login/restaurar/setpassword/<email>/<codigo>/<password>', setNewPassword),
 
-    path('search/<tipo>/<dato>', Buscar),
+    path('search/<tipo>/<dato>', buscar),
 
     path('resena/<email>/<cantida>/<tipo>',verReseñas),
     

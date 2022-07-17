@@ -1,21 +1,13 @@
-import json
-from django.db.models.fields import DateTimeCheckMixin, DateTimeField
-from django.shortcuts import render
+import os
 from django.http import HttpResponse
 from django.http import JsonResponse
-from json import loads
-from callserviceapp.models import  chat, client, item_company, nuevo_chat, ordenEmergencia, ordenEmergenciaLista, ordenGeneral, serviceProvider, item
-from callserviceapp.models import company
+from callserviceapp.models import  chat, client, item_company, nuevo_chat, ordenEmergencia, ordenEmergenciaLista, ordenGeneral, serviceProvider, item, company
 from callserviceapp.tasks import send_orden_emergencia, send_user_mail, send_proveedor_mail_new_orden
 from callserviceapp.utils import distanciaEnLaTierra, proveedoresRadio
 import random
 import base64
 import datetime
-import datetime
-from callservices.celery import debug_task
 from django.views.decorators.csrf import csrf_exempt
-
-# Create your views here.
 
 
 def homeCliente (request , lat, long):
@@ -156,9 +148,6 @@ def homeClientePedirDatos (request , email,rubro, tipoPedido,lat, long):
                 return HttpResponse("bad")
 
 
-
-
-
 ########################################################################################3
 #Registro
 
@@ -259,11 +248,6 @@ def askPersonalInfo(request,type,email):
                     imagen['client_picture']= "data:image/png;base64,"+base64.b64encode(datos.picture.read()).decode('ascii')
                 else:
                     imagen['client_picture']=""
-                #if datos.imagen_promocional:
-                 #   imagen['imagen_promocional']= "data:image/png;base64,"+base64.b64encode(datos.imagen_promocional.read()).decode('ascii')
-                #else:
-                 #   imagen['imagen_promocional']=""
-
                 data = [{"name": datos.name, "last_name": datos.last_name,
                 },
                 
@@ -941,7 +925,7 @@ def ListaProveedoresPalabra (independiente_nombre,independiente_apellido,empresa
             array_items_empresa.append(item_company.objects.filter(provider=datos))
     return ListaProveedores(array_items_independientes,array_items_empresa)
     
-def Buscar (request , tipo, dato):
+def buscar (tipo, dato):
     if tipo=="categoria":
         categoria_a_buscar=dato
         categoria_buscada_en_independientes=item.objects.filter(items=categoria_a_buscar).order_by('-qualification')
@@ -1224,14 +1208,10 @@ def pedirOrdenGeneral (request):
                 if not rubro:
                     return HttpResponse("bad")
                 else:
-                    print("bueno llego aquì")
-                    print(itemProveedor)
-                    print("asdfasdf")
-                    print (ordenGeneral.objects.filter(client_email=clienteEmail, proveedor_email=ProveedorEmail).exclude(status="CAN").exclude( status="REX").exclude( status="RED").first())
-                    print("/////////////////////////////////////////////////////////////")
+                    
                     if ordenGeneral.objects.filter(client_email=clienteEmail, proveedor_email=ProveedorEmail).exclude(status="CAN").exclude( status="REX").exclude( status="RED").first():
                         if ordenGeneral.objects.filter(client_email=clienteEmail, proveedor_email=ProveedorEmail).exclude(status="CAN").exclude( status="REX").exclude( status="RED").first().rubro.items==itemProveedor:
-                            print("deberia decir que ya hay una orden aqui")
+                            
                             return HttpResponse("ya hay una orden")
                         else:
                             new=ordenGeneral()
@@ -1241,14 +1221,8 @@ def pedirOrdenGeneral (request):
                             new.location_lat= clienteLat
                             new.location_long=clienteLong
                             new.tituloPedido=tituloPedido
-                            if diaPedido and diaPedido!=None:
-                                new.day=diaPedido
-                            else: 
-                                new.day=datetime.date(1997, 10, 19)
-                            if horaPedido and horaPedido!=None:
-                                new.time=horaPedido
-                            else: 
-                                new.time=datetime.time(0, 0, 0)
+                            new.day=""
+                            new.time=""
                             new.problem_description=descripcion_problema
                             new.direccion=direccion_pedido
                             if request.FILES.get("imagen1"):
@@ -1278,14 +1252,8 @@ def pedirOrdenGeneral (request):
                         new.location_lat= clienteLat
                         new.location_long=clienteLong
                         new.tituloPedido=tituloPedido
-                        if diaPedido and diaPedido!=None:
-                            new.day=diaPedido
-                        else: 
-                            new.day=datetime.date(1997, 10, 19)
-                        if horaPedido and horaPedido!=None:
-                            new.time=horaPedido
-                        else: 
-                            new.time=datetime.time(0, 0, 0)
+                        new.day=""
+                        new.time=""
                         new.problem_description=descripcion_problema
                         new.direccion=direccion_pedido
                         if request.FILES.get("imagen1"):
@@ -1330,10 +1298,8 @@ def pedirOrdenGeneral (request):
                         new.location_lat= clienteLat
                         new.location_long=clienteLong
                         new.tituloPedido=tituloPedido
-                        if diaPedido:
-                            new.day=diaPedido
-                        if horaPedido:
-                            new.time=horaPedido
+                        new.day=""
+                        new.time=""
                         new.problem_description=descripcion_problema
                         if request.FILES.get("imagen1"):
                             new.picture1= request.FILES.get("imagen1")
