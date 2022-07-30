@@ -206,8 +206,8 @@ class ordenGeneral (models.Model):
     location_lat = models.FloatField(default=None, blank=True)
     location_long = models.FloatField(default=None, blank=True)
     
-    day = models.TextField(default="")
-    time = models.TextField(default="")
+    day = models.TextField(default="",blank=True)
+    time = models.TextField(default="",blank=True)
    
     tituloPedido = models.TextField(default="Solicitud de pedido")
     problem_description = models.TextField(default=None, blank=True)
@@ -246,7 +246,7 @@ class ordenEmergencia (models.Model):
         ("CAN","CANCELADA"), #ORDEN CANCELADA POR CLIENTE
         ("REX","RECHAZADA"), #ORDEN RECHAZADA POR PROVEEDOR
     ]
-    status = models.CharField(max_length=3,choices= STATUS,default= "SO")
+    status = models.CharField(max_length=3,choices= STATUS,default= "ENV")
 
     rubro= models.TextField(blank=True)
 
@@ -282,6 +282,7 @@ class ordenEmergenciaLista (models.Model):
         ("OD","ORDEN DESACTIVADA"),
     ]
 
+    rubro=models.TextField(blank=True)
     ticket = models.IntegerField(default=1000, blank=True) 
     proveedor_email=models.EmailField(blank=True)
     status = models.CharField(max_length=3,choices= STATUS,default= "SO")

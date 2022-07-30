@@ -1369,7 +1369,8 @@ def consultarOrdenes(request , tipo,email):
 
 
         if ordenesEmergencia: 
-            for datos in ordenesGenerales:
+            print("llega aqui")
+            for datos in ordenesEmergencia:
                 cliente=client.objects.filter(email=datos.client_email).first()
                 imagen={}
                 if cliente.picture:
@@ -1385,7 +1386,9 @@ def consultarOrdenes(request , tipo,email):
                 else:
                     imagen['picture2']=""
                     
-                array.append({"rubro":datos.rubro.items,"tipo":"Orden de emergencia","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
+                print("checking")
+                print(datos.rubro)
+                array.append({"rubro":datos.rubro,"tipo":"ORDEN DE EMERGENCIA","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
                 "dia":datos.day, "time":datos.time, "titulo":datos.tituloPedido,"descripcion":datos.problem_description,
                 "location_lat":datos.location_lat,"location_long":datos.location_long,"email_cliente":cliente.email,
                 "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_cliente":imagen['imagen_Cliente'] })
@@ -1394,7 +1397,7 @@ def consultarOrdenes(request , tipo,email):
             for datos in EmergenciaLista:
                 ordenesEmergencia= ordenEmergencia.objects.filter(ticket=datos.ticket)
 
-                array.append({"tipo":"Orden de emergencia","status":datos.status, "ticket":datos.ticket})
+                array.append({"rubro":datos.rubro,"tipo":"Orden de emergencia","status":datos.status, "ticket":datos.ticket})
 
         if len(array)>0:
             return JsonResponse(array, safe=False)
@@ -1472,7 +1475,7 @@ def consultarOrdenes(request , tipo,email):
                 else:
                     imagen['picture2']=""
                         
-                array.append({"tipo":"Orden de emergencia","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
+                array.append({"rubro":datos.rubro,"tipo":"Orden de emergencia","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
                 "problem_description":datos.problem_description,
                 "location_cliente_lat":datos.location_cliente_lat,"location_cliente_long":datos.location_cliente_long,"email_proveedor":proveedor_email,
                 "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_proveedor":imagen['imagen_proveedor'] })
@@ -1491,7 +1494,6 @@ def cambiarEstadoOrden (request , n_ticket, tipo_orden,nuevo_estado_orden):
     if tipo_orden=="Orden general": 
         ordenesGenerales= ordenGeneral.objects.filter(ticket=n_ticket).first()
         if ordenesGenerales:
-           
             if nuevo_estado_orden=="CAN":
                 print("aca el nuevo estado es cancelarla")
                 email_cliente=ordenesGenerales.client_email
@@ -1520,6 +1522,7 @@ def cambiarEstadoOrden (request , n_ticket, tipo_orden,nuevo_estado_orden):
                         return HttpResponse("ok")
                     else: 
                         return HttpResponse("bad")
+                            
             ordenesGenerales.status=nuevo_estado_orden
             ordenesGenerales.save()
             return HttpResponse("ok")
@@ -2039,6 +2042,7 @@ def pedirOrdenEmergencia (request):
 
         if categoria and clienteEmail and clienteLat and clienteLong and descripcion_problema:
             
+            print("llega aca adentro del if")
             array=[]
 
             datos_independiente=item.objects.exclude(radius=0).exclude(hace_orden_emergencia=False).order_by('-publicidad','-qualification')
@@ -2047,9 +2051,11 @@ def pedirOrdenEmergencia (request):
             datos_companias=item_company.objects.exclude(radius=0).exclude(hace_orden_emergencia=False).order_by('-publicidad','-qualification')
             proveedoresRadio(2,array,datos_companias,clienteLat,clienteLong,0,30,3)
             
+            print(len(array))
             if len(array)<=3:
                 proveedoresRadio(1,array,datos_independiente,clienteLat,clienteLong,30,50,6)        
                 proveedoresRadio(2,array,datos_companias,clienteLat,clienteLong,30,50,6)
+                print(len(array))
                 if len(array)==0:
                     return HttpResponse("bad")
                 else:
@@ -2108,11 +2114,14 @@ def pedirOrdenEmergencia (request):
 @csrf_exempt
 def notificarProveedoresOrdenEmergencia(ticket, array_proveedores, categoria,descripcion_problema): 
     array=[]
+    
+    
     for proveedor in array_proveedores: 
         new=ordenEmergenciaLista()
         new.ticket=ticket
         new.status="CE"
         new.proveedor_email=proveedor["email"]
+        new.rubro=categoria
         try:
             send_orden_emergencia.delay(ticket, proveedor["email"], categoria,descripcion_problema)
             new.save()
