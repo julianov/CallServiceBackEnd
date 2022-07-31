@@ -2125,7 +2125,7 @@ def notificarProveedoresOrdenEmergencia(ticket, array_proveedores, categoria,des
         try:
             send_orden_emergencia.delay(ticket, proveedor["email"], categoria,descripcion_problema)
             new.save()
-            print("hallegadoooooopa")
+            print("ordenEmergenciaLista creada")
             return 1 
 
         except:
