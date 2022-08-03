@@ -1531,6 +1531,8 @@ def cambiarEstadoOrden (request , n_ticket, tipo_orden,nuevo_estado_orden):
             return HttpResponse("bad")
     elif tipo_orden=="Orden de emergencia":
         ordenesEmergencia= ordenEmergencia.objects.filter(ticket=n_ticket)
+        print("veamos que tenemos en la orden de emergencia")
+        print(ordenesEmergencia)
         if ordenesEmergencia:
             ordenesEmergencia.status=nuevo_estado_orden
             ordenesEmergencia.save()
@@ -2114,8 +2116,6 @@ def pedirOrdenEmergencia (request):
 @csrf_exempt
 def notificarProveedoresOrdenEmergencia(ticket, array_proveedores, categoria,descripcion_problema): 
     array=[]
-    
-    
     for proveedor in array_proveedores: 
         new=ordenEmergenciaLista()
         new.ticket=ticket
@@ -2132,11 +2132,10 @@ def notificarProveedoresOrdenEmergencia(ticket, array_proveedores, categoria,des
             print("problem found at send proveedor mail new orden")
             return 0
      
-@csrf_exempt    
-def proveedorAceptaOrdenEmergencia (request): 
-    if request.method == 'POST':
-        email_proveedor=request.POST.get("emailProveedor")
-        ticket = request.POST.get("ticket")
+def proveedorAceptaOrdenEmergencia (request, email, ticket): 
+    if email!="" and ticket!="":
+        email_proveedor=email
+        ticket = ticket
         orden=ordenEmergencia.objects.filter(ticket=ticket).first()
         if orden: 
             orden.status="ACE"
@@ -2146,11 +2145,22 @@ def proveedorAceptaOrdenEmergencia (request):
         else: 
             return HttpResponse("bad")
 
-@csrf_exempt    
-def proveedorRechazaOrdenEmergencia (request): 
-    if request.method == 'POST':
-        email_proveedor=request.POST.get("emailProveedor")
-        ticket = request.POST.get("ticket")
+
+def proveedorEnViajeOrdenEmergencia(request, ticket): 
+    ticket = ticket
+    orden=ordenEmergencia.objects.filter(ticket=ticket).first()
+    if orden: 
+        orden.status="EVI"
+        orden.save()
+        return HttpResponse("ok")
+    else: 
+        return HttpResponse("bad")
+
+    
+def proveedorRechazaOrdenEmergencia (request, email, ticket): 
+    if email!="" and ticket!="":
+        email_proveedor=email
+        ticket = ticket
         orden=ordenEmergencia.objects.filter(ticket=ticket).first()
         if orden: 
             orden.status="ENV"

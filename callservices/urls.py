@@ -5,7 +5,7 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 
-from callserviceapp.views import agregarFotoOrden, askPersonalInfo, buscar, cambiarEstadoOrden, cambiarfechaordengeneral, chatMensaje, chatSinLeer, chatVer, clienteRechazaOrdenEmergencia, completeInfo, completeInfoRubros, consultarOrdenParticular, consultarOrdenes, consultarTodasLasOrdenes, consultarTodasLasOrdenesCanceladas, consultarTodasLasOrdenesCurso, consultarTodasLasOrdenesFinalizadas, datosCliente, datosProveedor, deleteRubro, finalizarOrdenCliente, finalizarOrdenProveedor, homeCliente, homeClientePedirDatos, login, masInfoOrdenCliente, masInfoOrdenProveedor, modificarRubro, nuevaInfoPersonal, pedirOrdenEmergencia, pedirOrdenGeneral, presupuestoCliente, presupuestoProveedor, proveedorAceptaOrdenEmergencia, proveedorRechazaOrdenEmergencia, proveedorUbicacion, register, requestRubros, restarPassword, setNewPassword, verReseñas,addRubro 
+from callserviceapp.views import agregarFotoOrden, askPersonalInfo, buscar, cambiarEstadoOrden, cambiarfechaordengeneral, chatMensaje, chatSinLeer, chatVer, clienteRechazaOrdenEmergencia, completeInfo, completeInfoRubros, consultarOrdenParticular, consultarOrdenes, consultarTodasLasOrdenes, consultarTodasLasOrdenesCanceladas, consultarTodasLasOrdenesCurso, consultarTodasLasOrdenesFinalizadas, datosCliente, datosProveedor, deleteRubro, finalizarOrdenCliente, finalizarOrdenProveedor, homeCliente, homeClientePedirDatos, login, masInfoOrdenCliente, masInfoOrdenProveedor, modificarRubro, nuevaInfoPersonal, pedirOrdenEmergencia, pedirOrdenGeneral, presupuestoCliente, presupuestoProveedor, proveedorAceptaOrdenEmergencia, proveedorEnViajeOrdenEmergencia, proveedorRechazaOrdenEmergencia, proveedorUbicacion, register, requestRubros, restarPassword, setNewPassword, verReseñas,addRubro 
 
 from callserviceapp import views
 
@@ -65,9 +65,10 @@ urlpatterns = [
     path('chatsinleer/<email>', chatSinLeer),
 
     path('orden/ordenEmergencia/', pedirOrdenEmergencia), #GENERAR ORDEN POR PARTE DEL CLIENTE   
-    path('orden/ordenEmergencia/proveedorAcepta', proveedorAceptaOrdenEmergencia),
+    path('orden/ordenEmergencia/proveedorAcepta/<email>/<ticket>', proveedorAceptaOrdenEmergencia),
     path('orden/ordenEmergencia/rechazarOrdenCliente', clienteRechazaOrdenEmergencia),
-    path('orden/ordenEmergencia/rechazarOrdenProveedor', proveedorRechazaOrdenEmergencia),
+    path('orden/ordenEmergencia/rechazarOrdenProveedor/<email>/<ticket>', proveedorRechazaOrdenEmergencia),
+    path('orden/ordenEmergencia/proveedorEnViaje/<ticket>', proveedorEnViajeOrdenEmergencia),
 
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
