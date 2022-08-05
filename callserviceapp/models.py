@@ -230,8 +230,6 @@ class ordenGeneral (models.Model):
     resena_al_proveedor=models.TextField(default = None, blank=True)    
     resena_al_cliente=models.TextField(default = None, blank=True)    
 
-    
-
 
 class ordenEmergencia (models.Model):
 

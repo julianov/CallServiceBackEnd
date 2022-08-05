@@ -2156,7 +2156,28 @@ def proveedorEnViajeOrdenEmergencia(request, ticket):
     else: 
         return HttpResponse("bad")
 
-    
+def proveedorEnSitioOrdenEmergencia (request, ticket): 
+    ticket = ticket
+    orden=ordenEmergencia.objects.filter(ticket=ticket).first()
+    if orden: 
+        orden.status="ENS"
+        orden.save()
+        return HttpResponse("ok")
+    else: 
+        return HttpResponse("bad")
+
+def proveedorOrdenEmergenciaRealizada (request, ticket): 
+    ticket = ticket
+    orden=ordenEmergencia.objects.filter(ticket=ticket).first()
+    if orden: 
+        orden.status="RED"
+        orden.save()
+        orden_lista= ordenEmergenciaLista.objects.filter(ticket=ticket).first()
+        orden_lista.delete()
+        return HttpResponse("ok")
+    else: 
+        return HttpResponse("bad")
+
 def proveedorRechazaOrdenEmergencia (request, email, ticket): 
     if email!="" and ticket!="":
         email_proveedor=email
@@ -2201,7 +2222,32 @@ def clienteRechazaOrdenEmergencia (request):
             return HttpResponse("bad")
     else: 
         return HttpResponse("bad")
-    
+
+
+@csrf_exempt
+def proveedorOrdenEmergenciaCalificar (request): 
+    if request.method == 'POST':
+        ticket = request.POST.get("ticket")
+        reseña=request.POST.get("resena")
+        calificacion=request.POST.get("calificacion")
+        orden=ordenEmergencia.objects.filter(ticket=ticket).first()
+        if orden: 
+            orden.calificacion_cliente= calificacion
+            orden.resena_al_cliente=reseña
+            orden.califico_el_proveedor=True
+            orden.save()
+            email=orden.client_email
+            cliente=client.objects.filter(email=email).first()
+            if cliente:
+                calificacion_inicial= cliente.qualification
+                cliente.qualification=calificacion_inicial + (int(calificacion)/( (cliente.cantidad_ordenes_realizadas + cliente.cantidad_ordenes_canceladas)+1))
+                cliente.cantidad_ordenes_realizadas=cliente.cantidad_ordenes_realizadas+1
+                cliente.save()
+            return HttpResponse("ok")
+        else: 
+            return HttpResponse("bad")
+    else: 
+        return HttpResponse("bad")
     
 @csrf_exempt
 def checkTodasOrdenesEmergenciaAbiertas (request): 
