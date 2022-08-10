@@ -1696,18 +1696,15 @@ def finalizarOrdenProveedor(request):
 @csrf_exempt
 def finalizarOrdenCliente(request):
     if request.method == 'POST':
-        
         ticket=request.POST.get("ticket")
         calificacion = request.POST.get("calificacion")
         resena = request.POST.get("resena")
         orden_General= ordenGeneral.objects.filter(ticket=ticket).first()
         if orden_General:
-            
             email=orden_General.proveedor_email
             proveedor=serviceProvider.objects.filter(email=email).first()
             if proveedor:
                 calificacion_inicial= orden_General.rubro.qualification
-                
                 orden_General.rubro.qualification=calificacion_inicial + (int(calificacion)/( (proveedor.cantidad_ordenes_realizadas + proveedor.cantidad_ordenes_rechazadas)+1))
                 proveedor.cantidad_ordenes_realizadas=proveedor.cantidad_ordenes_realizadas+1
                 proveedor.save()
@@ -2201,11 +2198,11 @@ def proveedorRechazaOrdenEmergencia (request, email, ticket):
         else:
             return HttpResponse("bad")
 
-@csrf_exempt
-def clienteRechazaOrdenEmergencia (request): 
-    if request.method == 'POST':
-        ticket = request.POST.get("ticket")
-        motivo_rechazo=request.POST.get("motivo_rechazo")
+
+def clienteRechazaOrdenEmergencia (request, ticket, motivo_rechazo): 
+    if ticket != "":
+        ticket = ticket
+        motivo_rechazo=motivo_rechazo
         orden=ordenEmergencia.objects.filter(ticket=ticket).first()
         if orden: 
             orden.motivo_rechazo= motivo_rechazo
@@ -2217,6 +2214,7 @@ def clienteRechazaOrdenEmergencia (request):
                 os.remove(orden.picture2.path)
                 orden.picture2=""
             orden.save()
+            aca tengo que eliminar orden lista
             return HttpResponse("ok")
         else: 
             return HttpResponse("bad")
@@ -2244,6 +2242,42 @@ def proveedorOrdenEmergenciaCalificar (request):
                 cliente.cantidad_ordenes_realizadas=cliente.cantidad_ordenes_realizadas+1
                 cliente.save()
             return HttpResponse("ok")
+        else: 
+            return HttpResponse("bad")
+    else: 
+        return HttpResponse("bad")
+
+@csrf_exempt
+def clienteOrdenEmergenciaCalificar (request): 
+    if request.method == 'POST':
+        ticket = request.POST.get("ticket")
+        reseña=request.POST.get("resena")
+        calificacion=request.POST.get("calificacion")
+        orden=ordenEmergencia.objects.filter(ticket=ticket).first()
+        if orden: 
+            orden.calificacion_proveedor= calificacion
+            orden.resena_al_proveedor=reseña
+            orden.califico_el_cliente=True
+            orden.save()
+            email=orden.proveedor_email
+            proveedor_independiente=serviceProvider.objects.filter(email=email).first()
+            if proveedor_independiente:
+                calificacion_inicial= cliente.qualification
+                cliente.qualification=calificacion_inicial + (int(calificacion)/( (cliente.cantidad_ordenes_realizadas + cliente.cantidad_ordenes_canceladas)+1))
+                cliente.cantidad_ordenes_realizadas=cliente.cantidad_ordenes_realizadas+1
+                cliente.save()
+                return HttpResponse("ok")
+            else: 
+                proveedor_empresa=company.objects.filter(email=email).first()
+                if proveedor_empresa:
+                    calificacion_inicial= cliente.qualification
+                    cliente.qualification=calificacion_inicial + (int(calificacion)/( (cliente.cantidad_ordenes_realizadas + cliente.cantidad_ordenes_canceladas)+1))
+                    cliente.cantidad_ordenes_realizadas=cliente.cantidad_ordenes_realizadas+1
+                    cliente.save()
+                    return HttpResponse("ok")
+                else: 
+                    return HttpResponse("bad")
+
         else: 
             return HttpResponse("bad")
     else: 
