@@ -2214,7 +2214,10 @@ def clienteRechazaOrdenEmergencia (request, ticket, motivo_rechazo):
                 os.remove(orden.picture2.path)
                 orden.picture2=""
             orden.save()
-            aca tengo que eliminar orden lista
+            #aca elimino la lista
+            lista = ordenEmergenciaLista.objects.filter(ticket=ticket)
+            for datos in lista:
+                datos.delete()
             return HttpResponse("ok")
         else: 
             return HttpResponse("bad")
@@ -2254,6 +2257,7 @@ def clienteOrdenEmergenciaCalificar (request):
         reseña=request.POST.get("resena")
         calificacion=request.POST.get("calificacion")
         orden=ordenEmergencia.objects.filter(ticket=ticket).first()
+        rubro=""
         if orden: 
             orden.calificacion_proveedor= calificacion
             orden.resena_al_proveedor=reseña
@@ -2262,19 +2266,29 @@ def clienteOrdenEmergenciaCalificar (request):
             email=orden.proveedor_email
             proveedor_independiente=serviceProvider.objects.filter(email=email).first()
             if proveedor_independiente:
-                calificacion_inicial= cliente.qualification
-                cliente.qualification=calificacion_inicial + (int(calificacion)/( (cliente.cantidad_ordenes_realizadas + cliente.cantidad_ordenes_canceladas)+1))
-                cliente.cantidad_ordenes_realizadas=cliente.cantidad_ordenes_realizadas+1
-                cliente.save()
-                return HttpResponse("ok")
+                rubro=item.objects.filter(email=email).filter(items=orden.rubro).first()
+                if rubro:
+                    calificacion_inicial= rubro.qualification
+                    rubro.qualification=calificacion_inicial + (int(calificacion)/( (proveedor_independiente.cantidad_ordenes_realizadas + proveedor_independiente.cantidad_ordenes_canceladas)+1))
+                    proveedor_independiente.cantidad_ordenes_realizadas=proveedor_independiente.cantidad_ordenes_realizadas+1
+                    proveedor_independiente.save()
+                    rubro.save()
+                    return HttpResponse("ok")
+                else:
+                    return HttpResponse("bad")
             else: 
                 proveedor_empresa=company.objects.filter(email=email).first()
                 if proveedor_empresa:
-                    calificacion_inicial= cliente.qualification
-                    cliente.qualification=calificacion_inicial + (int(calificacion)/( (cliente.cantidad_ordenes_realizadas + cliente.cantidad_ordenes_canceladas)+1))
-                    cliente.cantidad_ordenes_realizadas=cliente.cantidad_ordenes_realizadas+1
-                    cliente.save()
-                    return HttpResponse("ok")
+                    rubro=item_company.objects.filter(email=email).filter(items=orden.rubro).first()
+                    if rubro:
+                        calificacion_inicial= rubro.qualification
+                        rubro.qualification=calificacion_inicial + (int(calificacion)/( (proveedor_empresa.cantidad_ordenes_realizadas + proveedor_empresa.cantidad_ordenes_canceladas)+1))
+                        proveedor_empresa.cantidad_ordenes_realizadas=proveedor_empresa.cantidad_ordenes_realizadas+1
+                        proveedor_empresa.save()
+                        rubro.save()
+                        return HttpResponse("ok")
+                    else:
+                        return HttpResponse("bad")
                 else: 
                     return HttpResponse("bad")
 
