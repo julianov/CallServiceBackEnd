@@ -2044,10 +2044,13 @@ def pedirOrdenEmergencia (request):
             print("llega aca adentro del if")
             array=[]
 
-            datos_independiente=item.objects.exclude(radius=0).exclude(hace_orden_emergencia=False).order_by('-publicidad','-qualification')
+            datos_independiente=item.objects.filter(items=categoria).exclude(radius=0).exclude(hace_orden_emergencia=False).order_by('-publicidad','-qualification')
+            print("los proveedores son:")
+            print(datos_independiente)
+
             proveedoresRadio(1,array,datos_independiente,clienteLat,clienteLong,0,30,3)
                    
-            datos_companias=item_company.objects.exclude(radius=0).exclude(hace_orden_emergencia=False).order_by('-publicidad','-qualification')
+            datos_companias=item_company.objects.filter(items=categoria).exclude(radius=0).exclude(hace_orden_emergencia=False).order_by('-publicidad','-qualification')
             proveedoresRadio(2,array,datos_companias,clienteLat,clienteLong,0,30,3)
             
             print(len(array))
