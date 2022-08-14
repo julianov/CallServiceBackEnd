@@ -42,7 +42,7 @@ urlpatterns = [
     path('orden/ordengeneral', pedirOrdenGeneral), #GENERAR ORDEN POR PARTE DEL CLIENTE   
     path('orden/misordenes/<tipo>/<email>', consultarOrdenes),  #lista de ordenes de un proveedor
     path('orden/datocliente/<n_ticket>/<tipo_orden>',datosCliente),
-    path('orden/datoproveedor/<n_ticket>/<tipo_orden>',datosProveedor),
+    path('orden/datoproveedor/<n_ticket>/<tipo_orden>/<rubro>',datosProveedor),
     path('orden/cambiarestado/<n_ticket>/<tipo_orden>/<nuevo_estado_orden>',cambiarEstadoOrden),
     path('orden/agregarfoto',agregarFotoOrden),
     path('orden/masInfo/proveedor',masInfoOrdenProveedor),

@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.http import JsonResponse
 from callserviceapp.models import  chat, client, item_company, nuevo_chat, ordenEmergencia, ordenEmergenciaLista, ordenGeneral, serviceProvider, item, company
 from callserviceapp.tasks import send_orden_emergencia, send_user_mail, send_proveedor_mail_new_orden
-from callserviceapp.utils import distanciaEnLaTierra, proveedoresRadio
+from callserviceapp.utils import distanciaEnLaTierra, proveedoresRadio, proveedoresRadioOrdenEmergencia
 import random
 import base64
 import datetime
@@ -34,12 +34,12 @@ def homeCliente (request , lat, long):
 def proveedorUbicacion (request , email, lat, long):
     proveedor=serviceProvider.objects.filter(email=email).first()
     if proveedor:
-        rubro=item.objects.filter(provider=proveedor).first()
+        rubro=item.objects.filter(provider=proveedor)
         if rubro:
-            print("llega a rubro")
-            rubro.posicion_lat=lat
-            rubro.posicion_long=long
-            rubro.save()
+            for rubros in rubro:
+                rubros.posicion_lat=lat
+                rubros.posicion_long=long
+                rubros.save()
             return HttpResponse("ok")
         
         else:
@@ -1118,7 +1118,7 @@ def datosCliente(request , n_ticket, tipo_orden):
         return HttpResponse("bad")
 
 
-def datosProveedor(request , n_ticket, tipo_orden):
+def datosProveedor(request , n_ticket, tipo_orden, rubro):
     if tipo_orden=="Orden general": 
         ordenesGenerales= ordenGeneral.objects.filter(ticket=n_ticket).first()
         if ordenesGenerales:
@@ -1128,7 +1128,7 @@ def datosProveedor(request , n_ticket, tipo_orden):
                 if proveedor_independiente.picture:
                     imagen="data:image/png;base64,"+base64.b64encode(proveedor_independiente.picture.read()).decode('ascii') 
                 
-                rubro=item.objects.filter(provider=proveedor_independiente).first()
+                rubro=item.objects.filter(provider=proveedor_independiente).filter(items=rubro).first()
                 if rubro:
                     calificacion=rubro.qualification
                 else: 
@@ -1141,7 +1141,7 @@ def datosProveedor(request , n_ticket, tipo_orden):
                     imagen=""
                     if compania.picture:
                         imagen="data:image/png;base64,"+base64.b64encode(compania.picture.read()).decode('ascii') 
-                    rubro=item_company.objects.filter(provider=proveedor_independiente).first()
+                    rubro=item_company.objects.filter(provider=proveedor_independiente).filter(items=rubro).first()
                     if rubro:
                         calificacion=rubro.qualification
                     else: 
@@ -1154,24 +1154,29 @@ def datosProveedor(request , n_ticket, tipo_orden):
             return HttpResponse ("bad")
 
     elif tipo_orden=="Orden de emergencia":
-        ordenesEmergencia= ordenEmergencia.objects.filter(ticket=n_ticket)
+        ordenesEmergencia= ordenEmergencia.objects.filter(ticket=n_ticket).first()
         if ordenesEmergencia:
             proveedor_independiente= serviceProvider.objects.filter(email=ordenesEmergencia.proveedor_email).first()
             if proveedor_independiente:
-                imagen=""
-                if proveedor_independiente.picture:
-                    imagen="data:image/png;base64,"+base64.b64encode(proveedor_independiente.picture.read()).decode('ascii') 
-                return JsonResponse( {"nombre":proveedor_independiente.name,"apellido":proveedor_independiente.last_name, 
-                "imagen":imagen, "calificacion":proveedor_independiente.qualification}, safe=False)
+                rubro=item.objects.filter(provider=proveedor_independiente).filter(items=rubro).first()
+                if rubro:
+                    imagen=""
+                    if proveedor_independiente.picture:
+                        imagen="data:image/png;base64,"+base64.b64encode(proveedor_independiente.picture.read()).decode('ascii') 
+                    return JsonResponse( {"nombre":proveedor_independiente.name,"apellido":proveedor_independiente.last_name, 
+                "imagen":imagen, "calificacion":rubro.qualification}, safe=False)
+                else:
+                    return HttpResponse("bad")
             else:
                 compania= company.objects.filter(email=ordenesEmergencia.proveedor_email).first()
                 if compania:
+                    rubro=item_company.objects.filter(provider=compania).filter(items=rubro).first()
                     imagen=""
                     if compania.picture:
                         imagen="data:image/png;base64,"+base64.b64encode(compania.picture.read()).decode('ascii') 
                 
                     return JsonResponse( {"nombre":compania.name,"apellido":compania.last_name, 
-                "imagen":imagen, "calificacion":compania.qualification}, safe=False)
+                "imagen":imagen, "calificacion":rubro.qualification}, safe=False)
                 else: 
                     return HttpResponse("bad") 
         else: 
@@ -1325,12 +1330,18 @@ def pedirOrdenGeneral (request):
                 return HttpResponse("bad")
 
 
-def consultarOrdenes(request , tipo,email):
+def consultarOrdenes(request, tipo,email):
     if tipo=="proveedor": 
         ordenesGenerales= ordenGeneral.objects.filter(proveedor_email=email).exclude(status="CAN").exclude( status="REX").exclude( califico_el_proveedor=True)
-        ordenesEmergencia= ordenEmergencia.objects.filter(proveedor_email=email).exclude(status="CAN").exclude( status="REX").exclude(califico_el_proveedor=True)
-        EmergenciaLista=ordenEmergenciaLista.objects.filter(proveedor_email=email)
-       
+        ordenesEmergencia= ordenEmergencia.objects.filter(proveedor_email=email).exclude(status="ENV").exclude(status="CAN").exclude( status="REX")                                                             
+        EmergenciaLista=ordenEmergenciaLista.objects.filter(proveedor_email=email).exclude(status="OA")
+        
+        print("//========////////////////////////////////////////////////")
+        print(ordenesEmergencia)
+        print("//////////////////////////////////////////////////")
+        print("//========////////////////////////////////////////////////")
+        print(EmergenciaLista)
+        print("//////////////////////////////////////////////////")
         array=[]
         if ordenesGenerales:
             for datos in ordenesGenerales:
@@ -1386,17 +1397,13 @@ def consultarOrdenes(request , tipo,email):
                 else:
                     imagen['picture2']=""
                     
-                print("checking")
-                print(datos.rubro)
                 array.append({"rubro":datos.rubro,"tipo":"ORDEN DE EMERGENCIA","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
-                "dia":datos.day, "time":datos.time, "titulo":datos.tituloPedido,"descripcion":datos.problem_description,
-                "location_lat":datos.location_lat,"location_long":datos.location_long,"email_cliente":cliente.email,
+                "descripcion":datos.problem_description,
+                "location_lat":datos.location_cliente_lat,"location_long":datos.location_cliente_long,"email_cliente":cliente.email,
                 "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_cliente":imagen['imagen_Cliente'] })
 
         if EmergenciaLista:
             for datos in EmergenciaLista:
-                ordenesEmergencia= ordenEmergencia.objects.filter(ticket=datos.ticket)
-
                 array.append({"rubro":datos.rubro,"tipo":"Orden de emergencia","status":datos.status, "ticket":datos.ticket})
 
         if len(array)>0:
@@ -2041,27 +2048,23 @@ def pedirOrdenEmergencia (request):
 
         if categoria and clienteEmail and clienteLat and clienteLong and descripcion_problema:
             
-            print("llega aca adentro del if")
             array=[]
 
             datos_independiente=item.objects.filter(items=categoria).exclude(radius=0).exclude(hace_orden_emergencia=False).order_by('-publicidad','-qualification')
-            print("los proveedores son:")
-            print(datos_independiente)
-
-            proveedoresRadio(1,array,datos_independiente,clienteLat,clienteLong,0,30,3)
+            proveedoresRadioOrdenEmergencia(1,array,datos_independiente,clienteLat,clienteLong,0,30,15)
                    
             datos_companias=item_company.objects.filter(items=categoria).exclude(radius=0).exclude(hace_orden_emergencia=False).order_by('-publicidad','-qualification')
-            proveedoresRadio(2,array,datos_companias,clienteLat,clienteLong,0,30,3)
-            
-            print(len(array))
+            proveedoresRadioOrdenEmergencia(2,array,datos_companias,clienteLat,clienteLong,0,30,15)
+           
             if len(array)<=3:
-                proveedoresRadio(1,array,datos_independiente,clienteLat,clienteLong,30,50,6)        
-                proveedoresRadio(2,array,datos_companias,clienteLat,clienteLong,30,50,6)
-                print(len(array))
+                
+                proveedoresRadioOrdenEmergencia(1,array,datos_independiente,clienteLat,clienteLong,30,50,6)        
+                proveedoresRadioOrdenEmergencia(2,array,datos_companias,clienteLat,clienteLong,30,50,6)
+                
                 if len(array)==0:
                     return HttpResponse("bad")
                 else:
-                    ticket =  ordenGeneral.objects.count()+ordenEmergencia.objects.count()+1000
+                    ticket = ordenGeneral.objects.count()+ordenEmergencia.objects.count()+1000
                     new=ordenEmergencia()
                     new.status="ENV"
                     new.rubro= categoria
@@ -2077,12 +2080,10 @@ def pedirOrdenEmergencia (request):
                     new.motivo_rechazo=""
                     new.resena_al_proveedor=""    
                     new.resena_al_cliente=""  
-
                     new.save()
                 
                 val=notificarProveedoresOrdenEmergencia(ticket, array, categoria, descripcion_problema)
                 if val==1:
-                    print("devolvio 1")
                     return HttpResponse(ticket)
                 else: 
                     return HttpResponse("bad")
@@ -2116,6 +2117,8 @@ def pedirOrdenEmergencia (request):
 @csrf_exempt
 def notificarProveedoresOrdenEmergencia(ticket, array_proveedores, categoria,descripcion_problema): 
     array=[]
+    fallo=False
+    
     for proveedor in array_proveedores: 
         new=ordenEmergenciaLista()
         new.ticket=ticket
@@ -2125,12 +2128,13 @@ def notificarProveedoresOrdenEmergencia(ticket, array_proveedores, categoria,des
         try:
             send_orden_emergencia.delay(ticket, proveedor["email"], categoria,descripcion_problema)
             new.save()
-            print("ordenEmergenciaLista creada")
-            return 1 
-
+            
         except:
-            print("problem found at send proveedor mail new orden")
-            return 0
+            fallo=True
+    if fallo:
+        return 0
+    else:
+        return 1            
      
 def proveedorAceptaOrdenEmergencia (request, email, ticket): 
     if email!="" and ticket!="":
@@ -2141,6 +2145,11 @@ def proveedorAceptaOrdenEmergencia (request, email, ticket):
             orden.status="ACE"
             orden.proveedor_email=email_proveedor
             orden.save()
+            lista = ordenEmergenciaLista.objects.filter(ticket=ticket)
+            if lista: 
+                for datos in lista:
+                    datos.status="OA"
+                    datos.save()
             return HttpResponse("ok")
         else: 
             return HttpResponse("bad")
@@ -2191,9 +2200,11 @@ def proveedorRechazaOrdenEmergencia (request, email, ticket):
             ordenLista.delete()
             lista=ordenEmergenciaLista.objects.filter(ticket=ticket)
             cantidad=lista.count()
-            if (cantidad-1)!=0:
-                array=[]
-                for proveedores in lista: 
+            print(cantidad)
+            if (cantidad)!=0:
+                for proveedores in lista:
+                    proveedores.status="CE" 
+                    proveedores.save()
                     send_orden_emergencia.delay(ticket, proveedores.proveedor_email, orden.rubro,orden.problem_description)
                 return HttpResponse("ok")
             else:

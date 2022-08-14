@@ -274,10 +274,7 @@ class ordenEmergencia (models.Model):
 class ordenEmergenciaLista (models.Model):
     STATUS = [
         ("CE","CORREO ENVIADO"),
-        ("CR","CORREO RECIBIDO"),
         ("OA","ORDEN ACEPTADA"),
-        ("OR","ORDEN RECHAZADA"),
-        ("OD","ORDEN DESACTIVADA"),
     ]
 
     rubro=models.TextField(blank=True)

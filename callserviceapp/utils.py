@@ -101,6 +101,7 @@ def ordenarProveedores(array):
 #Toma el tipo de proveedor, un arreglo de proveedores, la latitud y longitud del cliente y un rango de radio 
 #De cada proveedor obtiene la distancia hasta el cliente. Si está dentro del radio devuleve la lista de proveedor
 def proveedoresRadioOrdenEmergencia(tipo, array, proveedores, lat, long, radio1, radio2, cantidad_proveedores_maxima):
+    
     if proveedores:
         datos_de_proveedores=[]
         distancias=[]
@@ -109,7 +110,10 @@ def proveedoresRadioOrdenEmergencia(tipo, array, proveedores, lat, long, radio1,
             #distance = math.sqrt(math.pow(data.posicion_lat-float(lat), 2) + math.pow(data.posicion_long-float(long), 2) )
                         
             distance=distanciaEnLaTierra(float(data.posicion_long),float(data.posicion_lat),float(long),float(lat))
-            
+            print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+            print (distance)
+            print(data.provider.email)
+            print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
             if radio1 <= distance and distance < radio2:
                 datos_de_proveedores.append(data)
                 distancias.append(distance)
@@ -119,8 +123,7 @@ def proveedoresRadioOrdenEmergencia(tipo, array, proveedores, lat, long, radio1,
         
         if tipo==1: 
             j=0
-            print("aca tengo que ver que proveedores hay")
-            print(datos_de_proveedores)
+            
             for datos in datos_de_proveedores:
                 personales=datos.provider
                 imagenes={}
