@@ -925,7 +925,9 @@ def ListaProveedoresPalabra (independiente_nombre,independiente_apellido,empresa
             array_items_empresa.append(item_company.objects.filter(provider=datos))
     return ListaProveedores(array_items_independientes,array_items_empresa)
     
-def buscar (tipo, dato):
+def buscar (request,tipo, dato):
+    print("el tipo es:")
+    print(tipo)
     if tipo=="categoria":
         categoria_a_buscar=dato
         categoria_buscada_en_independientes=item.objects.filter(items=categoria_a_buscar).order_by('-qualification')
@@ -2141,16 +2143,19 @@ def proveedorAceptaOrdenEmergencia (request, email, ticket):
         email_proveedor=email
         ticket = ticket
         orden=ordenEmergencia.objects.filter(ticket=ticket).first()
-        if orden: 
-            orden.status="ACE"
-            orden.proveedor_email=email_proveedor
-            orden.save()
-            lista = ordenEmergenciaLista.objects.filter(ticket=ticket)
-            if lista: 
-                for datos in lista:
-                    datos.status="OA"
-                    datos.save()
-            return HttpResponse("ok")
+        if orden:
+            if orden.status=="ENV": 
+                orden.status="ACE"
+                orden.proveedor_email=email_proveedor
+                orden.save()
+                lista = ordenEmergenciaLista.objects.filter(ticket=ticket)
+                if lista: 
+                    for datos in lista:
+                        datos.status="OA"
+                        datos.save()
+                return HttpResponse("ok")
+            else:
+                return HttpResponse("taken")
         else: 
             return HttpResponse("bad")
 
@@ -2200,7 +2205,6 @@ def proveedorRechazaOrdenEmergencia (request, email, ticket):
             ordenLista.delete()
             lista=ordenEmergenciaLista.objects.filter(ticket=ticket)
             cantidad=lista.count()
-            print(cantidad)
             if (cantidad)!=0:
                 for proveedores in lista:
                     proveedores.status="CE" 
