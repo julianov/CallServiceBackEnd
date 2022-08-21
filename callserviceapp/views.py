@@ -14,7 +14,6 @@ def homeCliente (request , lat, long):
     array=[]
 
     datos_independiente=item.objects.order_by('-publicidad','-qualification')
-    
     proveedoresRadio(1,array,datos_independiente,lat,long,0,30,6)
     
     datos_companias=item_company.objects.order_by('-publicidad','-qualification')
