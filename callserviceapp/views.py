@@ -926,8 +926,7 @@ def ListaProveedoresPalabra (independiente_nombre,independiente_apellido,empresa
     return ListaProveedores(array_items_independientes,array_items_empresa)
     
 def buscar (request,tipo, dato):
-    print("el tipo es:")
-    print(tipo)
+    
     if tipo=="categoria":
         categoria_a_buscar=dato
         categoria_buscada_en_independientes=item.objects.filter(items=categoria_a_buscar).order_by('-qualification')
