@@ -22,6 +22,7 @@ def send_user_mail(randomNumber, email):
 
     #message.attach_alternative(content, 'text/html')
     send_mail(subject, cuerpo ,'servidor.ssmtp@gmail.com', [email],fail_silently = False) #Destinatario)
+    print("veamos si se ejecuta rabbitmq")
     return 1
 
 @shared_task()

@@ -290,60 +290,48 @@ def nuevaInfoPersonal (request):
             if not objetos:
                 return HttpResponse("no ha sido posible")
             else: 
-                email=objetos.first().email
-                password=objetos.first().password
+               
                 persona=objetos.first()
-                if persona.picture: 
-                    os.remove(persona.picture)
-                persona.delete()
-                new=client()
-                new.email=email
-                new.password=password
-                new.name=request.POST.get("nombre")
-                new.last_name=request.POST.get("apellido")
-                new.picture= request.FILES.get("image")
-                new.qualification=request.POST.get("calificacion")
-                new.save() 
+                
+                if request.POST.get("nombre")!= None:
+                    persona.name=request.POST.get("nombre")
+                if request.POST.get("apellido")!= None:
+                    persona.last_name=request.POST.get("apellido")
+                if request.FILES.get("image")!= None:
+                    persona.picture= request.FILES.get("image")
+                persona.save() 
                 return HttpResponse("ok")
         elif request.POST.get("tipo")=="2":
             objetos_=serviceProvider.objects.filter(email=request.POST.get("email"))
             if not objetos_:
                 return HttpResponse("no ha sido posible")
             else: 
-                email=objetos_.first().email
-                password=objetos_.first().password
+                
                 persona=objetos_.first()
-                if persona.picture:
-                    os.remove(persona.picture.path)
-                persona.delete()
-                new=serviceProvider()
-                new.email=email
-                new.password=password
-                new.name=request.POST.get("nombre")
-                new.last_name=request.POST.get("apellido")
-                new.picture= request.FILES.get("image")
-                # new.imagen_promocional= request.FILES.get("imagenPromocional")
-                new.save() 
+                
+                if request.POST.get("nombre")!= None:
+                    persona.name=request.POST.get("nombre")
+                if request.POST.get("apellido")!= None:
+                    persona.last_name=request.POST.get("apellido")
+                if request.FILES.get("image")!= None:
+                    persona.picture= request.FILES.get("image")
+                persona.save() 
                 return HttpResponse("ok")
         elif request.POST.get("tipo")=="3":
             objetos=company.objects.filter(email=request.POST.get("email"))
             if not objetos:
                 return HttpResponse("no ha sido posible")
             else: 
-                email=objetos.first().email
-                password=objetos.first().password
+                
                 compania=objetos.first()
-                if compania.picture:
-                    os.remove(compania.picture.path)
-                compania.delete()
-                new=company()
-                new.email=email
-                new.password=password
-                new.company_name=request.POST.get("nombre")
-                new.company_description=request.POST.get("descripcion")
-                new.picture= request.FILES.get("image")
-                # new.imagen_promocional= request.FILES.get("imagenPromocional")
-                new.save()
+                
+                if request.POST.get("nombre")!= None:
+                    compania.company_name=request.POST.get("nombre")
+                if request.POST.get("descripcion")!= None:
+                    compania.company_description=request.POST.get("descripcion")
+                if request.FILES.get("image")!= None:
+                    compania.picture= request.FILES.get("image")
+                compania.save()
                 return HttpResponse("ok")
         else: 
             return HttpResponse("bad")
@@ -632,14 +620,14 @@ def deleteRubro (request):
             proveedores=serviceProvider.objects.filter(email=request.POST.get("email"))
             if proveedores:
                 rubro=item.objects.filter(provider=proveedores.first()).filter(items=request.POST.get("item")).first()
-                if rubro.picture1: 
-                    os.remove(rubro.picture1.path)
-                if rubro.picture2: 
-                    os.remove(rubro.picture2.path)
-                if rubro.picture3: 
-                    os.remove(rubro.picture3.path)
-                if rubro. certificate: 
-                    os.remove(rubro.certificate.path) 
+                #if rubro.picture1: 
+                    #os.remove(rubro.picture1.path)
+                #if rubro.picture2: 
+                    #os.remove(rubro.picture2.path)
+                #if rubro.picture3: 
+                    #os.remove(rubro.picture3.path)
+                #if rubro. certificate: 
+                    #os.remove(rubro.certificate.path) 
                 rubro.delete()
                 return HttpResponse("rubro elimnado")
             else:
@@ -648,14 +636,14 @@ def deleteRubro (request):
             proveedores=company.objects.filter(email=request.POST.get("email"))
             if proveedores:
                 rubro=item_company.objects.filter(provider=proveedores.first()).filter(items=request.POST.get("item")).first()
-                if rubro.picture1: 
-                    os.remove(rubro.picture1.path)
-                if rubro.picture2: 
-                    os.remove(rubro.picture2.path)
-                if rubro.picture3: 
-                    os.remove(rubro.picture3.path)
-                if rubro. certificate: 
-                    os.remove(rubro.certificate.path) 
+                #if rubro.picture1: 
+                    #os.remove(rubro.picture1.path)
+                #if rubro.picture2: 
+                    #os.remove(rubro.picture2.path)
+                #if rubro.picture3: 
+                    #os.remove(rubro.picture3.path)
+                #if rubro. certificate: 
+                    #os.remove(rubro.certificate.path) 
                 rubro.delete()
                 return HttpResponse("rubro elimnado")
             else:
@@ -675,14 +663,14 @@ def modificarRubro (request):
                 latitud=rubro.posicion_lat
                 longitud=rubro.posicion_long
                 calificacion=rubro.qualification
-                if rubro.picture1: 
-                    os.remove(rubro.picture1.path)
-                if rubro.picture2: 
-                    os.remove(rubro.picture2.path)
-                if rubro.picture3: 
-                    os.remove(rubro.picture3.path)
-                if rubro. certificate: 
-                    os.remove(rubro.certificate.path)
+                #if rubro.picture1: 
+                    #os.remove(rubro.picture1.path)
+                #if rubro.picture2: 
+                    #os.remove(rubro.picture2.path)
+                #if rubro.picture3: 
+                    #os.remove(rubro.picture3.path)
+                #if rubro. certificate: 
+                    #os.remove(rubro.certificate.path)
                 rubro.delete()
                    
                 new = item()
@@ -720,14 +708,14 @@ def modificarRubro (request):
                 latitud=rubro.posicion_lat
                 longitud=rubro.posicion_long
                 calificacion=rubro.qualification
-                if rubro.picture1: 
-                    os.remove(rubro.picture1.path)
-                if rubro.picture2: 
-                    os.remove(rubro.picture2.path)
-                if rubro.picture3: 
-                    os.remove(rubro.picture3.path)
-                if rubro. certificate: 
-                    os.remove(rubro.certificate.path)
+                #if rubro.picture1: 
+                    #os.remove(rubro.picture1.path)
+                #if rubro.picture2: 
+                    #os.remove(rubro.picture2.path)
+                #if rubro.picture3: 
+                    #os.remove(rubro.picture3.path)
+                #if rubro. certificate: 
+                    #os.remove(rubro.certificate.path)
                 rubro.delete()
                    
                 new = item()
@@ -1487,7 +1475,7 @@ def consultarOrdenes(request, tipo,email):
                 "location_cliente_lat":datos.location_cliente_lat,"location_cliente_long":datos.location_cliente_long,"email_proveedor":proveedor_email,
                 "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_proveedor":imagen['imagen_proveedor'] })
             
-        print("array length")
+        print("array length ORDENES CLIENTE DE EMERGENCIA")
         print(len(array))
         if len(array)>0:
             return JsonResponse(array, safe=False)
@@ -2224,10 +2212,10 @@ def clienteRechazaOrdenEmergencia (request, ticket, motivo_rechazo):
             orden.motivo_rechazo= motivo_rechazo
             orden.status="CAN"
             if orden.picture1: 
-                os.remove(orden.picture1.path)
+                #os.remove(orden.picture1.path)
                 orden.picture1=""
             if orden.picture2:
-                os.remove(orden.picture2.path)
+                #os.remove(orden.picture2.path)
                 orden.picture2=""
             orden.save()
             #aca elimino la lista
