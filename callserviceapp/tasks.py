@@ -21,8 +21,7 @@ def send_user_mail(randomNumber, email):
     cuerpo="Su número de validación es: "+str(randomNumber)
 
     #message.attach_alternative(content, 'text/html')
-    send_mail(subject, cuerpo ,'servidor.ssmtp@gmail.com', [email],fail_silently = False) #Destinatario)
-    print("veamos si se ejecuta rabbitmq")
+    send_mail(subject, cuerpo ,'julianov403@pepisandbox.com', [email],fail_silently = False) #Destinatario)
     return 1
 
 @shared_task()
@@ -31,7 +30,7 @@ def send_proveedor_mail_new_orden(ticket, email, usuario):
     cuerpo = "Posee nueva solicitud de trabajo."+'\n'+'\n' + "Solicitud creada por: "+str(usuario)+'\n'
 
     #message.attach_alternative(content, 'text/html')
-    send_mail(subject, cuerpo,'servidor.ssmtp@gmail.com', [email],fail_silently = False) #Destinatario)
+    send_mail(subject, cuerpo,'julianov403@pepisandbox.com', [email],fail_silently = False) #Destinatario)
     return 1
 
 
@@ -43,6 +42,6 @@ def send_orden_emergencia(ticket, email , categoria,descripcion_problema):
     cuerpo = "Orden de emergencia"+'\n'+'\n'+"Posee nueva solicitud de trabajo."+'\n'+'\n' + "Categoría: "+str(categoria)+'\n'+'\n'+'\n'+descripcion_problema
 
     #message.attach_alternative(content, 'text/html')
-    send_mail(subject, cuerpo,'servidor.ssmtp@gmail.com', [email],fail_silently = False) #Destinatario)
+    send_mail(subject, cuerpo,'smtp.sendgrid.net', [email],fail_silently = False) #Destinatario)
     return 1
 
