@@ -5,7 +5,7 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 
-from callserviceapp.views import agregarFotoOrden, askPersonalInfo, buscar, cambiarEstadoOrden, cambiarfechaordengeneral, cancelarOrdenGeneral, chatMensaje, chatSinLeer, chatVer, clienteOrdenEmergenciaCalificar, clienteRechazaOrdenEmergencia, completeInfo, completeInfoRubros, consultarOrdenParticular, consultarOrdenes, consultarTodasLasOrdenes, consultarTodasLasOrdenesCanceladas, consultarTodasLasOrdenesCurso, consultarTodasLasOrdenesFinalizadas, datosCliente, datosProveedor, deleteRubro, finalizarOrdenCliente, finalizarOrdenProveedor, homeCliente, homeClientePedirDatos, login, masInfoOrdenCliente, masInfoOrdenProveedor, modificarRubro, nuevaInfoPersonal, pedirOrdenEmergencia, pedirOrdenGeneral, presupuestoCliente, presupuestoProveedor, proveedorAceptaOrdenEmergencia, proveedorEnSitioOrdenEmergencia, proveedorEnViajeOrdenEmergencia, proveedorOrdenEmergenciaCalificar, proveedorOrdenEmergenciaRealizada, proveedorRechazaOrdenEmergencia, proveedorUbicacion, register, requestRubros, restarPassword, setNewPassword, verReseñas,addRubro 
+from callserviceapp.views import agregarFotoOrden, askPersonalInfo, buscar, cambiarEstadoOrden, cambiarfechaordengeneral, cancelarOrdenGeneral, chatMensaje, chatSinLeer, chatVer, clienteOrdenEmergenciaCalificar, clienteRechazaOrdenEmergencia, completeInfo, completeInfoRubros, consultarOrdenParticular, consultarOrdenes, consultarTodasLasOrdenes, consultarTodasLasOrdenesCanceladas, consultarTodasLasOrdenesCurso, consultarTodasLasOrdenesFinalizadas, datosCliente, datosProveedor, deleteRubro, finalizarOrdenCliente, finalizarOrdenProveedor, homeCliente, homeClientePedirDatos, login, masInfoOrdenCliente, masInfoOrdenProveedor, modificarRubro, nuevaInfoPersonal, pedirOrdenEmergencia, pedirOrdenGeneral, presupuestoCliente, presupuestoProveedor, proveedorAceptaOrdenEmergencia, proveedorEnSitioOrdenEmergencia, proveedorEnViajeOrdenEmergencia, proveedorOrdenEmergenciaCalificar, proveedorOrdenEmergenciaRealizada, proveedorRechazaOrdenEmergencia, proveedorUbicacion, prueba, register, requestRubros, restarPassword, setNewPassword, verReseñas,addRubro 
 
 from callserviceapp import views
 
@@ -75,6 +75,7 @@ urlpatterns = [
     path('orden/ordenEmergencia/realizada/<ticket>', proveedorOrdenEmergenciaRealizada),
     path('orden/ordenEmergencia/finalizar/proveedor', proveedorOrdenEmergenciaCalificar),
     path('orden/ordenEmergencia/finalizar/cliente', clienteOrdenEmergenciaCalificar),
+    path('prueba', prueba),
 
 
 

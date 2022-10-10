@@ -9,6 +9,7 @@ class client(models.Model):
 
     password = models.CharField(max_length=200)
     email = models.EmailField()	
+    email_confirmed = models.BooleanField(default=False)
     random_number= models.IntegerField(default=0)
     name = models.CharField(max_length=200, blank=True)
     last_name = models.CharField(max_length=200, blank=True)
@@ -26,6 +27,7 @@ class serviceProvider(models.Model):
 
     password = models.CharField(max_length=200)
     email = models.EmailField(default=None)	
+    email_confirmed = models.BooleanField(default=False)
     random_number= models.IntegerField(default=0)
     name = models.CharField(max_length=200, blank=True)  
     last_name = models.CharField(max_length=200, blank=True)
@@ -103,6 +105,8 @@ class company (models.Model):
     #user = models.CharField(max_length=200)
     password = models.CharField(max_length=200)
     email = models.EmailField(default=None)
+    email_confirmed = models.BooleanField(default=False)
+
     random_number= models.IntegerField(default=0)
     company_name = models.CharField(max_length=200, blank=True)  
     company_description = models.CharField(max_length=200, blank=True)  

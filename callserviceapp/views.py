@@ -1,14 +1,19 @@
-import os
 from django.http import HttpResponse
 from django.http import JsonResponse
 from callserviceapp.models import  chat, client, item_company, nuevo_chat, ordenEmergencia, ordenEmergenciaLista, ordenGeneral, serviceProvider, item, company
-from callserviceapp.tasks import send_orden_emergencia, send_user_mail, send_proveedor_mail_new_orden
 from callserviceapp.utils import distanciaEnLaTierra, proveedoresRadio, proveedoresRadioOrdenEmergencia
+
 import random
 import base64
-import datetime
 from django.views.decorators.csrf import csrf_exempt
 
+from callserviceapp.tasks import send_orden_emergencia, send_proveedor_mail_new_orden, send_user_mail
+
+
+
+def prueba(request): 
+    send_user_mail.delay(2232,"julianov403@gmail.com")
+    return HttpResponse("hi")
 
 def homeCliente (request , lat, long):
     array=[]
@@ -1235,10 +1240,8 @@ def pedirOrdenGeneral (request):
                             new.resena_al_cliente=""
                             new.save()
                         
-                            try:
-                                send_proveedor_mail_new_orden.delay(ticket_numero, ProveedorEmail, client_.first().name+" "+client_.first().last_name)
-                            except:
-                                print("problem found at send proveedor mail new orden")
+                            send_proveedor_mail_new_orden.delay(ticket_numero, ProveedorEmail, client_.first().name+" "+client_.first().last_name)
+                           
                             return HttpResponse(ticket_numero) 
                     else:
                         new=ordenGeneral()
@@ -1265,11 +1268,9 @@ def pedirOrdenGeneral (request):
                         new.resena_al_proveedor=""
                         new.resena_al_cliente=""
                         new.save()
-                    
-                        try:
-                            send_proveedor_mail_new_orden.delay(ticket_numero, ProveedorEmail, client_.first().name+" "+client_.first().last_name)
-                        except:
-                            print("problem found at send proveedor mail new orden")
+
+                        send_proveedor_mail_new_orden.delay(ticket_numero, ProveedorEmail, client_.first().name+" "+client_.first().last_name)
+                     
                         return HttpResponse(ticket_numero) 
 
             else: 
@@ -1311,10 +1312,7 @@ def pedirOrdenGeneral (request):
                         
                         new.save()
 
-                        try:
-                            send_proveedor_mail_new_orden.delay(ticket_numero, ProveedorEmail, client_.name+" "+client_.last_name)
-                        except:
-                            print("problem found at send proveedor mail new orden")
+                        send_proveedor_mail_new_orden.delay(ticket_numero, ProveedorEmail, client_.name+" "+client_.last_name)
                         return HttpResponse(ticket_numero) 
 
             else: 
@@ -2124,16 +2122,11 @@ def notificarProveedoresOrdenEmergencia(ticket, array_proveedores, categoria,des
         new.status="CE"
         new.proveedor_email=proveedor["email"]
         new.rubro=categoria
-        try:
-            send_orden_emergencia.delay(ticket, proveedor["email"], categoria,descripcion_problema)
-            new.save()
-            
-        except:
-            fallo=True
-    if fallo:
-        return 0
-    else:
-        return 1            
+        
+        send_orden_emergencia.delay(ticket, proveedor["email"], categoria,descripcion_problema)
+        new.save()
+        
+    return 1            
      
 def proveedorAceptaOrdenEmergencia (request, email, ticket): 
     if email!="" and ticket!="":
