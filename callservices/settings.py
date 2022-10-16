@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'callserviceapp.apps.CallserviceappConfig',
+    'rest_framework.authtoken',
+
 ]
 
 

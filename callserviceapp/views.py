@@ -9,11 +9,58 @@ from django.views.decorators.csrf import csrf_exempt
 
 from callserviceapp.tasks import send_orden_emergencia, send_proveedor_mail_new_orden, send_user_mail
 
+from rest_framework.authtoken.models import Token
 
-
+@csrf_exempt
 def prueba(request): 
     send_user_mail.delay(2232,"julianov403@gmail.com")
     return HttpResponse("hi")
+
+def login(request, email, password):
+    client_=client.objects.filter(email=email).filter(password=password)
+    if client_:
+        datos=client_.first()
+        imagen={}
+        if datos.picture:
+            imagen['img_personal']="data:image/png;base64,"+base64.b64encode(datos.picture.read()).decode('ascii')
+        else:
+            imagen['img_personal']=""
+
+  
+        data=[{"user":datos.email, "clientType":"1", "calificacion":datos.qualification,"picture":imagen['img_personal']}]
+        return JsonResponse(data, safe=False)
+            
+    else: 
+        serviceProvider_=serviceProvider.objects.filter(email=email).filter(password=password)
+        if serviceProvider_:
+            datos=serviceProvider_.first()
+            imagen={}
+            if datos.picture:
+                imagen['img_personal']="data:image/png;base64,"+base64.b64encode(datos.picture.read()).decode('ascii')
+            else:
+                imagen['img_personal']=""
+            
+            token = Token.objects.create(user=serviceProvider_)
+            print("el token es: ")
+            print(token)
+            data=[{"user":datos.email, "clientType":"2", "picture":imagen['img_personal']}]
+            return JsonResponse(data, safe=False) 
+        else:
+            company_=company.objects.filter(email=email).filter(password=password)
+            if company_:
+                datos=company_.first()
+                imagen={}
+                if datos.picture:
+                    imagen['img_personal']="data:image/png;base64,"+base64.b64encode(datos.picture.read()).decode('ascii')
+                else:
+                    imagen['img_personal']=""
+                    
+                token = Token.objects.create(user=company_)
+
+                data=[{"user":datos.email, "clientType":"3", "picture":imagen['img_personal']}]
+                return JsonResponse(data, safe=False)
+            else: 
+                return HttpResponse("usuario y contraseña no válidos")
 
 def homeCliente (request , lat, long):
     array=[]
@@ -158,13 +205,10 @@ def homeClientePedirDatos (request , email,rubro, tipoPedido,lat, long):
 @csrf_exempt 
 def register (request):
     if request.method == 'POST': 
-        print("paso por aca")
         type=request.POST.get("tipo")
         email=request.POST.get("email")
         password =request.POST.get("password")
 
-        print(email)
-        print(password)
         if type == '1':
             print("es usuario comun")
             #nuevo usuario
@@ -173,14 +217,12 @@ def register (request):
             proveedor_empresa=company.objects.filter(email=email)
             
             if not (cliente or proveedor_independiente or proveedor_empresa):     
-                print("entramos aqui") 
                 randomNumber = random.randint(1, 99999)
                 send_user_mail.delay(randomNumber, email)
-                b = client( email=email, password=password)
+                b = client( email=email, password=password,random_number=randomNumber)
                 b.save()
-                print("entramos aqui") 
 
-                return HttpResponse(randomNumber)
+                return HttpResponse("email send")
             else:
                 return HttpResponse("User alredy taken")
         if type == '2':
@@ -192,10 +234,10 @@ def register (request):
             if not (cliente and proveedor_independiente and proveedor_empresa):
                 randomNumber = random.randint(1, 99999)
                 send_user_mail.delay(randomNumber, email)
-                b = serviceProvider( email=email, password=password)
+                b = serviceProvider( email=email, password=password, random_number=randomNumber)
                 b.save()
                 print("debe enviar numero random")
-                return HttpResponse(randomNumber)
+                return HttpResponse("email send")
             else:
                 return HttpResponse("User alredy taken")
         if type == '3':
@@ -207,13 +249,52 @@ def register (request):
             if not (cliente and proveedor_independiente and proveedor_empresa):
                 randomNumber = random.randint(1, 99999)
                 send_user_mail.delay(randomNumber, email)
-                b = company( email=email, password=password)
+                b = company( email=email, password=password, random_number=randomNumber)
                 b.save()
-                return HttpResponse(randomNumber)
+                return HttpResponse("email send")
             else:
                 return HttpResponse("User alredy taken")
         else:
             return HttpResponse("No es cliente normal")
+
+@csrf_exempt
+def validacionEmail (request):
+    if request.method == 'POST': 
+        codigo=request.POST.get("codigo")
+        email=request.POST.get("email")
+        cliente=client.objects.filter(email=email).first()
+        if cliente: 
+            if cliente.random_number == int(codigo): 
+                cliente.email_confirmed=True
+                cliente.save()
+                return HttpResponse("email confirmed")
+            else: 
+                return  HttpResponse("bad")
+        else: 
+            proveedor = serviceProvider.objects.filter(email=email).first()
+            if proveedor:
+                if proveedor.random_number == int(codigo): 
+                    proveedor.email_confirmed=True
+                    proveedor.save()
+                    return HttpResponse("email confirmed")
+                else: 
+                    return  HttpResponse("bad") 
+
+            else: 
+                compania = company.objects.filter(email=email).first()
+                if compania: 
+                    if compania.random_number == int(codigo): 
+                        compania.email_confirmed=True
+                        compania.save()
+                        return HttpResponse("email confirmed")
+                    else: 
+                        return  HttpResponse("bad")
+                else: 
+
+                    return HttpResponse("bad")
+
+     
+
 
 def askPersonalInfo(request,type,email):
     if type=="1":
@@ -754,44 +835,7 @@ def modificarRubro (request):
         else:
             return HttpResponse("no ha sido posible modificar el rubro")
 
-def login(request, email, password):
-    client_=client.objects.filter(email=email).filter(password=password)
-    if client_:
-        datos=client_.first()
-        imagen={}
-        if datos.picture:
-            imagen['img_personal']="data:image/png;base64,"+base64.b64encode(datos.picture.read()).decode('ascii')
-        else:
-            imagen['img_personal']=""
-            
-        data=[{"user":datos.email, "clientType":"1", "calificacion":datos.qualification,"picture":imagen['img_personal']}]
-        return JsonResponse(data, safe=False)
-            
-    else: 
-        serviceProvider_=serviceProvider.objects.filter(email=email).filter(password=password)
-        if serviceProvider_:
-            datos=serviceProvider_.first()
-            imagen={}
-            if datos.picture:
-                imagen['img_personal']="data:image/png;base64,"+base64.b64encode(datos.picture.read()).decode('ascii')
-            else:
-                imagen['img_personal']=""
 
-            data=[{"user":datos.email, "clientType":"2", "picture":imagen['img_personal']}]
-            return JsonResponse(data, safe=False) 
-        else:
-            company_=company.objects.filter(email=email).filter(password=password)
-            if company_:
-                datos=company_.first()
-                imagen={}
-                if datos.picture:
-                    imagen['img_personal']="data:image/png;base64,"+base64.b64encode(datos.picture.read()).decode('ascii')
-                else:
-                    imagen['img_personal']=""
-                data=[{"user":datos.email, "clientType":"3", "picture":imagen['img_personal']}]
-                return JsonResponse(data, safe=False)
-            else: 
-                return HttpResponse("usuario y contraseña no válidos")
 
 
 def restarPassword(request, email):
