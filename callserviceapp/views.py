@@ -40,9 +40,6 @@ def login(request, email, password):
             else:
                 imagen['img_personal']=""
             
-            token = Token.objects.create(user=serviceProvider_)
-            print("el token es: ")
-            print(token)
             data=[{"user":datos.email, "clientType":"2", "picture":imagen['img_personal']}]
             return JsonResponse(data, safe=False) 
         else:
@@ -1229,6 +1226,7 @@ def datosProveedor(request , n_ticket, tipo_orden, rubro):
 
 @csrf_exempt
 def pedirOrdenGeneral (request):
+  
     if request.method == 'POST': 
     
         ProveedorEmail=request.POST.get("ProveedorEmail")
@@ -1321,6 +1319,9 @@ def pedirOrdenGeneral (request):
                 print("debe enviar bad")
                 return HttpResponse("bad")
         else:
+            print("*********************************************")
+            print(request.POST.get("tipoProveedor"))
+            print("*********************************************")
             company_=company.objects.filter(email=ProveedorEmail)
             client_=client.objects.filter(email=clienteEmail)
             if company_ and client_: 
@@ -1334,7 +1335,7 @@ def pedirOrdenGeneral (request):
                     else: 
                         new=ordenGeneral()
                         new.rubro_company=rubro_company
-                        new.rubro=""
+                        #new.rubro=rubro_company
                         new.status="ENV"
                         new.location_lat= clienteLat
                         new.location_long=clienteLong
@@ -1351,11 +1352,13 @@ def pedirOrdenGeneral (request):
                         new.proveedor_email=ProveedorEmail
                         ticket_numero=ordenGeneral.objects.count()+ordenEmergencia.objects.count()+1000
                         new.ticket=ticket_numero
+                        new.motivo_rechazo=""
                         new.resena_al_proveedor=""
                         new.resena_al_cliente=""
                         
                         new.save()
-
+                        print("///////////////////")
+                        print(client_.name)
                         send_proveedor_mail_new_orden.delay(ticket_numero, ProveedorEmail, client_.name+" "+client_.last_name)
                         return HttpResponse(ticket_numero) 
 
@@ -1455,41 +1458,74 @@ def consultarOrdenes(request, tipo,email):
        
         if ordenesGenerales:
             for datos in ordenesGenerales:
-              proveedor=serviceProvider.objects.filter(email=datos.proveedor_email).first()
-              if not proveedor:
-                  proveedor=company.objects.filter(email=datos.proveedor_email).first()
-              if proveedor:
-                imagen={}
-                if proveedor.picture:
-                    imagen['imagen_proveedor']="data:image/png;base64,"+base64.b64encode(proveedor.picture.read()).decode('ascii')
-                else: 
-                    imagen['imagen_proveedor']=""
-                if datos.picture1: 
-                    imagen['picture1']="data:image/png;base64,"+base64.b64encode(datos.picture1.read()).decode('ascii')
-                else:
-                    imagen['picture1']=""
-                if datos.picture2: 
-                    imagen['picture2']="data:image/png;base64,"+base64.b64encode(datos.picture2.read()).decode('ascii')
-                else:
-                    imagen['picture2']=""
-                if datos.picture1_mas_información: 
-                    imagen['picture1_mas_información']="data:image/png;base64,"+base64.b64encode(datos.picture1_mas_información.read()).decode('ascii')
-                else:
-                    imagen['picture1_mas_información']=""
-                if datos.picture2_mas_información: 
-                    imagen['picture2_mas_información']="data:image/png;base64,"+base64.b64encode(datos.picture2_mas_información.read()).decode('ascii')
-                else:
-                    imagen['picture2_mas_información']=""
+                proveedor=serviceProvider.objects.filter(email=datos.proveedor_email).first()
+                if proveedor:
+                    imagen={}
+                    if proveedor.picture:
+                        imagen['imagen_proveedor']="data:image/png;base64,"+base64.b64encode(proveedor.picture.read()).decode('ascii')
+                    else: 
+                        imagen['imagen_proveedor']=""
+                    if datos.picture1: 
+                        imagen['picture1']="data:image/png;base64,"+base64.b64encode(datos.picture1.read()).decode('ascii')
+                    else:
+                        imagen['picture1']=""
+                    if datos.picture2: 
+                        imagen['picture2']="data:image/png;base64,"+base64.b64encode(datos.picture2.read()).decode('ascii')
+                    else:
+                        imagen['picture2']=""
+                    if datos.picture1_mas_información: 
+                        imagen['picture1_mas_información']="data:image/png;base64,"+base64.b64encode(datos.picture1_mas_información.read()).decode('ascii')
+                    else:
+                        imagen['picture1_mas_información']=""
+                    if datos.picture2_mas_información: 
+                        imagen['picture2_mas_información']="data:image/png;base64,"+base64.b64encode(datos.picture2_mas_información.read()).decode('ascii')
+                    else:
+                        imagen['picture2_mas_información']=""
 
+                    array.append({"rubro":datos.rubro.items,"tipo":"Orden general","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
+                    "dia":datos.day, "time":datos.time, "titulo":datos.tituloPedido,"descripcion":datos.problem_description,
+                    "location_lat":datos.location_lat,"location_long":datos.location_long, "email_proveedor":proveedor.email,
+                    "presupuesto":str(datos.presupuesto_inicial), "pedidoMasInformacion": datos.pedido_mas_información,
+                    "respuesta_cliente_pedido_mas_información":datos.respuesta_cliente_pedido_mas_información,
+                    "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_proveedor":imagen['imagen_proveedor'],
+                    "picture1_mas_información": imagen['picture1_mas_información'],
+                    "picture2_mas_información": imagen['picture2_mas_información'] }) 
                 
-                array.append({"rubro":datos.rubro.items,"tipo":"Orden general","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
-                "dia":datos.day, "time":datos.time, "titulo":datos.tituloPedido,"descripcion":datos.problem_description,
-                "location_lat":datos.location_lat,"location_long":datos.location_long, "email_proveedor":proveedor.email,
-                "presupuesto":str(datos.presupuesto_inicial), "pedidoMasInformacion": datos.pedido_mas_información,
-                "respuesta_cliente_pedido_mas_información":datos.respuesta_cliente_pedido_mas_información,
-                "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_proveedor":imagen['imagen_proveedor'],
-                "picture1_mas_información": imagen['picture1_mas_información'],
-                "picture2_mas_información": imagen['picture2_mas_información'] })
+                else:
+
+                    proveedor=company.objects.filter(email=datos.proveedor_email).first()
+                    if proveedor:
+                        imagen={}
+                        if proveedor.picture:
+                            imagen['imagen_proveedor']="data:image/png;base64,"+base64.b64encode(proveedor.picture.read()).decode('ascii')
+                        else: 
+                            imagen['imagen_proveedor']=""
+                        if datos.picture1: 
+                            imagen['picture1']="data:image/png;base64,"+base64.b64encode(datos.picture1.read()).decode('ascii')
+                        else:
+                            imagen['picture1']=""
+                        if datos.picture2: 
+                            imagen['picture2']="data:image/png;base64,"+base64.b64encode(datos.picture2.read()).decode('ascii')
+                        else:
+                            imagen['picture2']=""
+                        if datos.picture1_mas_información: 
+                            imagen['picture1_mas_información']="data:image/png;base64,"+base64.b64encode(datos.picture1_mas_información.read()).decode('ascii')
+                        else:
+                            imagen['picture1_mas_información']=""
+                        if datos.picture2_mas_información: 
+                            imagen['picture2_mas_información']="data:image/png;base64,"+base64.b64encode(datos.picture2_mas_información.read()).decode('ascii')
+                        else:
+                            imagen['picture2_mas_información']=""
+
+                        
+                        array.append({"rubro":datos.rubro_company.items,"tipo":"Orden general","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
+                        "dia":datos.day, "time":datos.time, "titulo":datos.tituloPedido,"descripcion":datos.problem_description,
+                        "location_lat":datos.location_lat,"location_long":datos.location_long, "email_proveedor":proveedor.email,
+                        "presupuesto":str(datos.presupuesto_inicial), "pedidoMasInformacion": datos.pedido_mas_información,
+                        "respuesta_cliente_pedido_mas_información":datos.respuesta_cliente_pedido_mas_información,
+                        "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_proveedor":imagen['imagen_proveedor'],
+                        "picture1_mas_información": imagen['picture1_mas_información'],
+                        "picture2_mas_información": imagen['picture2_mas_información'] })
 
             
         if ordenesEmergencia: 
@@ -1520,8 +1556,7 @@ def consultarOrdenes(request, tipo,email):
                 "location_cliente_lat":datos.location_cliente_lat,"location_cliente_long":datos.location_cliente_long,"email_proveedor":proveedor_email,
                 "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_proveedor":imagen['imagen_proveedor'] })
             
-        print("array length ORDENES CLIENTE DE EMERGENCIA")
-        print(len(array))
+
         if len(array)>0:
             return JsonResponse(array, safe=False)
         else: 

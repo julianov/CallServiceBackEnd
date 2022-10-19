@@ -185,7 +185,7 @@ class ordenGeneral (models.Model):
 
     client_email = models.EmailField(blank=True)
     proveedor_email=models.EmailField(blank=True)
-    rubro= models.ForeignKey(item,blank=True,default=None,on_delete=models.CASCADE)
+    rubro= models.ForeignKey(item,blank=True,null=True,on_delete=models.CASCADE)
     rubro_company = models.ForeignKey(item_company,blank=True,null=True,on_delete=models.CASCADE)
     tiempo_respuesta_promedio=models.FloatField(default=1000)
 
