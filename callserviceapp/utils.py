@@ -44,7 +44,6 @@ def proveedoresRadio(tipo, array, proveedores, lat, long, radio1, radio2, cantid
         
         if tipo==1: 
             j=0
-            print("aca tengo que ver que proveedores hay")
             print(datos_de_proveedores)
             for datos in datos_de_proveedores:
                 personales=datos.provider

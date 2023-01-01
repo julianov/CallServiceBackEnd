@@ -1,76 +1,52 @@
 from django.http import HttpResponse
 from django.http import JsonResponse
-from callserviceapp.models import  chat, client, item_company, nuevo_chat, ordenEmergencia, ordenEmergenciaLista, ordenGeneral, serviceProvider, item, company
+from callserviceapp.models import  chat, nuevo_chat, ordenEmergencia, ordenEmergenciaLista, ordenGeneral, item, user_data, validation_token
 from callserviceapp.utils import distanciaEnLaTierra, proveedoresRadio, proveedoresRadioOrdenEmergencia
 
 import random
 import base64
 from django.views.decorators.csrf import csrf_exempt
 
-from callserviceapp.tasks import send_orden_emergencia, send_proveedor_mail_new_orden, send_user_mail
+from callserviceapp.tasks import send_client_mail_more_info, send_client_order_canceled, send_orden_emergencia, send_proveedor_change_date, send_proveedor_mail_more_info, send_proveedor_mail_new_orden, send_proveedor_on_trip, send_user_mail
 
 from rest_framework.authtoken.models import Token
+from django.contrib.auth.models import User
+
 
 @csrf_exempt
 def prueba(request): 
     send_user_mail.delay(2232,"julianov403@gmail.com")
     return HttpResponse("hi")
 
-def login(request, email, password):
-    client_=client.objects.filter(email=email).filter(password=password)
-    if client_:
-        datos=client_.first()
-        imagen={}
-        if datos.picture:
-            imagen['img_personal']="data:image/png;base64,"+base64.b64encode(datos.picture.read()).decode('ascii')
-        else:
-            imagen['img_personal']=""
 
-  
-        data=[{"user":datos.email, "clientType":"1", "calificacion":datos.qualification,"picture":imagen['img_personal']}]
-        return JsonResponse(data, safe=False)
-            
-    else: 
-        serviceProvider_=serviceProvider.objects.filter(email=email).filter(password=password)
-        if serviceProvider_:
-            datos=serviceProvider_.first()
-            imagen={}
-            if datos.picture:
-                imagen['img_personal']="data:image/png;base64,"+base64.b64encode(datos.picture.read()).decode('ascii')
-            else:
-                imagen['img_personal']=""
-            
-            data=[{"user":datos.email, "clientType":"2", "picture":imagen['img_personal']}]
-            return JsonResponse(data, safe=False) 
-        else:
-            company_=company.objects.filter(email=email).filter(password=password)
-            if company_:
-                datos=company_.first()
+def login(request, email, password):
+    user=User.objects.filter(email=email, password=password)
+    if user:
+        if user.is_active: 
+            client_data=user_data.objects.filter(usr_id=user).first()
+            if client_data:
                 imagen={}
-                if datos.picture:
-                    imagen['img_personal']="data:image/png;base64,"+base64.b64encode(datos.picture.read()).decode('ascii')
+                if client_data.picture:
+                    imagen['img_personal']="data:image/png;base64,"+base64.b64encode(client_data.picture.read()).decode('ascii')
                 else:
                     imagen['img_personal']=""
-                    
-                token = Token.objects.create(user=company_)
-
-                data=[{"user":datos.email, "clientType":"3", "picture":imagen['img_personal']}]
+        
+                data=[{"user":user.email, "clientType":client_data.client_type, "calificacion":client_data.qualification,"picture":imagen['img_personal']}]
                 return JsonResponse(data, safe=False)
-            else: 
-                return HttpResponse("usuario y contraseña no válidos")
+        else: 
+            return HttpResponse("Must verify the email")        
+    else:
+        return HttpResponse("user or password incorrect")
+
 
 def homeCliente (request , lat, long):
     array=[]
 
-    datos_independiente=item.objects.order_by('-publicidad','-qualification')
-    proveedoresRadio(1,array,datos_independiente,lat,long,0,30,6)
-    
-    datos_companias=item_company.objects.order_by('-publicidad','-qualification')
-    proveedoresRadio(2,array,datos_companias,lat,long,0,30,6)
-    
+    proveedores=item.objects.order_by('-publicidad','-qualification')
+    proveedoresRadio(1,array,proveedores,lat,long,0,30,10)
+        
     if len(array)<=5:
-        proveedoresRadio(1,array,datos_independiente,lat,long,30,150,6)        
-        proveedoresRadio(2,array,datos_companias,lat,long,30,150,6)
+        proveedoresRadio(1,array,proveedores,lat,long,30,150,6)        
         if len(array)==0:
             return HttpResponse("bad")
         else:
@@ -80,39 +56,25 @@ def homeCliente (request , lat, long):
 
 
 def proveedorUbicacion (request , email, lat, long):
-    proveedor=serviceProvider.objects.filter(email=email).first()
-    if proveedor:
-        rubro=item.objects.filter(provider=proveedor)
-        if rubro:
-            for rubros in rubro:
-                rubros.posicion_lat=lat
-                rubros.posicion_long=long
-                rubros.save()
-            return HttpResponse("ok")
+    user=User.objects.filter(email=email).first()
+    if user:
+        user.posicion_lat=lat
+        user.posicion_long=long
+        user.save()
+        return HttpResponse("ok")
         
-        else:
-            return HttpResponse("sin rubro")
-    else: 
-        compania=company.objects.filter(email=email).first()
-        if compania: 
-            rubro=item_company.objects.filter(provider=compania).first()
-            if rubro: 
-                rubro.posicion_lat=lat
-                rubro.posicion_long=long
-                rubro.save()
-                return HttpResponse("ok")
-            else: 
-                return HttpResponse("sin rubro")
-        else:
-            return HttpResponse("bad")
+    else:
+        return HttpResponse("bad")
+  
 
-def homeClientePedirDatos (request , email,rubro, tipoPedido,lat, long):  
-    
-    datos_personales=serviceProvider.objects.filter(email=email).first()
-   
-    if datos_personales:
-        datosItem= item.objects.filter(provider=datos_personales).filter(items=rubro).first()
-        if datosItem:
+
+def homeClientePedirDatos (request , email,rubro, tipoPedido,lat, long):
+    user=User.objects.filter(email=email).first()
+    if user: 
+        datosItem=item.objects.filter(user_id=user).filter(items=rubro).first()
+        datos_personales=user_data.objects.filter(user_id=user).first()
+
+        if datosItem and datos_personales:
             if (tipoPedido=="caracteres"):        
                 
                 distance=distanciaEnLaTierra(float(datosItem.posicion_long),float(datosItem.posicion_lat),float(long),float(lat))
@@ -154,46 +116,7 @@ def homeClientePedirDatos (request , email,rubro, tipoPedido,lat, long):
 
         else:
             return HttpResponse("bad") 
-    else: 
-        datos_compania=company.objects.filter(email=email).first()
-        if datos_compania: 
-            datos_item_compania=item_company.objects.filter(provider=datos_compania).filter(items=rubro).first()
-            if datos_item_compania:
-                imagenes={}
-                if datos_compania.picture:
-                    imagenes['picture']="data:image/png;base64,"+base64.b64encode(datos_compania.picture.read()).decode('ascii')
-                else: 
-                    imagenes['picture']=""
-                if datos_item_compania.certificate: 
-                    imagenes['certificate']="data:image/png;base64,"+base64.b64encode(datos_item_compania.certificate.read()).decode('ascii')
-                else: 
-                    imagenes['certificate']=""
-                if datos_item_compania.picture1: 
-                    imagenes['picture1']="data:image/png;base64,"+base64.b64encode(datos_item_compania.picture1.read()).decode('ascii')
-                else: 
-                    imagenes['picture1']=""
-                if datos_item_compania.picture2: 
-                    imagenes['picture2']="data:image/png;base64,"+base64.b64encode(datos_item_compania.picture2.read()).decode('ascii')
-                else: 
-                    imagenes['picture2']=""
-                if datos_item_compania.picture3: 
-                    imagenes['picture3']="data:image/png;base64,"+base64.b64encode(datos_item_compania.picture3.read()).decode('ascii')
-                else: 
-                    imagenes['picture3']=""            
-                
-                distance=distanciaEnLaTierra(float(datos_item_compania.posicion_long),float(datos_item_compania.posicion_lat),float(long),float(lat))
-                
-                data={"tipo":"Empresa de servicios" ,"name":datos_compania.company_name, "last_name":datos_compania.company_description, "picture":imagenes['picture'],"distancia":distance,
-                "items":datos_item_compania.items, "qualification":datos_item_compania.qualification,"days_of_works":datos_item_compania.days_of_works,
-                "hour_init":datos_item_compania.hour_init,"hour_end":datos_item_compania.hour_end,"description":datos_item_compania.description,
-                "certificate":imagenes['certificate'] ,"picture1":imagenes['picture1'] , "picture2": imagenes['picture2'], "picture3":imagenes['picture3']  ,
-                "radio":datos_item_compania.radius,"pais":datos_item_compania.pais, "provincia":datos_item_compania.provincia, "ciudad":datos_item_compania.ciudad, 
-                "calle":datos_item_compania.domicilio_calle, "numeracion":datos_item_compania.domicilio_numeracion}
-            
-                return JsonResponse(data, safe=False)
-                
-            else: 
-                return HttpResponse("bad")
+
 
 
 ########################################################################################3
@@ -202,446 +125,188 @@ def homeClientePedirDatos (request , email,rubro, tipoPedido,lat, long):
 @csrf_exempt 
 def register (request):
     if request.method == 'POST': 
+        
         type=request.POST.get("tipo")
         email=request.POST.get("email")
         password =request.POST.get("password")
 
-        if type == '1':
-            print("es usuario comun")
-            #nuevo usuario
-            cliente=client.objects.filter(email=email)
-            proveedor_independiente=serviceProvider.objects.filter(email=email)
-            proveedor_empresa=company.objects.filter(email=email)
-            
-            if not (cliente or proveedor_independiente or proveedor_empresa):     
-                randomNumber = random.randint(1, 99999)
-                send_user_mail.delay(randomNumber, email)
-                b = client( email=email, password=password,random_number=randomNumber)
-                b.save()
-
-                return HttpResponse("email send")
-            else:
-                return HttpResponse("User alredy taken")
-        if type == '2':
-            #nuevo proveedor de servicios
-            cliente=client.objects.filter(email=email)
-            proveedor_independiente=serviceProvider.objects.filter(email=email)
-            proveedor_empresa=company.objects.filter(email=email)
-            
-            if not (cliente and proveedor_independiente and proveedor_empresa):
-                randomNumber = random.randint(1, 99999)
-                send_user_mail.delay(randomNumber, email)
-                b = serviceProvider( email=email, password=password, random_number=randomNumber)
-                b.save()
-                print("debe enviar numero random")
-                return HttpResponse("email send")
-            else:
-                return HttpResponse("User alredy taken")
-        if type == '3':
-            #nueva empresa
-            cliente=client.objects.filter(email=email)
-            proveedor_independiente=serviceProvider.objects.filter(email=email)
-            proveedor_empresa=company.objects.filter(email=email)
-            
-            if not (cliente and proveedor_independiente and proveedor_empresa):
-                randomNumber = random.randint(1, 99999)
-                send_user_mail.delay(randomNumber, email)
-                b = company( email=email, password=password, random_number=randomNumber)
-                b.save()
-                return HttpResponse("email send")
-            else:
-                return HttpResponse("User alredy taken")
+        user= User.objects.filter(email=email)
+        if not user: 
+            user = User(username=(email.split("@"))[0], email=email, password=password, is_active=False)
+            user.save()
+            randomNumber = random.randint(1, 99999)
+            val_token=validation_token(user_id=user, val_token=randomNumber)
+            val_token.save()
+            send_user_mail.delay(randomNumber, email)
+            userData=user_data (user_id=user,client_type=type)
+            userData.save()
+            return HttpResponse("email send")
         else:
-            return HttpResponse("No es cliente normal")
+            return HttpResponse("User alredy taken")
+      
 
 @csrf_exempt
 def validacionEmail (request):
     if request.method == 'POST': 
         codigo=request.POST.get("codigo")
         email=request.POST.get("email")
-        cliente=client.objects.filter(email=email).first()
-        if cliente: 
-            if cliente.random_number == int(codigo): 
-                cliente.email_confirmed=True
-                cliente.save()
-                return HttpResponse("email confirmed")
-            else: 
-                return  HttpResponse("bad")
-        else: 
-            proveedor = serviceProvider.objects.filter(email=email).first()
-            if proveedor:
-                if proveedor.random_number == int(codigo): 
-                    proveedor.email_confirmed=True
-                    proveedor.save()
+        user=User.objects.filter(email=email).first()
+        if user: 
+            val_token=validation_token.objects.filter(user_id=user).first()
+            if val_token: 
+                if val_token.val_token == int(codigo): 
+                    user.is_active=True
+                    user.save()
                     return HttpResponse("email confirmed")
                 else: 
-                    return  HttpResponse("bad") 
-
-            else: 
-                compania = company.objects.filter(email=email).first()
-                if compania: 
-                    if compania.random_number == int(codigo): 
-                        compania.email_confirmed=True
-                        compania.save()
-                        return HttpResponse("email confirmed")
-                    else: 
-                        return  HttpResponse("bad")
-                else: 
-
-                    return HttpResponse("bad")
-
-     
+                    return  HttpResponse("bad")
+        else: 
+            return HttpResponse("bad")
 
 
 def askPersonalInfo(request,type,email):
-    if type=="1":
-        objetos=client.objects.filter(email=email)
-        if objetos:
-            
-            if objetos.first().name==None:
+    user=User.objects.filter(email=email).first()
+    if user:
+        userData=user_data.objects.filter(user_id=user).first()
+        if userData: 
+            if userData.name==None:
                 return HttpResponse("no ha cargado información personal")
             else:
-                datos=objetos.first()
                 imagen={}
-                if datos.picture:
-                    imagen['client_picture']= "data:image/png;base64,"+base64.b64encode(datos.picture.read()).decode('ascii')
+                if userData.picture:
+                    imagen['client_picture']= "data:image/png;base64,"+base64.b64encode(userData.picture.read()).decode('ascii')
                 else:
                     imagen['client_picture']=""
-                data = [{"name": datos.name, "last_name": datos.last_name,
-                "qualification": datos.qualification,},
+                data = [{"name": userData.name, "last_name": userData.last_name,
+                "qualification": userData.qualification,},
                 
                 {"client_picture": imagen['client_picture']}]
 
                 return JsonResponse(data, safe=False)
-        else:
-            return HttpResponse("usuario no registrado")
-    if type=="2":
-        objetos=serviceProvider.objects.filter(email=email)
-        if not objetos: 
-            return HttpResponse("usuario no registrado")
-        else: 
-            
-            if objetos.first().name==None:
-                return HttpResponse("no ha cargado información personal")
-            else:
-                datos=objetos.first()
-                imagen={}
-                if datos.picture:
-                    imagen['client_picture']= "data:image/png;base64,"+base64.b64encode(datos.picture.read()).decode('ascii')
-                else:
-                    imagen['client_picture']=""
-                data = [{"name": datos.name, "last_name": datos.last_name,
-                },
-                
-                {"client_picture": imagen['client_picture'] }]
-
-                return JsonResponse(data, safe=False)
-
-    if type=="3":
-        objetos=company.objects.filter(email=email)
-        if not objetos: 
-            return HttpResponse("usuario no registrado")
-        else: 
-            if objetos.first().company_name==None:
-                return HttpResponse("no ha cargado información personal")
-            else:
-                datos=objetos.first()
-                imagen={}
-                if datos.picture:
-                    imagen['client_picture']= "data:image/png;base64,"+base64.b64encode(datos.picture.read()).decode('ascii')
-                else:
-                    imagen['client_picture']=""
-             #   if datos.imagen_promocional:
-              #      imagen['imagen_promocional']= "data:image/png;base64,"+base64.b64encode(datos.imagen_promocional.read()).decode('ascii')
-               # else:
-                #    imagen['imagen_promocional']=""
-
-                data = [{"name": datos.company_name, "description": datos.company_description,
-                },
-                
-                {"client_picture": imagen['client_picture'] }]
-
-                return JsonResponse(data, safe=False)
     else:
-        return HttpResponse("Problema de sistema")
+        return HttpResponse("usuario no registrado") 
+
 
 @csrf_exempt 
 def nuevaInfoPersonal (request): 
-    if request.method == 'POST': 
-        if request.POST.get("tipo")=="1":
-            objetos=client.objects.filter(email=request.POST.get("email"))
-            if not objetos:
-                return HttpResponse("no ha sido posible")
-            else: 
-               
-                persona=objetos.first()
-                
+    if request.method == 'POST':
+        user=User.objects.filter(email=request.POST.get("email")).first()
+        if user:
+            userData=user_data.objects.filter(user_id=user)
+            if userData: 
                 if request.POST.get("nombre")!= None:
-                    persona.name=request.POST.get("nombre")
+                    userData.name=request.POST.get("nombre")
                 if request.POST.get("apellido")!= None:
-                    persona.last_name=request.POST.get("apellido")
+                    userData.last_name=request.POST.get("apellido")
                 if request.FILES.get("image")!= None:
-                    persona.picture= request.FILES.get("image")
-                persona.save() 
+                    userData.picture= request.FILES.get("image")
+                userData.save() 
                 return HttpResponse("ok")
-        elif request.POST.get("tipo")=="2":
-            objetos_=serviceProvider.objects.filter(email=request.POST.get("email"))
-            if not objetos_:
-                return HttpResponse("no ha sido posible")
-            else: 
-                
-                persona=objetos_.first()
-                
-                if request.POST.get("nombre")!= None:
-                    persona.name=request.POST.get("nombre")
-                if request.POST.get("apellido")!= None:
-                    persona.last_name=request.POST.get("apellido")
-                if request.FILES.get("image")!= None:
-                    persona.picture= request.FILES.get("image")
-                persona.save() 
-                return HttpResponse("ok")
-        elif request.POST.get("tipo")=="3":
-            objetos=company.objects.filter(email=request.POST.get("email"))
-            if not objetos:
-                return HttpResponse("no ha sido posible")
-            else: 
-                
-                compania=objetos.first()
-                
-                if request.POST.get("nombre")!= None:
-                    compania.company_name=request.POST.get("nombre")
-                if request.POST.get("descripcion")!= None:
-                    compania.company_description=request.POST.get("descripcion")
-                if request.FILES.get("image")!= None:
-                    compania.picture= request.FILES.get("image")
-                compania.save()
-                return HttpResponse("ok")
+            else:
+                return HttpResponse("bad")
         else: 
             return HttpResponse("bad")
-    else:
-        return HttpResponse("bad")
+
 
 @csrf_exempt 
 def completeInfo (request): 
-    if request.method == 'POST': 
-        if request.POST.get("tipo")=="1":
-            objetos=client.objects.filter(email=request.POST.get("email"))
-            if objetos:
-                modelo=objetos.first()
-                modelo.name=request.POST.get("nombre")
-                modelo.last_name=request.POST.get("apellido")
-                modelo.picture= request.FILES.get("image")
-                modelo.qualification=0
-                modelo.save()
-                return HttpResponse("todo ok")
-            else: 
-                return HttpResponse("no usuario registrado")
-        if request.POST.get("tipo")=="2":
-            objetos=serviceProvider.objects.filter(email=request.POST.get("email"))            
-            if objetos:
-                modelo=objetos.first()
-                modelo.name=request.POST.get("nombre")
-                modelo.last_name=request.POST.get("apellido")
-                modelo.picture= request.FILES.get("image")
-               # modelo.imagen_promocional= request.FILES.get("imagenPromocional")
-                modelo.qualification=0
-                modelo.save()
-                return HttpResponse("todo ok")
-            else: 
-                return HttpResponse("no usuario registrado")
-        if request.POST.get("tipo")=="3":
-            objetos=company.objects.filter(email=request.POST.get("email"))
-            if objetos:
-                modelo=objetos.first()
-                modelo.company_name=request.POST.get("nombre")
-                modelo.company_description=request.POST.get("descripcion")
-                modelo.picture= request.FILES.get("image")
-              #  modelo.imagen_promocional= request.FILES.get("imagenPromocional")
-                modelo.qualification=0
-                modelo.save()
-                return HttpResponse("todo ok")
-            else: 
-                return HttpResponse("no usuario registrado")  
-        else:
+    if request.method == 'POST':
+
+        user=User.objects.filter(email=request.POST.get("email")) 
+        if user: 
+            userData =user_data.objects.filter(user_id=user).first()
+            userData.name=request.POST.get("nombre")
+            userData.last_name=request.POST.get("apellido") 
+            userData.picture= request.FILES.get("image") 
+            userData.qualification=0
+            userData.save()
+            return HttpResponse("todo ok")
+        else: 
             return HttpResponse("no usuario registrado")
 
+      
 ###############################################
 #RUBROS
 
 @csrf_exempt 
 def addRubro (request):
-    if request.method == 'POST': 
-        if request.POST.get("tipo")=="2":
-            proveedores=serviceProvider.objects.filter(email=request.POST.get("email"))
-            if not proveedores:
-                print("no detecto proveedor")
-                return HttpResponse("No usuario registrado")
+    if request.method == 'POST':
+
+        user=User.objects.filter(email=request.POST.get("email"))
+        if user:
+            rubros=item.objects.filter(user_id=user)
+            if len(rubros)<2:
+                posicion_global=(request.POST.get("posicion").split("/"))
+                new = item()
+                new.items=request.POST.get("item")
+                new.user_id=user
+                if request.POST.get("ordenEmergencia")=="no":
+                    new.hace_orden_emergencia=False
+                else: 
+                    new.hace_orden_emergencia=True
+                new.radius=request.POST.get("radius")
+                new.pais=request.POST.get("pais")
+                new.provincia=request.POST.get("provincia")
+                new.ciudad=request.POST.get("ciudad")
+                new.domicilio_calle= request.POST.get("calle") 
+                new.domicilio_numeracion=request.POST.get("calle-numeracion")
+                new.qualification=0
+                new.publicidad=0
+                new.description=request.POST.get("description")
+                new.days_of_works=request.POST.get("days_of_works")
+                new.hour_init=request.POST.get("hour_init")
+                new.hour_end=request.POST.get("hour_end") 
+                new.certificate=request.FILES.get("certificate")	
+                new.picture1=request.FILES.get("picture1")
+                new.picture2=request.FILES.get("picture2")
+                new.picture3=request.FILES.get("picture3")
+                new.save()
+                return HttpResponse("rubro cargado")
             else:
-                print("bueno vamos por buen camino ahora")
-                proveedor=proveedores.first()
-                rubros=item.objects.filter(provider=proveedor)
-                print("la cantidad de rubros que tiene es: "+str(len(rubros)))
-               # print("los mismos son: "+rubros)
-                if len(rubros)<2:
-                    
-                    posicion_global=(request.POST.get("posicion").split("/"))
-                    new = item()
-                    new.items=request.POST.get("item") 
-                    new.provider=proveedores.first()
-
-                    if request.POST.get("ordenEmergencia")=="no":
-                        new.hace_orden_emergencia=False
-                    else: 
-                        new.hace_orden_emergencia=True
-
-                    new.radius=request.POST.get("radius")
-                    if len (posicion_global) > 1:
-                        new.posicion_lat= posicion_global[0]
-                        new.posicion_long= posicion_global[1]
-                    else:
-                        new.posicion_lat=0
-                        new.posicion_long=0
-                    
-                    new.pais=request.POST.get("pais")
-                    new.provincia=request.POST.get("provincia")
-                    new.ciudad=request.POST.get("ciudad")
-                    new.domicilio_calle= request.POST.get("calle") 
-                    new.domicilio_numeracion=request.POST.get("calle-numeracion")
-
-                    new.qualification=0
-                    new.publicidad=0
- 
-                    new.description=request.POST.get("description")
-                    new.days_of_works=request.POST.get("days_of_works")
-                    new.hour_init=request.POST.get("hour_init")
-                    new.hour_end=request.POST.get("hour_end") 
-                    new.certificate=request.FILES.get("certificate")	
-                    new.picture1=request.FILES.get("picture1")
-                    new.picture2=request.FILES.get("picture2")
-                    new.picture3=request.FILES.get("picture3")
-                    new.save()
-                                        	
-                    #new.picture3=""
-                    return HttpResponse("rubro cargado")
-                else:
-                    return HttpResponse("ha cargado la cantidad maxima de items")
-        if request.POST.get("tipo")=="3":
-            proveedores=company.objects.filter(email=request.POST.get("email"))
-            if not proveedores:
-                return HttpResponse("No usuario registrado")
-            else:
-                proveedor=proveedores.first()
-
-                rubros=item_company.objects.filter(provider=proveedor)
-
-                if len(rubros)<2:
-                    posicion_global=(request.POST.get("posicion").split("/"))
-                   
-                    new = item_company()
-                    new.items=request.POST.get("item") 
-                    new.provider=proveedores.first()
-
-                    if request.POST.get("ordenEmergencia")=="no":
-                        new.hace_orden_emergencia=False
-                    else: 
-                        new.hace_orden_emergencia=True
-
-                    
-                    new.radius=request.POST.get("radius")
-                    new.qualification=0
-                    new.publicidad=0
-                    new.pais=request.POST.get("pais")
-                    new.provincia=request.POST.get("provincia")
-                    new.ciudad=request.POST.get("ciudad")
-                    new.domicilio_calle= request.POST.get("calle") 
-                    new.domicilio_numeracion=request.POST.get("calle-numeracion")
-
-                    if len (posicion_global) > 1:
-                        new.posicion_lat= posicion_global[0]
-                        new.posicion_long= posicion_global[1]
-                    else:
-                        new.posicion_lat=0
-                        new.posicion_long=0
-                  
-                    new.description=request.POST.get("description")
-                    new.days_of_works=request.POST.get("days_of_works")
-                    new.hour_init=request.POST.get("hour_init")
-                    new.hour_end=request.POST.get("hour_end") 
-                    new.certificate=request.FILES.get("certificate")	
-                    new.picture1=request.FILES.get("picture1")
-                    new.picture2=request.FILES.get("picture2")
-                    new.picture3=request.FILES.get("picture3")
-                    new.save()	
-
-                    #new.picture3=""
-                    return HttpResponse("rubro cargado")
-                else:
-                    return HttpResponse("ha cargado la cantidad maxima de items")
+                return HttpResponse("ha cargado la cantidad maxima de items")
 
 
 @csrf_exempt 
 def completeInfoRubros (request,modo,tipo,email):
     if modo=="pedir":
-        if tipo=="2":
-            proveedores=serviceProvider.objects.filter(email=email)
-            if not proveedores:
-                return HttpResponse("No usuario registrado")
-            else:
-                rubros=item.objects.filter(provider=proveedores.first())
-                
-                if not rubros:
-                    return HttpResponse ("No hay rubros cargados")
-                else:                    
-                    x=[]
-                    for i in range(0, len(rubros)):
-                        
-                        x.append(rubros[i].items+"-")
-                    return HttpResponse(x)
-                    #aca tengo que devolver los tipos de rubros cargados
-        if tipo=="3":
-            empresa=company.objects.filter(email=email)
-            if not empresa:
-                return HttpResponse("No usuario registrado")
-            else:
-                rubros=item_company.objects.filter(provider=empresa.first())
-                
-                if not rubros:
-                    return HttpResponse ("No hay rubros cargados")
-                else:
-                    x=[]
-                    for i in range(0, len(rubros)):
-                        x.append(rubros[i].items+"-")
-                        
-                    return HttpResponse(x)
-    return HttpResponse("No usuario registrado")
+        user=User.objects.filter(email=email).first()
+        if user:
+            rubros=item.objects.filter(user_id=user) 
+            if not rubros:
+                return HttpResponse ("No hay rubros cargados")
+            else:                    
+                x=[]
+                for i in range(0, len(rubros)):
+                    x.append(rubros[i].items+"-")
+                return HttpResponse(x)
+        return HttpResponse("No usuario registrado")
 
 
 def requestRubros(request, tipo,email,rubro):
-    if tipo=="2":
-        proveedores=serviceProvider.objects.filter(email=email)
-        if proveedores:
-            rubro=item.objects.filter(provider=proveedores.first()).filter(items=rubro)
-            if rubro:
-                datos=rubro.first()
-                images = {}
-                if datos.certificate: 
-                    images['certificado'] = "data:image/png;base64,"+base64.b64encode(datos.certificate.read()).decode('ascii')
-                else:
-                    images['certificado'] = ""
-                if datos.picture1: 
-                    images['imagen1'] ="data:image/png;base64,"+base64.b64encode(datos.picture1.read()).decode('ascii')
-                else: 
-                    images['imagen1'] =""
-                if datos.picture2  : 
-                    images['imagen2'] ="data:image/png;base64,"+base64.b64encode(datos.picture2.read()).decode('ascii')
-                else:
-                    images['imagen2'] =""
-                if datos.picture3: 
-                    images['imagen3'] ="data:image/png;base64,"+base64.b64encode(datos.picture3.read()).decode('ascii')
-                else: 
-                    images['imagen3'] =""
+    user=User.objects.filter(email=email).first()
+    if user: 
+        rubro=item.objects.filter(user_id=user).filter(items=rubro)
+        if rubro:
+            datos=rubro.first()
+            images = {}
+            if datos.certificate: 
+                images['certificado'] = "data:image/png;base64,"+base64.b64encode(datos.certificate.read()).decode('ascii')
+            else:
+                images['certificado'] = ""
+            if datos.picture1: 
+                images['imagen1'] ="data:image/png;base64,"+base64.b64encode(datos.picture1.read()).decode('ascii')
+            else: 
+                images['imagen1'] =""
+            if datos.picture2  : 
+                images['imagen2'] ="data:image/png;base64,"+base64.b64encode(datos.picture2.read()).decode('ascii')
+            else:
+                images['imagen2'] =""
+            if datos.picture3: 
+                images['imagen3'] ="data:image/png;base64,"+base64.b64encode(datos.picture3.read()).decode('ascii')
+            else: 
+                images['imagen3'] =""
 
-                data = {"rubro": datos.items, "radius": str(datos.radius),
+            data = {"rubro": datos.items, "radius": str(datos.radius),
                 "description":datos.description,"hace_orden_emergencia":"no",
                 "qualification":str(datos.qualification),
                 "pais":datos.pais, "provincia":datos.provincia, "ciudad":datos.ciudad,
@@ -650,119 +315,44 @@ def requestRubros(request, tipo,email,rubro):
                 "hour_end": str(datos.hour_end),"certificate":images['certificado'],
                 "picture1":images['imagen1'],"picture2": images['imagen2'],"picture3": images['imagen3'] }
                 
-                return JsonResponse(data, safe=False)
+            return JsonResponse(data, safe=False)
                 #return HttpResponse(data)
-            else:
-                return HttpResponse ("incongruencia de datos")
-        else: 
+        else:
             return HttpResponse ("incongruencia de datos")
-    if tipo=="3":
-        proveedores=company.objects.filter(email=email)
-        if proveedores:
-            rubro=item_company.objects.filter(provider=proveedores.first()).filter(items=rubro)
-            if rubro:
-                datos=rubro.first()
-                images = {}
-                if datos.certificate: 
-                    images['certificado'] = "data:image/png;base64,"+base64.b64encode(datos.certificate.read()).decode('ascii')
-                else:
-                    images['certificado'] = ""
-                if datos.picture1: 
-                    images['imagen1'] ="data:image/png;base64,"+base64.b64encode(datos.picture1.read()).decode('ascii')
-                else: 
-                    images['imagen1'] =""
-                if datos.picture2: 
-                    images['imagen2'] ="data:image/png;base64,"+base64.b64encode(datos.picture2.read()).decode('ascii')
-                else:
-                    images['imagen2'] =""
-                if datos.picture3: 
-                    images['imagen3'] ="data:image/png;base64,"+base64.b64encode(datos.picture3.read()).decode('ascii')
-                else: 
-                    images['imagen3'] =""
-                
-                data = {"rubro": datos.items, "radius": str(datos.radius),
-                "description":datos.description,"hace_orden_emergencia":"no",
-                "qualification":str(datos.qualification),
-                "pais":datos.pais, "provincia":datos.provincia, "ciudad":datos.ciudad,
-                "calle":datos.domicilio_calle, "numeracion":datos.domicilio_numeracion,
-                "days_of_works": datos.days_of_works,"hour_init": str(datos.hour_init),
-                "hour_end": str(datos.hour_end),"certificate":images['certificado'],
-                "picture1":images['imagen1'],"picture2": images['imagen2'],"picture3": images['imagen3'] }
-
-                return JsonResponse(data, safe=False)
-            else:
-                return HttpResponse ("incongruencia de datos")
-        else: 
-            return HttpResponse ("incongruencia de datos")
-
+        
 
 @csrf_exempt 
 def deleteRubro (request):
     if request.method == 'POST':
-        if(request.POST.get("tipo")=="2"):
-            proveedores=serviceProvider.objects.filter(email=request.POST.get("email"))
-            if proveedores:
-                rubro=item.objects.filter(provider=proveedores.first()).filter(items=request.POST.get("item")).first()
-                #if rubro.picture1: 
-                    #os.remove(rubro.picture1.path)
-                #if rubro.picture2: 
-                    #os.remove(rubro.picture2.path)
-                #if rubro.picture3: 
-                    #os.remove(rubro.picture3.path)
-                #if rubro. certificate: 
-                    #os.remove(rubro.certificate.path) 
-                rubro.delete()
-                return HttpResponse("rubro elimnado")
-            else:
-                return HttpResponse("no ha sido posible eliminar el rubro")
-        elif (request.POST.get("tipo")=="3"):
-            proveedores=company.objects.filter(email=request.POST.get("email"))
-            if proveedores:
-                rubro=item_company.objects.filter(provider=proveedores.first()).filter(items=request.POST.get("item")).first()
-                #if rubro.picture1: 
-                    #os.remove(rubro.picture1.path)
-                #if rubro.picture2: 
-                    #os.remove(rubro.picture2.path)
-                #if rubro.picture3: 
-                    #os.remove(rubro.picture3.path)
-                #if rubro. certificate: 
-                    #os.remove(rubro.certificate.path) 
+        user=User.objects.filter(email=request.POST.get("email"))
+        if user:
+            rubro=item.objects.filter(user_id=user).filter(items=request.POST.get("item")).first() 
+            if rubro:
                 rubro.delete()
                 return HttpResponse("rubro elimnado")
             else:
                 return HttpResponse("no ha sido posible eliminar el rubro")
         else:
-            return HttpResponse("no ha sido posible eliminar el rubro")
+            return HttpResponse("no ha sido posible eliminar el rubro") 
+
+
 
 @csrf_exempt 
 def modificarRubro (request):
-    print(request.POST.get("provincia"))
     if request.method == 'POST':
-        if(request.POST.get("tipo")=="2"):
-            proveedores=serviceProvider.objects.filter(email=request.POST.get("email"))
-            if proveedores:
-                rubro=item.objects.filter(provider=proveedores.first()).filter(items=request.POST.get("item")).first()
-                
-                latitud=rubro.posicion_lat
-                longitud=rubro.posicion_long
+        user=User.objects.filter(email=request.POST.get("email")).first()
+        if user:
+            rubro=item.objects.filter(user_id=user).filter(items=request.POST.get("item")).first()
+            if rubro:
                 calificacion=rubro.qualification
-                #if rubro.picture1: 
-                    #os.remove(rubro.picture1.path)
-                #if rubro.picture2: 
-                    #os.remove(rubro.picture2.path)
-                #if rubro.picture3: 
-                    #os.remove(rubro.picture3.path)
-                #if rubro. certificate: 
-                    #os.remove(rubro.certificate.path)
                 rubro.delete()
-                   
+
                 new = item()
                 new.items=request.POST.get("item") 
-                new.provider=proveedores.first()
+                new.user_id=user
 
                 new.radius=request.POST.get("radius")
-                new.posicion_lat= latitud
-                new.posicion_long=longitud
+
                 new.pais=request.POST.get("pais")
                 new.provincia=request.POST.get("provincia")
                 new.ciudad=request.POST.get("ciudad")
@@ -780,52 +370,6 @@ def modificarRubro (request):
                 new.picture2=request.FILES.get("picture2")
                 new.picture3=request.FILES.get("picture3")
                 new.save()
-                
-                return HttpResponse("rubro modificado")
-            else:
-                return HttpResponse("no ha sido posible modificar el rubro")
-        elif (request.POST.get("tipo")=="3"):
-            proveedores=company.objects.filter(email=request.POST.get("email"))
-            if proveedores:                
-                rubro=item_company.objects.filter(provider=proveedores.first()).filter(items=request.POST.get("item"))
-                latitud=rubro.posicion_lat
-                longitud=rubro.posicion_long
-                calificacion=rubro.qualification
-                #if rubro.picture1: 
-                    #os.remove(rubro.picture1.path)
-                #if rubro.picture2: 
-                    #os.remove(rubro.picture2.path)
-                #if rubro.picture3: 
-                    #os.remove(rubro.picture3.path)
-                #if rubro. certificate: 
-                    #os.remove(rubro.certificate.path)
-                rubro.delete()
-                   
-                new = item()
-                new.items=request.POST.get("item") 
-                new.provider=proveedores.first()
-
-                new.radius=request.POST.get("radius")
-                new.posicion_lat= latitud
-                new.posicion_long=longitud
-                new.pais=request.POST.get("pais")
-                new.provincia=request.POST.get("provincia")
-                new.ciudad=request.POST.get("ciudad")
-                new.domicilio_calle= request.POST.get("calle") 
-                new.domicilio_numeracion=request.POST.get("calle-numeracion")
-
-                new.qualification=calificacion
- 
-                new.description=request.POST.get("description")
-                new.days_of_works=request.POST.get("days_of_works")
-                new.hour_init=request.POST.get("hour_init")
-                new.hour_end=request.POST.get("hour_end") 
-                new.certificate=request.FILES.get("certificate")	
-                new.picture1=request.FILES.get("picture1")
-                new.picture2=request.FILES.get("picture2")
-                new.picture3=request.FILES.get("picture3")
-                new.save()
-
                 return HttpResponse("rubro modificado")
             else:
                 return HttpResponse("no ha sido posible modificar el rubro")
@@ -833,158 +377,122 @@ def modificarRubro (request):
             return HttpResponse("no ha sido posible modificar el rubro")
 
 
-
-
 def restarPassword(request, email):
-    client_=client.objects.filter(email=email)
-    if client_:
+    user=User.objects.filter(email=email).first() 
+    if user:
         randomNumber = random.randint(1, 99999)
-        nuevo=client_.first()
-        nuevo.random_number=randomNumber
-        nuevo.save()
+        val_token=validation_token(user_id=user, val_token=randomNumber)
+        val_token.save()
         send_user_mail.delay(randomNumber, email)
         return HttpResponse(randomNumber)
+
     else:
-        serviceProvider_=serviceProvider.objects.filter(email=email)
-        if serviceProvider_:
-            randomNumber = random.randint(1, 99999)
-            send_user_mail.delay(randomNumber, email)
-            nuevo=serviceProvider_.first()
-            nuevo.random_number=randomNumber
-            nuevo.save()
-            return HttpResponse(randomNumber)
-        else: 
-            company_=company.objects.filter(email=email)
-            if company_:
-                randomNumber = random.randint(1, 99999)
-                send_user_mail.delay(randomNumber, email)
-                nuevo=company_.first()
-                nuevo.random_number=randomNumber
-                nuevo.save()
-                return HttpResponse(randomNumber)   
-            else:
-                return HttpResponse("usuario y email no registrado")         
+        return HttpResponse("usuario y email no registrado")         
 
 def setNewPassword (request, email, codigo,password):
-    client_=client.objects.filter(email=email).filter(random_number=codigo)
-    if client_:
-        nuevo=client_.first()
-        nuevo.password=password
-        nuevo.save()
-        return HttpResponse("Contraseña cambiada correctamente")
-    else:
-        serviceProvider_=serviceProvider.objects.filter(email=email).filter(random_number=codigo)
-        if serviceProvider_:
-            nuevo=serviceProvider_.first()
-            nuevo.password=password
-            nuevo.save()
+    user=User.objects.filter(email=email).first() 
+    if user:
+        valToken=validation_token.objects.filter(user_id=user).first()
+        if codigo==valToken.val_token:
+            user.password=password
+            user.save()
             return HttpResponse("Contraseña cambiada correctamente")
-        else: 
-            company_=company.objects.filter(email=email).filter(random_number=codigo)
-            if company_:
-                nuevo=company_.first()
-                nuevo.password=password
-                nuevo.save()
-                return HttpResponse("Contraseña cambiada correctamente")   
-            else:
-                return HttpResponse("usuario y email no registrado")
+        else:
+            return HttpResponse("Bad code") 
+    else:
+        return HttpResponse("usuario y email no registrado")
 
 
-def ListaProveedores (datos_independiente,datos_companias):
-    #datos_independientes es item
-    #datos_empresa es item_company
-    array=[]
-
-    if datos_independiente:
-        i=0
-        for datos in datos_independiente:
-            personales=datos.provider
-
-            imagenes={}
-            
-            if personales.picture:
-                imagenes['picture']= "data:image/png;base64,"+base64.b64encode(personales.picture.read()).decode('ascii')
-            else: 
-                imagenes['picture']=""
-
-            first={"item":datos.items,"imagen":imagenes['picture'] ,
-           "calificacion":datos.qualification,
-            "nombre":personales.name, "apellido":personales.last_name, "email":personales.email, "tipo":"Proveedor de servicio independiente" }
-
-            array.append(first)
-            i=i+1
-            if i==10: 
-                break
-    
-    datos_companias=item_company.objects.exclude(radius=0).order_by('-qualification')
-    if datos_companias:
-        i=0
-        for datos in datos_companias:
-            
-            personales=datos.provider
-
-            imagenes={}
-            
-            if personales.picture:
-                imagenes['picture']= "data:image/png;base64,"+base64.b64encode(personales.picture.read()).decode('ascii')
-            else: 
-                imagenes['picture']=""
-
-
-            first={"item":datos.items,"imagen":imagenes['picture'] ,
-           "calificacion":datos.qualification,
-            "nombre":personales.company_name, "apellido":"", "email":personales.email, "tipo":"Empresa de servicios" }
-
-            array.append(first)
-            i=i+1
-            if i==10: 
-                break
-    return array
-
-def ListaProveedoresPalabra (independiente_nombre,independiente_apellido,empresa_nombre,empresa_descripcion):
-    array_items_independientes=[]
-    array_items_empresa=[]
-    if independiente_nombre:
-        for datos in independiente_nombre:
-            array_items_independientes=(item.objects.filter(provider=datos))
-    if independiente_apellido: 
-        for datos in independiente_apellido:
-            array_items_independientes.append(item.objects.filter(provider=datos))
-    if empresa_nombre:
-        for datos in empresa_nombre:
-            array_items_empresa=(item_company.objects.filter(provider=datos))
-    if empresa_descripcion:
-        for datos in empresa_descripcion:
-            array_items_empresa.append(item_company.objects.filter(provider=datos))
-    return ListaProveedores(array_items_independientes,array_items_empresa)
-    
 def buscar (request,tipo, dato):
     
     if tipo=="categoria":
         categoria_a_buscar=dato
-        categoria_buscada_en_independientes=item.objects.filter(items=categoria_a_buscar).order_by('-qualification')
-        categoria_buscada_en_empresa=item_company.objects.filter(items=categoria_a_buscar).order_by('-qualification')
-        
-        if categoria_buscada_en_independientes or categoria_buscada_en_empresa:
-            arreglo_a_enviar=ListaProveedores(categoria_buscada_en_independientes,categoria_buscada_en_empresa)
-            if len(arreglo_a_enviar)== 0:
+        categoria_buscada=item.objects.filter(items=categoria_a_buscar).order_by('-qualification')
+        if categoria_buscada:
+            i=0
+            array=[]
+            for datos in categoria_buscada:
+                
+                personales=datos.user_id
+                userData=user_data.objects.filter(user_id=personales).first()
+                imagenes={}
+                tipo_proveedor=""
+                    
+                if userData.picture:
+                    imagenes['picture']= "data:image/png;base64,"+base64.b64encode(userData.picture.read()).decode('ascii')
+                else: 
+                    imagenes['picture']=""
+                if userData.client_type==2:
+                    tipo_proveedor="Proveedor de servicio independiente"
+                else:
+                    tipo_proveedor="Empresa proveedora de servicios"
+
+                first={"item":datos.items,"imagen":imagenes['picture'] ,
+                    "calificacion":datos.qualification,
+                    "nombre":userData.name, "apellido":userData.last_name, "email":"", "tipo":tipo_proveedor }
+
+                array.append(first)
+                i=i+1
+                if i==30: 
+                    break
+            if len(array)== 0:
                 return HttpResponse("bad")
             else:
-                return JsonResponse(arreglo_a_enviar, safe=False)
+                return JsonResponse(array, safe=False) 
         else:
-            return HttpResponse("bad") 
+            return HttpResponse("bad")
+
+
     if tipo=="palabras":
-        arreglo_proveedores_independientes_nombre=serviceProvider.objects.filter(name=dato)
-        arreglo_proveedores_independientes_apellido=(serviceProvider.objects.filter(last_name=dato))
-        arreglo_proveedores_empresas_nombre=company.objects.filter(company_name=dato)
-        arreglo_proveedores_empresas_descripcion=(company.objects.filter(company_description=dato))
+        arreglo_proveedores_nombre=user_data.objects.filter(name=dato)
+        arreglo_proveedores_apellido=user_data.objects.filter(last_name=dato)
+        array=[]
+        if arreglo_proveedores_nombre: 
+            for datos in arreglo_proveedores_nombre:
+                imagenes={}
+                if datos.picture:
+                    imagenes['picture']= "data:image/png;base64,"+base64.b64encode(datos.picture.read()).decode('ascii')
+                else: 
+                    imagenes['picture']=""
+                if datos.client_type==2:
+                    tipo_proveedor="Proveedor de servicio independiente"
+                else:
+                    tipo_proveedor="Empresa proveedora de servicios"
+
+                rubro=item.objects.filter(user_id=datos.user_id).first()
+
+                first={"item":rubro,"imagen":imagenes['picture'] ,
+                    "calificacion":datos.qualification,
+                    "nombre":datos.name, "apellido":datos.last_name, "email":"", "tipo":tipo_proveedor }
+                array.append(first)
         
-        arreglo_a_enviar=ListaProveedoresPalabra(arreglo_proveedores_independientes_nombre,arreglo_proveedores_independientes_apellido,arreglo_proveedores_empresas_nombre,arreglo_proveedores_empresas_descripcion)
-        if len(arreglo_a_enviar)== 0:
+        if arreglo_proveedores_apellido and len(array)<30: 
+            for datos in arreglo_proveedores_apellido:
+                imagenes={}
+                if datos.picture:
+                    imagenes['picture']= "data:image/png;base64,"+base64.b64encode(datos.picture.read()).decode('ascii')
+                else: 
+                    imagenes['picture']=""
+                if datos.client_type==2:
+                    tipo_proveedor="Proveedor de servicio independiente"
+                else:
+                    tipo_proveedor="Empresa proveedora de servicios"
+
+                rubro=item.objects.filter(user_id=datos.user_id).first()
+
+                first={"item":rubro,"imagen":imagenes['picture'] ,
+                    "calificacion":datos.qualification,
+                    "nombre":datos.name, "apellido":datos.last_name, "email":"", "tipo":tipo_proveedor }
+                array.append(first)
+        if len(array)== 0:
             return HttpResponse("bad")
         else:
-            return JsonResponse(arreglo_a_enviar, safe=False)
+            return JsonResponse(array, safe=False) 
+
     
+
+            
+##########################################################################################################
 
 def verReseñas (request , email, cantida, tipo):
     cantidad=int(cantida)
@@ -1113,116 +621,94 @@ def verReseñas (request , email, cantida, tipo):
     
     else: 
         return HttpResponse("bad")
-            
-##########################################################################################################
+
+
 
 def datosCliente(request , n_ticket, tipo_orden):
 
-    print(tipo_orden)
-    print(n_ticket)
     if tipo_orden=="Orden general": 
         
         ordenesGenerales= ordenGeneral.objects.filter(ticket=n_ticket).first()
         if ordenesGenerales:
-            cliente= client.objects.filter(email=ordenesGenerales.client_email).first()
-            if cliente:
-                imagen=""
-                if cliente.picture:
-                    imagen="data:image/png;base64,"+base64.b64encode(cliente.picture.read()).decode('ascii') 
-                return JsonResponse( {"nombre":cliente.name,"apellido":cliente.last_name, 
-                "imagen":imagen, "calificacion":cliente.qualification}, safe=False)
-
+            user=User.objects.filter(email=ordenesGenerales.client_email).first()
+            if user:
+                userData=user_data.objects.filter(user_id=user).first()
+                if userData:
+                    imagen=""
+                    if userData.picture:
+                        imagen="data:image/png;base64,"+base64.b64encode(userData.picture.read()).decode('ascii') 
+                    
+                    return JsonResponse( {"nombre":userData.name,"apellido":userData.last_name, 
+                    "imagen":imagen, "calificacion":userData.qualification}, safe=False) 
+                else:
+                    return HttpResponse("bad")
             else: 
                 return HttpResponse("bad") 
-        else: 
-            return HttpResponse ("bad")
+
     elif tipo_orden=="Orden de emergencia":
         ordenesEmergencia= ordenEmergencia.objects.filter(ticket=n_ticket)
         if ordenesEmergencia:
-            cliente= client.objects.filter(email=ordenesEmergencia.client_email).first()
-            if cliente:
-                imagen=""
-                if cliente.picture:
-                    imagen="data:image/png;base64,"+base64.b64encode(cliente.picture.read()).decode('ascii') 
-                return JsonResponse( {"nombre":cliente.name,"apellido":cliente.last_name, 
-                "imagen":imagen, "calificacion":cliente.qualification}, safe=False)
-
+            user=User.objects.filter(email=ordenesEmergencia.client_email).first()
+            if user:
+                userData=user_data.objects.filter(user_id=user).first()
+                if userData:
+                    imagen=""
+                    if userData.picture:
+                        imagen="data:image/png;base64,"+base64.b64encode(userData.picture.read()).decode('ascii') 
+                    
+                    return JsonResponse( {"nombre":userData.name,"apellido":userData.last_name, 
+                    "imagen":imagen, "calificacion":userData.qualification}, safe=False) 
+                else:
+                    return HttpResponse("bad")
             else: 
-                return HttpResponse("bad") 
-        else: 
-            return HttpResponse ("bad")
-    else: 
-        return HttpResponse("bad")
+                return HttpResponse("bad")
 
 
 def datosProveedor(request , n_ticket, tipo_orden, rubro):
     if tipo_orden=="Orden general": 
         ordenesGenerales= ordenGeneral.objects.filter(ticket=n_ticket).first()
         if ordenesGenerales:
-            proveedor_independiente= serviceProvider.objects.filter(email=ordenesGenerales.proveedor_email).first()
-            if proveedor_independiente:
-                imagen=""
-                if proveedor_independiente.picture:
-                    imagen="data:image/png;base64,"+base64.b64encode(proveedor_independiente.picture.read()).decode('ascii') 
-                
-                rubro=item.objects.filter(provider=proveedor_independiente).filter(items=rubro).first()
-                if rubro:
-                    calificacion=rubro.qualification
-                else: 
-                    calificacion="-"
-                return JsonResponse( {"nombre":proveedor_independiente.name,"apellido":proveedor_independiente.last_name, 
-                "imagen":imagen, "calificacion":calificacion}, safe=False)
-            else:
-                compania= company.objects.filter(email=ordenesGenerales.proveedor_email).first()
-                if compania:
+            user=User.objects.filter(email=ordenesGenerales.proveedor_email).first()
+            if user:
+                userData=user_data.objects.filter(user_id=user).first()
+                if userData:
                     imagen=""
-                    if compania.picture:
-                        imagen="data:image/png;base64,"+base64.b64encode(compania.picture.read()).decode('ascii') 
-                    rubro=item_company.objects.filter(provider=proveedor_independiente).filter(items=rubro).first()
-                    if rubro:
-                        calificacion=rubro.qualification
-                    else: 
-                        calificacion="-"
-                    return JsonResponse( {"nombre":compania.name,"apellido":compania.last_name, 
-                "imagen":imagen, "calificacion":calificacion}, safe=False)
-                else: 
-                    return HttpResponse("bad") 
+                    if userData.picture:
+                        imagen="data:image/png;base64,"+base64.b64encode(userData.picture.read()).decode('ascii') 
+                    
+                    return JsonResponse( {"nombre":userData.name,"apellido":userData.last_name, 
+                    "imagen":imagen, "calificacion":userData.qualification}, safe=False) 
+                else:
+                    return HttpResponse("bad")
+            else: 
+                return HttpResponse("bad")
         else: 
-            return HttpResponse ("bad")
+            return HttpResponse("bad")
 
     elif tipo_orden=="Orden de emergencia":
         ordenesEmergencia= ordenEmergencia.objects.filter(ticket=n_ticket).first()
         if ordenesEmergencia:
-            proveedor_independiente= serviceProvider.objects.filter(email=ordenesEmergencia.proveedor_email).first()
-            if proveedor_independiente:
-                rubro=item.objects.filter(provider=proveedor_independiente).filter(items=rubro).first()
-                if rubro:
+            user=User.objects.filter(email=ordenesEmergencia.proveedor_email).first()
+            if user:
+                userData=user_data.objects.filter(user_id=user).first()
+                if userData:
                     imagen=""
-                    if proveedor_independiente.picture:
-                        imagen="data:image/png;base64,"+base64.b64encode(proveedor_independiente.picture.read()).decode('ascii') 
-                    return JsonResponse( {"nombre":proveedor_independiente.name,"apellido":proveedor_independiente.last_name, 
-                "imagen":imagen, "calificacion":rubro.qualification}, safe=False)
+                    if userData.picture:
+                        imagen="data:image/png;base64,"+base64.b64encode(userData.picture.read()).decode('ascii') 
+                    
+                    return JsonResponse( {"nombre":userData.name,"apellido":userData.last_name, 
+                    "imagen":imagen, "calificacion":userData.qualification}, safe=False) 
                 else:
                     return HttpResponse("bad")
-            else:
-                compania= company.objects.filter(email=ordenesEmergencia.proveedor_email).first()
-                if compania:
-                    rubro=item_company.objects.filter(provider=compania).filter(items=rubro).first()
-                    imagen=""
-                    if compania.picture:
-                        imagen="data:image/png;base64,"+base64.b64encode(compania.picture.read()).decode('ascii') 
-                
-                    return JsonResponse( {"nombre":compania.name,"apellido":compania.last_name, 
-                "imagen":imagen, "calificacion":rubro.qualification}, safe=False)
-                else: 
-                    return HttpResponse("bad") 
+            else: 
+                return HttpResponse("bad")
         else: 
-            return HttpResponse ("bad")
-    else: 
-        return HttpResponse("bad")
+            return HttpResponse("bad")
+
 
 ###########################################################################################
 #ORDEN GENERAL 
+
 
 @csrf_exempt
 def pedirOrdenGeneral (request):
@@ -1240,131 +726,85 @@ def pedirOrdenGeneral (request):
         horaPedido=request.POST.get("horaPedido")
         descripcion_problema=request.POST.get("descripcion_problema")
         direccion_pedido=request.POST.get("direccion")
+
+        user_proveedor=User.objects.filter(email=ProveedorEmail).first()
         
-        if tipoProveedor=="Proveedor de servicio independiente":
-            serviceProvider_=serviceProvider.objects.filter(email=ProveedorEmail)
-            client_=client.objects.filter(email=clienteEmail)
-            
-            if serviceProvider_ and client_: 
-                
-                rubro= item.objects.filter(items=itemProveedor, provider=serviceProvider_.first()).first()
-                if not rubro:
-                    return HttpResponse("bad")
-                else:
-                    
-                    if ordenGeneral.objects.filter(client_email=clienteEmail, proveedor_email=ProveedorEmail).exclude(status="CAN").exclude( status="REX").exclude( status="RED").first():
-                        if ordenGeneral.objects.filter(client_email=clienteEmail, proveedor_email=ProveedorEmail).exclude(status="CAN").exclude( status="REX").exclude( status="RED").first().rubro.items==itemProveedor:
+        rubro= item.objects.filter(items=itemProveedor, user_id=user_proveedor).first()
+        
+        if rubro:
+            if ordenGeneral.objects.filter(client_email=clienteEmail, proveedor_email=ProveedorEmail).exclude(status="CAN").exclude( status="REX").exclude( status="RED").first():
+                if ordenGeneral.objects.filter(client_email=clienteEmail, proveedor_email=ProveedorEmail).exclude(status="CAN").exclude( status="REX").exclude( status="RED").first().rubro.items==itemProveedor:
                             
-                            return HttpResponse("ya hay una orden")
-                        else:
-                            new=ordenGeneral()
-                            new.status="ENV"
-                            new.rubro=rubro
-                            #new.rubro_company=""
-                            new.location_lat= clienteLat
-                            new.location_long=clienteLong
-                            new.tituloPedido=tituloPedido
-                            new.day=""
-                            new.time=""
-                            new.problem_description=descripcion_problema
-                            new.direccion=direccion_pedido
-                            if request.FILES.get("imagen1"):
-                                new.picture1= request.FILES.get("imagen1")
-                            if request.FILES.get("imagen2"):
-                                new.picture2=request.FILES.get("imagen2")
-
-                            new.client_email=clienteEmail
-                            new.proveedor_email=ProveedorEmail
-                            ticket_numero=ordenGeneral.objects.count()+ordenEmergencia.objects.count()+1000
-                            new.ticket=ticket_numero
-                            new.motivo_rechazo=""
-                            new.resena_al_proveedor=""
-                            new.resena_al_cliente=""
-                            new.save()
-                        
-                            send_proveedor_mail_new_orden.delay(ticket_numero, ProveedorEmail, client_.first().name+" "+client_.first().last_name)
-                           
-                            return HttpResponse(ticket_numero) 
-                    else:
-                        new=ordenGeneral()
-                        new.status="ENV"
-                        new.rubro=rubro
-                        #new.rubro_company=""
-                        new.location_lat= clienteLat
-                        new.location_long=clienteLong
-                        new.tituloPedido=tituloPedido
-                        new.day=""
-                        new.time=""
-                        new.problem_description=descripcion_problema
-                        new.direccion=direccion_pedido
-                        if request.FILES.get("imagen1"):
-                            new.picture1= request.FILES.get("imagen1")
-                        if request.FILES.get("imagen2"):
-                            new.picture2=request.FILES.get("imagen2")
-
-                        new.client_email=clienteEmail
-                        new.proveedor_email=ProveedorEmail
-                        ticket_numero=ordenGeneral.objects.count()+ordenEmergencia.objects.count()+1000
-                        new.ticket=ticket_numero
-                        new.motivo_rechazo=""
-                        new.resena_al_proveedor=""
-                        new.resena_al_cliente=""
-                        new.save()
-
-                        send_proveedor_mail_new_orden.delay(ticket_numero, ProveedorEmail, client_.first().name+" "+client_.first().last_name)
-                     
-                        return HttpResponse(ticket_numero) 
-
-            else: 
-                print("debe enviar bad")
-                return HttpResponse("bad")
-        else:
-            print("*********************************************")
-            print(request.POST.get("tipoProveedor"))
-            print("*********************************************")
-            company_=company.objects.filter(email=ProveedorEmail)
-            client_=client.objects.filter(email=clienteEmail)
-            if company_ and client_: 
-                
-                rubro_company= item_company.objects.filter(items=itemProveedor, provider=company_.first()).first()
-                if not rubro_company:
-                    return HttpResponse("bad")
+                    return HttpResponse("ya hay una orden")
                 else:
-                    if ordenGeneral.objects.filter(client_email=clienteEmail, proveedor_email=ProveedorEmail).exclude(status="CAN").exclude( status="REX").exclude( status="RED"):
-                        return HttpResponse("ya hay una orden")
-                    else: 
-                        new=ordenGeneral()
-                        new.rubro_company=rubro_company
-                        #new.rubro=rubro_company
-                        new.status="ENV"
-                        new.location_lat= clienteLat
-                        new.location_long=clienteLong
-                        new.tituloPedido=tituloPedido
-                        new.day=""
-                        new.time=""
-                        new.problem_description=descripcion_problema
-                        if request.FILES.get("imagen1"):
-                            new.picture1= request.FILES.get("imagen1")
-                        if request.FILES.get("imagen2"):
-                            new.picture2=request.FILES.get("imagen2")
-                        
-                        new.client_email=clienteEmail
-                        new.proveedor_email=ProveedorEmail
-                        ticket_numero=ordenGeneral.objects.count()+ordenEmergencia.objects.count()+1000
-                        new.ticket=ticket_numero
-                        new.motivo_rechazo=""
-                        new.resena_al_proveedor=""
-                        new.resena_al_cliente=""
-                        
-                        new.save()
-                        print("///////////////////")
-                        print(client_.name)
-                        send_proveedor_mail_new_orden.delay(ticket_numero, ProveedorEmail, client_.name+" "+client_.last_name)
-                        return HttpResponse(ticket_numero) 
+                    new=ordenGeneral()
+                    new.status="ENV"
+                    new.rubro=rubro
+                    new.tituloPedido=tituloPedido
+                    new.day=""
+                    new.time=""
+                    new.problem_description=descripcion_problema
+                    new.direccion=direccion_pedido
+                    if request.FILES.get("imagen1"):
+                        new.picture1= request.FILES.get("imagen1")
+                    if request.FILES.get("imagen2"):
+                        new.picture2=request.FILES.get("imagen2")
 
-            else: 
-                return HttpResponse("bad")
+                    new.client_email=clienteEmail
+                    new.proveedor_email=ProveedorEmail
+                    ticket_numero=ordenGeneral.objects.count()+ordenEmergencia.objects.count()+1000
+                    new.ticket=ticket_numero
+                    new.motivo_rechazo=""
+                    new.resena_al_proveedor=""
+                    new.resena_al_cliente=""
+                    new.save()
 
+                    user_client=User.objects.filter(email=clienteEmail).first()
+                    userData=user_data.objects.filter(user_id=user_client).first()
+                    userData.posicion_lat=clienteLat
+                    userData.posicion_long=clienteLong
+                    userData.save()
+                        
+                    send_proveedor_mail_new_orden.delay(ticket_numero, ProveedorEmail, client_.first().name+" "+client_.first().last_name)
+                           
+                    return HttpResponse(ticket_numero)
+            else:
+                new=ordenGeneral()
+                new.status="ENV"
+                new.rubro=rubro
+                new.tituloPedido=tituloPedido
+                new.day=""
+                new.time=""
+                new.problem_description=descripcion_problema
+                new.direccion=direccion_pedido
+                if request.FILES.get("imagen1"):
+                    new.picture1= request.FILES.get("imagen1")
+                if request.FILES.get("imagen2"):
+                    new.picture2=request.FILES.get("imagen2")
+
+                new.client_email=clienteEmail
+                new.proveedor_email=ProveedorEmail
+                ticket_numero=ordenGeneral.objects.count()+ordenEmergencia.objects.count()+1000
+                new.ticket=ticket_numero
+                new.motivo_rechazo=""
+                new.resena_al_proveedor=""
+                new.resena_al_cliente=""
+                new.save()
+
+                user_client=User.objects.filter(email=clienteEmail).first()
+                userData=user_data.objects.filter(user_id=user_client).first()
+                userData.posicion_lat=clienteLat
+                userData.posicion_long=clienteLong
+                userData.save()
+                        
+                send_proveedor_mail_new_orden.delay(ticket_numero, ProveedorEmail, client_.first().name+" "+client_.first().last_name)
+                           
+                return HttpResponse(ticket_numero)
+
+        else:
+            return HttpResponse("bad")
+
+LLEGUE HASTA ACA
 
 def consultarOrdenes(request, tipo,email):
     if tipo=="proveedor": 
@@ -1372,12 +812,7 @@ def consultarOrdenes(request, tipo,email):
         ordenesEmergencia= ordenEmergencia.objects.filter(proveedor_email=email).exclude(status="ENV").exclude(status="CAN").exclude( status="REX")                                                             
         EmergenciaLista=ordenEmergenciaLista.objects.filter(proveedor_email=email).exclude(status="OA")
         
-        print("//========////////////////////////////////////////////////")
-        print(ordenesEmergencia)
-        print("//////////////////////////////////////////////////")
-        print("//========////////////////////////////////////////////////")
-        print(EmergenciaLista)
-        print("//////////////////////////////////////////////////")
+       
         array=[]
         if ordenesGenerales:
             for datos in ordenesGenerales:
@@ -1416,7 +851,6 @@ def consultarOrdenes(request, tipo,email):
 
 
         if ordenesEmergencia: 
-            print("llega aqui")
             for datos in ordenesEmergencia:
                 cliente=client.objects.filter(email=datos.client_email).first()
                 imagen={}
@@ -1450,10 +884,7 @@ def consultarOrdenes(request, tipo,email):
     elif tipo=="cliente":
         ordenesGenerales= ordenGeneral.objects.filter(client_email=email).exclude(status="CAN").exclude( status="REX").exclude(califico_el_cliente=True)
         ordenesEmergencia= ordenEmergencia.objects.filter(client_email=email).exclude(status="CAN").exclude( status="REX").exclude(califico_el_cliente=True)
-        print("*********************")
-        print(ordenesEmergencia)
-        print("********************")
-        
+
         array=[]
        
         if ordenesGenerales:
@@ -1572,14 +1003,23 @@ def cambiarEstadoOrden (request , n_ticket, tipo_orden,nuevo_estado_orden):
                                        
             ordenesGenerales.status=nuevo_estado_orden
             ordenesGenerales.save()
-            return HttpResponse("ok")
-            
+            if nuevo_estado_orden == "EVI":
+                proveedor=""
+                proveedor=serviceProvider.objects.filter(email=ordenesGenerales.proveedor_email).first()
+                if proveedor:
+                    send_proveedor_on_trip.delay(n_ticket,proveedor.name+" "+proveedor.last_name,ordenesGenerales.rubro,ordenesGenerales.client_email)
+                    return HttpResponse("ok")
+                else:
+                    company_=company.objects.filter(email=ordenesGenerales.proveedor_email).first()
+                    if company_: 
+                        send_proveedor_on_trip.delay(n_ticket,company_.name,ordenesGenerales.rubro_company,ordenesGenerales.client_email)
+                        return HttpResponse("ok")
+                    else:
+                        return HttpResponse("bad")      
         else: 
             return HttpResponse("bad")
     elif tipo_orden=="Orden de emergencia":
         ordenesEmergencia= ordenEmergencia.objects.filter(ticket=n_ticket)
-        print("veamos que tenemos en la orden de emergencia")
-        print(ordenesEmergencia)
         if ordenesEmergencia:
             ordenesEmergencia.status=nuevo_estado_orden
             ordenesEmergencia.save()
@@ -1590,7 +1030,6 @@ def cambiarEstadoOrden (request , n_ticket, tipo_orden,nuevo_estado_orden):
             return HttpResponse("bad")
 
 def cancelarOrdenGeneral (request , n_ticket, tipo_orden,nuevo_estado_orden,motivo):
-    print("llego a cancelar orden")
     if tipo_orden=="Orden general": 
         ordenesGenerales= ordenGeneral.objects.filter(ticket=n_ticket).first()
         if nuevo_estado_orden=="CAN":
@@ -1601,6 +1040,10 @@ def cancelarOrdenGeneral (request , n_ticket, tipo_orden,nuevo_estado_orden,moti
             ordenesGenerales.status=nuevo_estado_orden
             ordenesGenerales.motivo_rechazo=motivo
             ordenesGenerales.save()
+            if ordenesGenerales.rubro:
+                send_client_order_canceled.delay(n_ticket,ordenesGenerales.rubro,motivo,ordenesGenerales.proveedor_email, cliente.name+" "+cliente.last_name)
+            else: 
+                send_client_order_canceled.delay(n_ticket,ordenesGenerales.rubro_company,motivo,ordenesGenerales.proveedor_email, cliente.name+" "+cliente.last_name)
             return HttpResponse("ok")
         else:
             email_proveedor=ordenesGenerales.proveedor_email
@@ -1661,7 +1104,6 @@ def agregarFotoOrden(request):
 
 @csrf_exempt
 def masInfoOrdenProveedor (request):
-    
     if request.method == 'POST':
         ticket=request.POST.get("ticket")
         tipo_orden=request.POST.get("tipoOrden")
@@ -1671,11 +1113,15 @@ def masInfoOrdenProveedor (request):
                 orden_General.pedido_mas_información=request.POST.get("masInfo")
                 orden_General.status="PEI"
                 orden_General.save()
+
+                send_proveedor_mail_more_info.delay(ticket, request.POST.get("masInfo"),orden_General.client_email)
+
                 return HttpResponse("ok")
         else:
             return HttpResponse("bad")
     else: 
         return HttpResponse("bad")
+
 
 @csrf_exempt
 def masInfoOrdenCliente(request):
@@ -1689,6 +1135,7 @@ def masInfoOrdenCliente(request):
             orden_General.picture1_mas_información= request.FILES.get("imagen1")
             orden_General.picture2_mas_información= request.FILES.get("imagen2")
             orden_General.save()
+            send_client_mail_more_info.delay(ticket, orden_General.pedido_mas_información, request.POST.get("respuesta_informacion"), orden_General.client_email)
             return HttpResponse("ok")
         else:
             return HttpResponse("bad")
@@ -1706,6 +1153,10 @@ def presupuestoProveedor(request):
                 orden_General.presupuesto_inicial=request.POST.get("precio")
                 orden_General.day=request.POST.get("dia")
                 orden_General.time=request.POST.get("hora")
+                print("////////////////////////")
+                print(request.POST.get("dia"))
+                print(request.POST.get("hora"))
+                print("/////////////////////")
                 orden_General.status="PRE"
                 orden_General.save()
                 return HttpResponse("ok")
@@ -1733,12 +1184,12 @@ def presupuestoCliente(request):
 def cambiarfechaordengeneral (request): 
     if request.method == 'POST':
         ticket=request.POST.get("ticket")
-        print(request.POST.get("hora"))
         orden_General= ordenGeneral.objects.filter(ticket=ticket).first()
         if orden_General:
             orden_General.day=request.POST.get("dia")
             orden_General.time=request.POST.get("hora")
             orden_General.save()
+            send_proveedor_change_date.delay(ticket,request.POST.get("dia"), request.POST.get("hora"),orden_General.client_email )
             return HttpResponse("ok")
         else:
             return HttpResponse("bad")

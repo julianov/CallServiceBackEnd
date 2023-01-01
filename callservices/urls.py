@@ -21,7 +21,6 @@ urlpatterns = [
     path('registro/', register),
     path('registro/verificacion/email', validacionEmail),
 
-
     path('completarinfo/completar',completeInfo),
     path('cambiarInfoPersonal', nuevaInfoPersonal),
 

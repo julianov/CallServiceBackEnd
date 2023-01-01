@@ -1,16 +1,12 @@
 from django.contrib import admin
-from .models import  campañaPublicidad, chat, client, company, item_company, ordenEmergencia, ordenEmergenciaLista, ordenGeneral 
-from .models import serviceProvider 
+from .models import  campañaPublicidad, chat, ordenEmergencia, ordenEmergenciaLista, ordenGeneral, user_data, validation_token 
 from .models import item 
 
 
 # Register your models here.
-admin.site.register(client)
-admin.site.register(serviceProvider)
+admin.site.register(user_data)
 admin.site.register(item)
-admin.site.register(company)
-admin.site.register(item_company)
-
+admin.site.register(validation_token)
 admin.site.register(ordenGeneral)
 admin.site.register(ordenEmergencia)
 admin.site.register(ordenEmergenciaLista)
