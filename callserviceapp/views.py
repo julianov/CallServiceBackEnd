@@ -804,23 +804,23 @@ def pedirOrdenGeneral (request):
         else:
             return HttpResponse("bad")
 
-LLEGUE HASTA ACA
 
 def consultarOrdenes(request, tipo,email):
     if tipo=="proveedor": 
         ordenesGenerales= ordenGeneral.objects.filter(proveedor_email=email).exclude(status="CAN").exclude( status="REX").exclude( califico_el_proveedor=True)
         ordenesEmergencia= ordenEmergencia.objects.filter(proveedor_email=email).exclude(status="ENV").exclude(status="CAN").exclude( status="REX")                                                             
         EmergenciaLista=ordenEmergenciaLista.objects.filter(proveedor_email=email).exclude(status="OA")
+            
         
-       
         array=[]
         if ordenesGenerales:
             for datos in ordenesGenerales:
-              cliente=client.objects.filter(email=datos.client_email).first()
-              if cliente:
+              user=User.objects.filter(email=datos.client_email).first()
+              userData=user_data.objects.filter(user_id=user).first() 
+              if userData:
                 imagen={}
-                if cliente.picture:
-                    imagen['imagen_Cliente']="data:image/png;base64,"+base64.b64encode(cliente.picture.read()).decode('ascii')
+                if userData.picture:
+                    imagen['imagen_Cliente']="data:image/png;base64,"+base64.b64encode(userData.picture.read()).decode('ascii')
                 else: 
                     imagen['imagen_Cliente']=""
                 if datos.picture1: 
@@ -842,7 +842,7 @@ def consultarOrdenes(request, tipo,email):
                     
                 array.append({"rubro":datos.rubro.items,"tipo":"Orden general","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
                 "dia":datos.day, "time":datos.time, "titulo":datos.tituloPedido,"descripcion":datos.problem_description,
-                "location_lat":datos.location_lat,"location_long":datos.location_long, "email_cliente":cliente.email,
+                "location_lat":datos.location_lat,"location_long":datos.location_long, "email_cliente":user.email,
                 "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_cliente":imagen['imagen_Cliente'],
                 "presupuesto":datos.presupuesto_inicial, "pedidoMasInformacion": datos.pedido_mas_información,
                 "respuesta_cliente_pedido_mas_información":datos.respuesta_cliente_pedido_mas_información,
@@ -852,10 +852,11 @@ def consultarOrdenes(request, tipo,email):
 
         if ordenesEmergencia: 
             for datos in ordenesEmergencia:
-                cliente=client.objects.filter(email=datos.client_email).first()
+                user=User.objects.filter(email=datos.client_email).first()
+                userData=user_data.objects.filter(user_id=user).first() 
                 imagen={}
-                if cliente.picture:
-                    imagen['imagen_Cliente']="data:image/png;base64,"+base64.b64encode(cliente.picture.read()).decode('ascii')
+                if userData.picture:
+                    imagen['imagen_Cliente']="data:image/png;base64,"+base64.b64encode(userData.picture.read()).decode('ascii')
                 else: 
                     imagen['imagen_Cliente']=""
                 if datos.picture1: 
@@ -869,7 +870,7 @@ def consultarOrdenes(request, tipo,email):
                     
                 array.append({"rubro":datos.rubro,"tipo":"ORDEN DE EMERGENCIA","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
                 "descripcion":datos.problem_description,
-                "location_lat":datos.location_cliente_lat,"location_long":datos.location_cliente_long,"email_cliente":cliente.email,
+                "location_lat":datos.location_cliente_lat,"location_long":datos.location_cliente_long,"email_cliente":user.email,
                 "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_cliente":imagen['imagen_Cliente'] })
 
         if EmergenciaLista:
@@ -884,16 +885,17 @@ def consultarOrdenes(request, tipo,email):
     elif tipo=="cliente":
         ordenesGenerales= ordenGeneral.objects.filter(client_email=email).exclude(status="CAN").exclude( status="REX").exclude(califico_el_cliente=True)
         ordenesEmergencia= ordenEmergencia.objects.filter(client_email=email).exclude(status="CAN").exclude( status="REX").exclude(califico_el_cliente=True)
-
+        
         array=[]
        
         if ordenesGenerales:
             for datos in ordenesGenerales:
-                proveedor=serviceProvider.objects.filter(email=datos.proveedor_email).first()
-                if proveedor:
+                user=User.objects.filter(email=datos.proveedor_email).first()
+                userData=user_data.objects.filter(user_id=user).first() 
+                if userData:
                     imagen={}
-                    if proveedor.picture:
-                        imagen['imagen_proveedor']="data:image/png;base64,"+base64.b64encode(proveedor.picture.read()).decode('ascii')
+                    if userData.picture:
+                        imagen['imagen_proveedor']="data:image/png;base64,"+base64.b64encode(userData.picture.read()).decode('ascii')
                     else: 
                         imagen['imagen_proveedor']=""
                     if datos.picture1: 
@@ -915,62 +917,24 @@ def consultarOrdenes(request, tipo,email):
 
                     array.append({"rubro":datos.rubro.items,"tipo":"Orden general","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
                     "dia":datos.day, "time":datos.time, "titulo":datos.tituloPedido,"descripcion":datos.problem_description,
-                    "location_lat":datos.location_lat,"location_long":datos.location_long, "email_proveedor":proveedor.email,
+                    "location_lat":datos.location_lat,"location_long":datos.location_long, "email_proveedor":user.email,
                     "presupuesto":str(datos.presupuesto_inicial), "pedidoMasInformacion": datos.pedido_mas_información,
                     "respuesta_cliente_pedido_mas_información":datos.respuesta_cliente_pedido_mas_información,
                     "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_proveedor":imagen['imagen_proveedor'],
                     "picture1_mas_información": imagen['picture1_mas_información'],
                     "picture2_mas_información": imagen['picture2_mas_información'] }) 
-                
-                else:
-
-                    proveedor=company.objects.filter(email=datos.proveedor_email).first()
-                    if proveedor:
-                        imagen={}
-                        if proveedor.picture:
-                            imagen['imagen_proveedor']="data:image/png;base64,"+base64.b64encode(proveedor.picture.read()).decode('ascii')
-                        else: 
-                            imagen['imagen_proveedor']=""
-                        if datos.picture1: 
-                            imagen['picture1']="data:image/png;base64,"+base64.b64encode(datos.picture1.read()).decode('ascii')
-                        else:
-                            imagen['picture1']=""
-                        if datos.picture2: 
-                            imagen['picture2']="data:image/png;base64,"+base64.b64encode(datos.picture2.read()).decode('ascii')
-                        else:
-                            imagen['picture2']=""
-                        if datos.picture1_mas_información: 
-                            imagen['picture1_mas_información']="data:image/png;base64,"+base64.b64encode(datos.picture1_mas_información.read()).decode('ascii')
-                        else:
-                            imagen['picture1_mas_información']=""
-                        if datos.picture2_mas_información: 
-                            imagen['picture2_mas_información']="data:image/png;base64,"+base64.b64encode(datos.picture2_mas_información.read()).decode('ascii')
-                        else:
-                            imagen['picture2_mas_información']=""
-
-                        
-                        array.append({"rubro":datos.rubro_company.items,"tipo":"Orden general","status":datos.status, "fecha_creacion":datos.fecha_creacion , "ticket":datos.ticket,
-                        "dia":datos.day, "time":datos.time, "titulo":datos.tituloPedido,"descripcion":datos.problem_description,
-                        "location_lat":datos.location_lat,"location_long":datos.location_long, "email_proveedor":proveedor.email,
-                        "presupuesto":str(datos.presupuesto_inicial), "pedidoMasInformacion": datos.pedido_mas_información,
-                        "respuesta_cliente_pedido_mas_información":datos.respuesta_cliente_pedido_mas_información,
-                        "picture1":imagen['picture1'], "picture2":imagen['picture2'], "imagen_proveedor":imagen['imagen_proveedor'],
-                        "picture1_mas_información": imagen['picture1_mas_información'],
-                        "picture2_mas_información": imagen['picture2_mas_información'] })
-
             
         if ordenesEmergencia: 
             for datos in ordenesEmergencia:
-                proveedor=serviceProvider.objects.filter(email=datos.proveedor_email).first()
-                if not proveedor:
-                    proveedor=company.objects.filter(email=datos.proveedor_email).first()
-                
+                user=User.objects.filter(email=datos.proveedor_email).first()
+                userData=user_data.objects.filter(user_id=user).first() 
+               
                 imagen={}
                 proveedor_email=""
-                if proveedor:
-                    if proveedor.picture:
-                        imagen['imagen_proveedor']="data:image/png;base64,"+base64.b64encode(proveedor.picture.read()).decode('ascii')
-                    proveedor_email=proveedor.email
+                if userData:
+                    if userData.picture:
+                        imagen['imagen_proveedor']="data:image/png;base64,"+base64.b64encode(userData.picture.read()).decode('ascii')
+                    proveedor_email=user.email
                 else: 
                     imagen['imagen_proveedor']=""
                 if datos.picture1: 
@@ -996,26 +960,25 @@ def consultarOrdenes(request, tipo,email):
     else:
         return HttpResponse("bad") 
 
+
 def cambiarEstadoOrden (request , n_ticket, tipo_orden,nuevo_estado_orden):
     if tipo_orden=="Orden general": 
+        
         ordenesGenerales= ordenGeneral.objects.filter(ticket=n_ticket).first()
         if ordenesGenerales:
                                        
             ordenesGenerales.status=nuevo_estado_orden
             ordenesGenerales.save()
+
             if nuevo_estado_orden == "EVI":
-                proveedor=""
-                proveedor=serviceProvider.objects.filter(email=ordenesGenerales.proveedor_email).first()
-                if proveedor:
-                    send_proveedor_on_trip.delay(n_ticket,proveedor.name+" "+proveedor.last_name,ordenesGenerales.rubro,ordenesGenerales.client_email)
+                user=User.objects.filter(email=ordenesGenerales.proveedor_email).first()
+                userData=user_data.objects.filter(user_id=user).first()
+                if userData:
+                    send_proveedor_on_trip.delay(n_ticket,userData.name+" "+userData.last_name,ordenesGenerales.rubro,ordenesGenerales.client_email)
                     return HttpResponse("ok")
+                
                 else:
-                    company_=company.objects.filter(email=ordenesGenerales.proveedor_email).first()
-                    if company_: 
-                        send_proveedor_on_trip.delay(n_ticket,company_.name,ordenesGenerales.rubro_company,ordenesGenerales.client_email)
-                        return HttpResponse("ok")
-                    else:
-                        return HttpResponse("bad")      
+                    return HttpResponse("bad")      
         else: 
             return HttpResponse("bad")
     elif tipo_orden=="Orden de emergencia":
@@ -1029,43 +992,36 @@ def cambiarEstadoOrden (request , n_ticket, tipo_orden,nuevo_estado_orden):
     else: 
             return HttpResponse("bad")
 
+
 def cancelarOrdenGeneral (request , n_ticket, tipo_orden,nuevo_estado_orden,motivo):
     if tipo_orden=="Orden general": 
         ordenesGenerales= ordenGeneral.objects.filter(ticket=n_ticket).first()
         if nuevo_estado_orden=="CAN":
+
             email_cliente=ordenesGenerales.client_email
-            cliente=client.objects.filter(email=email_cliente).first()
-            cliente.cantidad_ordenes_canceladas=cliente.cantidad_ordenes_canceladas+1
-            cliente.save()
+            user=User.objects.filter(email=email_cliente).first()
+            userData=user_data.objects.filter(user_id=user).first()
+            userData.cantidad_ordenes_canceladas=userData.cantidad_ordenes_canceladas+1
+            userData.save()
             ordenesGenerales.status=nuevo_estado_orden
             ordenesGenerales.motivo_rechazo=motivo
             ordenesGenerales.save()
-            if ordenesGenerales.rubro:
-                send_client_order_canceled.delay(n_ticket,ordenesGenerales.rubro,motivo,ordenesGenerales.proveedor_email, cliente.name+" "+cliente.last_name)
-            else: 
-                send_client_order_canceled.delay(n_ticket,ordenesGenerales.rubro_company,motivo,ordenesGenerales.proveedor_email, cliente.name+" "+cliente.last_name)
+            
+            send_client_order_canceled.delay(n_ticket,ordenesGenerales.rubro,motivo,ordenesGenerales.proveedor_email, userData.name+" "+userData.last_name)
             return HttpResponse("ok")
         else:
             email_proveedor=ordenesGenerales.proveedor_email
-            proveedor=serviceProvider.objects.filter(email=email_proveedor).first()
-            if proveedor:
-                proveedor.cantidad_ordenes_rechazadas=proveedor.cantidad_ordenes_rechazadas+1 
-                proveedor.save()
+            user=User.objects.filter(email=email_proveedor).first()
+            userData=user_data.objects.filter(user_id=user).first()
+            if userData:
+                userData.cantidad_ordenes_rechazadas=userData.cantidad_ordenes_rechazadas+1 
+                userData.save()
                 ordenesGenerales.status=nuevo_estado_orden
                 ordenesGenerales.motivo_rechazo=motivo
                 ordenesGenerales.save()
                 return HttpResponse("ok")
             else:
-                compania=company.objects.filter(email=email_proveedor).first()
-                if compania: 
-                    compania.cantidad_ordenes_rechazadas= compania.cantidad_ordenes_rechazadas+1
-                    compania.save()
-                    ordenesGenerales.status=nuevo_estado_orden
-                    ordenesGenerales.motivo_rechazo=motivo
-                    ordenesGenerales.save()
-                    return HttpResponse("ok")
-                else: 
-                    return HttpResponse("bad")
+               return HttpResponse("bad")
 
 
 @csrf_exempt
@@ -1142,6 +1098,7 @@ def masInfoOrdenCliente(request):
     else: 
         return HttpResponse("bad")
 
+
 @csrf_exempt
 def presupuestoProveedor(request):
     if request.method == 'POST':
@@ -1153,10 +1110,6 @@ def presupuestoProveedor(request):
                 orden_General.presupuesto_inicial=request.POST.get("precio")
                 orden_General.day=request.POST.get("dia")
                 orden_General.time=request.POST.get("hora")
-                print("////////////////////////")
-                print(request.POST.get("dia"))
-                print(request.POST.get("hora"))
-                print("/////////////////////")
                 orden_General.status="PRE"
                 orden_General.save()
                 return HttpResponse("ok")
@@ -1164,6 +1117,7 @@ def presupuestoProveedor(request):
             return HttpResponse("bad")
     else: 
         return HttpResponse("bad")    
+
 
 @csrf_exempt
 def presupuestoCliente(request):
@@ -1196,6 +1150,7 @@ def cambiarfechaordengeneral (request):
     else: 
         return HttpResponse("bad") 
 
+
 @csrf_exempt
 def finalizarOrdenProveedor(request):
     if request.method == 'POST':
@@ -1205,12 +1160,13 @@ def finalizarOrdenProveedor(request):
         orden_General= ordenGeneral.objects.filter(ticket=ticket).first()
         if orden_General:
             email=orden_General.client_email
-            cliente=client.objects.filter(email=email).first()
-            if cliente:
-                calificacion_inicial= cliente.qualification
-                cliente.qualification=calificacion_inicial + (int(calificacion)/( (cliente.cantidad_ordenes_realizadas + cliente.cantidad_ordenes_canceladas)+1))
-                cliente.cantidad_ordenes_realizadas=cliente.cantidad_ordenes_realizadas+1
-                cliente.save()
+            user=User.objects.filter(email=email).first()
+            userData=user_data.objects.filter(user_id=user).first()
+            if userData:
+                calificacion_inicial= userData.qualification
+                userData.qualification=calificacion_inicial + (int(calificacion)/( (userData.cantidad_ordenes_realizadas + userData.cantidad_ordenes_canceladas)+1))
+                userData.cantidad_ordenes_realizadas=userData.cantidad_ordenes_realizadas+1
+                userData.save()
                 if resena!="":
                     orden_General.resena_al_cliente=resena
                 orden_General.calificacion_cliente=calificacion #la calificación en la orden no es igual a la calificación del cliente
@@ -1227,6 +1183,7 @@ def finalizarOrdenProveedor(request):
     else: 
         return HttpResponse("bad") 
 
+
 @csrf_exempt
 def finalizarOrdenCliente(request):
     if request.method == 'POST':
@@ -1236,12 +1193,13 @@ def finalizarOrdenCliente(request):
         orden_General= ordenGeneral.objects.filter(ticket=ticket).first()
         if orden_General:
             email=orden_General.proveedor_email
-            proveedor=serviceProvider.objects.filter(email=email).first()
-            if proveedor:
+            user=User.objects.filter(email=email).first()
+            userData=user_data.objects.filter(user_id=user).first()
+            if userData:
                 calificacion_inicial= orden_General.rubro.qualification
-                orden_General.rubro.qualification=calificacion_inicial + (int(calificacion)/( (proveedor.cantidad_ordenes_realizadas + proveedor.cantidad_ordenes_rechazadas)+1))
-                proveedor.cantidad_ordenes_realizadas=proveedor.cantidad_ordenes_realizadas+1
-                proveedor.save()
+                orden_General.rubro.qualification=calificacion_inicial + (int(calificacion)/( (userData.cantidad_ordenes_realizadas + userData.cantidad_ordenes_rechazadas)+1))
+                userData.cantidad_ordenes_realizadas=userData.cantidad_ordenes_realizadas+1
+                userData.save()
                 orden_General.rubro.save()
                 if resena!="":
                     orden_General.resena_al_proveedor=resena
@@ -1252,22 +1210,7 @@ def finalizarOrdenCliente(request):
                 return HttpResponse("ok")
 
             else: 
-                compania=company.objects.filter(email=email).first()
-                if compania:
-                    calificacion_inicial= orden_General.rubro_company.qualification
-                    orden_General.rubro_company.qualification=calificacion_inicial + (calificacion/( (compania.cantidad_ordenes_realizadas + compania.cantidad_ordenes_rechazadas)+1))
-                    compania.cantidad_ordenes_realizadas=compania.cantidad_ordenes_realizadas+1
-                    compania.save()
-                    orden_General.rubro_company.save()
-                    if resena!="":
-                        orden_General.resena_al_proveedor=resena
-
-                    orden_General.calificacion_proveedor = calificacion #la calificación en la orden no es igual a la calificación del cliente
-                    orden_General.status="RED"
-                    orden_General.save() 
-                    return HttpResponse("ok")
-                else: 
-                    return HttpResponse("bad")
+                return HttpResponse("bad")
         
         else:
             return HttpResponse("bad")
@@ -1282,28 +1225,20 @@ def consultarTodasLasOrdenes (request, tipo, email):
             for data in ordenesGenerales:
                 if data.rubro:
                     array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
-                elif data.rubro_company:
-                    array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
         ordenesEmergencia = ordenEmergencia.objects.filter(client_email=email).exclude(status="RED").exclude(status="CAN").exclude(status="REX")
         if ordenesEmergencia:
             for data in ordenesEmergencia:
                 if data.rubro:
-                    array.append({"rubro":data.rubro,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
-                elif data.rubro_company:
                     array.append({"rubro":data.rubro,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
         ordenesGenerales= ordenGeneral.objects.filter(client_email=email).exclude(status="ENV").exclude(status="REC").exclude(status="ABI").exclude(status="PEI").exclude(status="PRE").exclude(status="ACE").exclude(status="EVI").exclude(status="ENS")
         if ordenesGenerales:
             for data in ordenesGenerales:
                 if data.rubro:
                     array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
-                elif data.rubro_company:
-                    array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
         ordenesEmergencia = ordenEmergencia.objects.filter(client_email=email).exclude(status="ENV").exclude(status="REC").exclude(status="ACE").exclude(status="EVI").exclude(status="ENS")
         if ordenesEmergencia:
             for data in ordenesEmergencia:
                 if data.rubro:
-                    array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
-                elif data.rubro_company:
                     array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
         if len(array)>0:
             return JsonResponse(array, safe=False)
@@ -1321,14 +1256,10 @@ def consultarTodasLasOrdenesCanceladas(request, tipo, email):
             for data in ordenesGenerales:
                 if data.rubro:
                     array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
-                elif data.rubro_company:
-                    array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
         ordenesEmergencia = ordenEmergencia.objects.filter(client_email=email).exclude(status="RED").exclude(status="ENV").exclude(status="REC").exclude(status="ABI").exclude(status="PEI").exclude(status="PRE").exclude(status="ACE").exclude(status="EVI").exclude(status="ENS")
         if ordenesEmergencia:
             for data in ordenesEmergencia:
                 if data.rubro:
-                    array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
-                elif data.rubro_company:
                     array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
         if len(array)>0:
             return JsonResponse(array, safe=False)
@@ -1341,14 +1272,10 @@ def consultarTodasLasOrdenesCanceladas(request, tipo, email):
             for data in ordenesGenerales:
                 if data.rubro:
                     array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
-                elif data.rubro_company:
-                    array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
         ordenesEmergencia = ordenEmergencia.objects.filter(proveedor_email=email).exclude(status="RED").exclude(status="ENV").exclude(status="REC").exclude(status="ABI").exclude(status="PEI").exclude(status="PRE").exclude(status="ACE").exclude(status="EVI").exclude(status="ENS")
         if ordenesEmergencia:
             for data in ordenesEmergencia:
                 if data.rubro:
-                    array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
-                elif data.rubro_company:
                     array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
         if len(array)>0:
             return JsonResponse(array, safe=False)
@@ -1363,14 +1290,10 @@ def consultarTodasLasOrdenesCurso(request, tipo, email):
             for data in ordenesGenerales:
                 if data.rubro:
                     array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
-                elif data.rubro_company:
-                    array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
         ordenesEmergencia = ordenEmergencia.objects.filter(client_email=email).exclude(status="RED").exclude(status="CAN").exclude(status="REX")
         if ordenesEmergencia:
             for data in ordenesEmergencia:
                 if data.rubro:
-                    array.append({"rubro":data.rubro,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
-                elif data.rubro_company:
                     array.append({"rubro":data.rubro,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
         if len(array)>0:
             return JsonResponse(array, safe=False)
@@ -1383,14 +1306,10 @@ def consultarTodasLasOrdenesCurso(request, tipo, email):
             for data in ordenesGenerales:
                 if data.rubro:
                     array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
-                elif data.rubro_company:
-                    array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
         ordenesEmergencia = ordenEmergencia.objects.filter(proveedor_email=email).exclude(status="RED").exclude(status="CAN").exclude(status="REX")
         if ordenesEmergencia:
             for data in ordenesEmergencia:
                 if data.rubro:
-                    array.append({"rubro":data.rubro,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
-                elif data.rubro_company:
                     array.append({"rubro":data.rubro,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
         if len(array)>0:
             return JsonResponse(array, safe=False)
@@ -1405,14 +1324,10 @@ def consultarTodasLasOrdenesFinalizadas(request, tipo, email):
             for data in ordenesGenerales:
                 if data.rubro:
                     array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
-                elif data.rubro_company:
-                    array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
         ordenesEmergencia = ordenEmergencia.objects.filter(client_email=email).exclude(status="CAN").exclude(status="REX").exclude(status="ENV").exclude(status="REC").exclude(status="ABI").exclude(status="PEI").exclude(status="PRE").exclude(status="ACE").exclude(status="EVI").exclude(status="ENS")
         if ordenesEmergencia:
             for data in ordenesEmergencia:
                 if data.rubro:
-                    array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
-                elif data.rubro_company:
                     array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
         if len(array)>0:
             return JsonResponse(array, safe=False)
@@ -1425,14 +1340,10 @@ def consultarTodasLasOrdenesFinalizadas(request, tipo, email):
             for data in ordenesGenerales:
                 if data.rubro:
                     array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
-                elif data.rubro_company:
-                    array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
         ordenesEmergencia = ordenEmergencia.objects.filter(proveedor_email=email).exclude(status="CAN").exclude(status="REX").exclude(status="ENV").exclude(status="REC").exclude(status="ABI").exclude(status="PEI").exclude(status="PRE").exclude(status="ACE").exclude(status="EVI").exclude(status="ENS")
         if ordenesEmergencia:
             for data in ordenesEmergencia:
                 if data.rubro:
-                    array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
-                elif data.rubro_company:
                     array.append({"rubro":data.rubro.items,"status":data.status,"fecha":data.fecha_creacion, "ticket":data.ticket})
         if len(array)>0:
             return JsonResponse(array, safe=False)
@@ -1445,7 +1356,8 @@ def consultarOrdenParticular (request, ticket):
     ordenesGeneral= ordenGeneral.objects.filter(ticket=ticket).first()
     if ordenesGeneral:
         nombre=""
-        proveedor=serviceProvider.objects.filter(email=ordenesGeneral.proveedor_email).first()
+        user=User.objects.filter(email=ordenesGeneral.proveedor_email).first()
+        proveedor=user_data.objects.filter(user_id=user).first()
         if proveedor: 
             nombre=proveedor.name +" "+ proveedor.last_name
             data={"tipo":"Orden general","status":ordenesGeneral.status, "fecha_creacion":ordenesGeneral.fecha_creacion , "ticket":ordenesGeneral.ticket,
@@ -1456,24 +1368,11 @@ def consultarOrdenParticular (request, ticket):
                     }
             return JsonResponse(data, safe=False)
         else:
-            proveedor=company.objects.filter(email=ordenesGeneral.proveedor_email).first()
-            nombre=proveedor.company_name
-            if proveedor:                     
-                        
-                data={"tipo":"Orden general","status":ordenesGeneral.status, "fecha_creacion":ordenesGeneral.fecha_creacion , "ticket":ordenesGeneral.ticket,
-                    "dia":ordenesGeneral.day, "time":ordenesGeneral.time, "titulo":ordenesGeneral.tituloPedido,"descripcion":ordenesGeneral.problem_description,
-                    "proveedor_nombre":nombre, "reseña_al_proveedor": ordenesGeneral.resena_al_proveedor,
-                    "presupuesto":ordenesGeneral.presupuesto_inicial, "pedidoMasInformacion": ordenesGeneral.pedido_mas_información,
-                    "respuesta_cliente_pedido_mas_información":ordenesGeneral.respuesta_cliente_pedido_mas_información,
-                    }
-                return JsonResponse(data, safe=False)
-            else:
-                return HttpResponse("bad") 
+            return HttpResponse("bad") 
     else:
         ordenEmergency=ordenEmergencia.objects.filter(ticket=ticket).first()
         if ordenEmergency:
-            cliente=client.objects.filter(email=ordenEmergency.client_email).first()
-                                
+                                            
             data={"tipo":"Orden de emergencia","status":ordenEmergency.status, "fecha_creacion":ordenEmergency.fecha_creacion , "ticket":ordenEmergency.ticket,
                 "dia":ordenEmergency.day, "time":ordenEmergency.time, "titulo":ordenEmergency.tituloPedido,"descripcion":ordenEmergency.problem_description,
                 
@@ -1577,16 +1476,12 @@ def pedirOrdenEmergencia (request):
             
             array=[]
 
-            datos_independiente=item.objects.filter(items=categoria).exclude(radius=0).exclude(hace_orden_emergencia=False).order_by('-publicidad','-qualification')
-            proveedoresRadioOrdenEmergencia(1,array,datos_independiente,clienteLat,clienteLong,0,30,15)
-                   
-            datos_companias=item_company.objects.filter(items=categoria).exclude(radius=0).exclude(hace_orden_emergencia=False).order_by('-publicidad','-qualification')
-            proveedoresRadioOrdenEmergencia(2,array,datos_companias,clienteLat,clienteLong,0,30,15)
-           
+            datos_proveedores=item.objects.filter(items=categoria).exclude(radius=0).exclude(hace_orden_emergencia=False).order_by('-publicidad','-qualification')
+            proveedoresRadioOrdenEmergencia(1,array,datos_proveedores,clienteLat,clienteLong,0,30,15)
+                              
             if len(array)<=3:
                 
-                proveedoresRadioOrdenEmergencia(1,array,datos_independiente,clienteLat,clienteLong,30,50,6)        
-                proveedoresRadioOrdenEmergencia(2,array,datos_companias,clienteLat,clienteLong,30,50,6)
+                proveedoresRadioOrdenEmergencia(1,array,datos_proveedores,clienteLat,clienteLong,30,50,6)        
                 
                 if len(array)==0:
                     return HttpResponse("bad")
@@ -1776,7 +1671,8 @@ def proveedorOrdenEmergenciaCalificar (request):
             orden.califico_el_proveedor=True
             orden.save()
             email=orden.client_email
-            cliente=client.objects.filter(email=email).first()
+            user=User.objects.filter(email=email).first()
+            cliente=user_data.objects.filter(user_id=user).first()
             if cliente:
                 calificacion_inicial= cliente.qualification
                 cliente.qualification=calificacion_inicial + (int(calificacion)/( (cliente.cantidad_ordenes_realizadas + cliente.cantidad_ordenes_canceladas)+1))
@@ -1802,33 +1698,21 @@ def clienteOrdenEmergenciaCalificar (request):
             orden.califico_el_cliente=True
             orden.save()
             email=orden.proveedor_email
-            proveedor_independiente=serviceProvider.objects.filter(email=email).first()
-            if proveedor_independiente:
+            user=User.objects.filter(email=email).first()
+            proveedor=user_data.objects.filter(user_id=user).first()
+            if proveedor:
                 rubro=item.objects.filter(email=email).filter(items=orden.rubro).first()
                 if rubro:
                     calificacion_inicial= rubro.qualification
-                    rubro.qualification=calificacion_inicial + (int(calificacion)/( (proveedor_independiente.cantidad_ordenes_realizadas + proveedor_independiente.cantidad_ordenes_canceladas)+1))
-                    proveedor_independiente.cantidad_ordenes_realizadas=proveedor_independiente.cantidad_ordenes_realizadas+1
-                    proveedor_independiente.save()
+                    rubro.qualification=calificacion_inicial + (int(calificacion)/( (proveedor.cantidad_ordenes_realizadas + proveedor.cantidad_ordenes_canceladas)+1))
+                    proveedor.cantidad_ordenes_realizadas=proveedor.cantidad_ordenes_realizadas+1
+                    proveedor.save()
                     rubro.save()
                     return HttpResponse("ok")
                 else:
                     return HttpResponse("bad")
-            else: 
-                proveedor_empresa=company.objects.filter(email=email).first()
-                if proveedor_empresa:
-                    rubro=item_company.objects.filter(email=email).filter(items=orden.rubro).first()
-                    if rubro:
-                        calificacion_inicial= rubro.qualification
-                        rubro.qualification=calificacion_inicial + (int(calificacion)/( (proveedor_empresa.cantidad_ordenes_realizadas + proveedor_empresa.cantidad_ordenes_canceladas)+1))
-                        proveedor_empresa.cantidad_ordenes_realizadas=proveedor_empresa.cantidad_ordenes_realizadas+1
-                        proveedor_empresa.save()
-                        rubro.save()
-                        return HttpResponse("ok")
-                    else:
-                        return HttpResponse("bad")
-                else: 
-                    return HttpResponse("bad")
+            else:
+                return HttpResponse("bad")
 
         else: 
             return HttpResponse("bad")

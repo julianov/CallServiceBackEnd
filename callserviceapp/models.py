@@ -89,9 +89,6 @@ class item (models.Model):
 #Models for orders
 
 
-class reseñas (models.Model): 
-
-
 class ordenGeneral (models.Model):
     
     id = models.AutoField(primary_key=True)
