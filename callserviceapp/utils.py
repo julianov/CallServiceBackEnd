@@ -5,6 +5,9 @@ import base64
 
 from celery import Task, shared_task
 
+from callserviceapp.models import user_data
+
+
 
 def distanciaEnLaTierra(lon1, lat1, lon2, lat2):
     """
@@ -32,8 +35,8 @@ def proveedoresRadio(tipo, array, proveedores, lat, long, radio1, radio2, cantid
         i=0
         for data in proveedores:
             #distance = math.sqrt(math.pow(data.posicion_lat-float(lat), 2) + math.pow(data.posicion_long-float(long), 2) )
-                        
-            distance=distanciaEnLaTierra(float(data.posicion_long),float(data.posicion_lat),float(long),float(lat))
+            userData=user_data.objects.filter(user_id=data.user_id).first()
+            distance=distanciaEnLaTierra(float(userData.posicion_long),float(userData.posicion_lat),float(long),float(lat))
             
             if radio1 <= distance and distance < radio2:
                 datos_de_proveedores.append(data)
@@ -44,9 +47,9 @@ def proveedoresRadio(tipo, array, proveedores, lat, long, radio1, radio2, cantid
         
         if tipo==1: 
             j=0
-            print(datos_de_proveedores)
             for datos in datos_de_proveedores:
-                personales=datos.provider
+                personales=user_data.objects.filter(user_id=datos.user_id).first()
+
                 imagenes={}
             
                 if personales.picture:
@@ -56,7 +59,7 @@ def proveedoresRadio(tipo, array, proveedores, lat, long, radio1, radio2, cantid
 
                 first={"item":datos.items,"certificado":imagenes['picture'] ,"distancia":distancias[j],
             "calificacion":datos.qualification,
-                "nombre":personales.name, "apellido":personales.last_name, "email":personales.email, "tipo":"Proveedor de servicio independiente" }
+                "nombre":personales.name, "apellido":personales.last_name, "email":datos.user_id.email, "tipo":personales.client_type }
 
                 array.append(first)
                 j=j+1

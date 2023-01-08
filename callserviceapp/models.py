@@ -13,7 +13,7 @@ class validation_token (models.Model):
 
 class user_data (models.Model):
 
-    user_id = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    user_id = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
     client_type= models.IntegerField(default=1, blank=True) 
     name = models.CharField(max_length=200, blank=True)
     last_name = models.CharField(max_length=200, blank=True)
@@ -21,8 +21,8 @@ class user_data (models.Model):
     qualification=models.IntegerField(default=0)
     cantidad_ordenes_realizadas =models.IntegerField(default=0)
     cantidad_ordenes_canceladas =models.IntegerField(default=0) 
-    posicion_lat = models.FloatField(default=None, blank=True)
-    posicion_long= models.FloatField(default=None, blank=True)
+    posicion_lat = models.FloatField(default=None, null=True)
+    posicion_long= models.FloatField(default=None, null=True)
 
 
 class item (models.Model):
@@ -95,7 +95,7 @@ class ordenGeneral (models.Model):
 
     client_email = models.EmailField(blank=True)
     proveedor_email=models.EmailField(blank=True)
-    rubro= models.ForeignKey(item,blank=True,null=True,on_delete=models.CASCADE)
+    rubro= models.OneToOneField(item,blank=True,null=True,on_delete=models.CASCADE)
     tiempo_respuesta_promedio=models.FloatField(default=1000)
 
     fecha_creacion=models.DateField( auto_now_add=True)

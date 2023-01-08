@@ -20,10 +20,11 @@ def prueba(request):
 
 
 def login(request, email, password):
-    user=User.objects.filter(email=email, password=password)
+
+    user=User.objects.filter(email=email, password=password).first()
     if user:
         if user.is_active: 
-            client_data=user_data.objects.filter(usr_id=user).first()
+            client_data=user_data.objects.filter(user_id=user).first()
             if client_data:
                 imagen={}
                 if client_data.picture:
@@ -58,9 +59,10 @@ def homeCliente (request , lat, long):
 def proveedorUbicacion (request , email, lat, long):
     user=User.objects.filter(email=email).first()
     if user:
-        user.posicion_lat=lat
-        user.posicion_long=long
-        user.save()
+        userData=user_data.objects.filter(user_id=user).first()
+        userData.posicion_lat=lat
+        userData.posicion_long=long
+        userData.save()
         return HttpResponse("ok")
         
     else:
@@ -76,8 +78,7 @@ def homeClientePedirDatos (request , email,rubro, tipoPedido,lat, long):
 
         if datosItem and datos_personales:
             if (tipoPedido=="caracteres"):        
-                
-                distance=distanciaEnLaTierra(float(datosItem.posicion_long),float(datosItem.posicion_lat),float(long),float(lat))
+                distance=distanciaEnLaTierra(float(datos_personales.posicion_long),float(datos_personales.posicion_lat),float(long),float(lat))
                 if datos_personales.picture:
                     imagen="data:image/png;base64,"+base64.b64encode(datos_personales.picture.read()).decode('ascii')
                 else: 
@@ -132,7 +133,7 @@ def register (request):
 
         user= User.objects.filter(email=email)
         if not user: 
-            user = User(username=(email.split("@"))[0], email=email, password=password, is_active=False)
+            user = User(username=(email.split("@"))[0]+(email.split("@"))[1], email=email, password=password, is_active=False)
             user.save()
             randomNumber = random.randint(1, 99999)
             val_token=validation_token(user_id=user, val_token=randomNumber)
@@ -191,8 +192,12 @@ def askPersonalInfo(request,type,email):
 def nuevaInfoPersonal (request): 
     if request.method == 'POST':
         user=User.objects.filter(email=request.POST.get("email")).first()
+        
         if user:
-            userData=user_data.objects.filter(user_id=user)
+            print("--------------------------")
+            print(user)
+            print("----------------------------")
+            userData=user_data.objects.filter(user_id=user).first()
             if userData: 
                 if request.POST.get("nombre")!= None:
                     userData.name=request.POST.get("nombre")
@@ -212,15 +217,21 @@ def nuevaInfoPersonal (request):
 def completeInfo (request): 
     if request.method == 'POST':
 
-        user=User.objects.filter(email=request.POST.get("email")) 
+        user=User.objects.filter(email=request.POST.get("email")).first() 
+        print("--------------------------")
+        print(user)
+        print("----------------------------")
         if user: 
             userData =user_data.objects.filter(user_id=user).first()
-            userData.name=request.POST.get("nombre")
-            userData.last_name=request.POST.get("apellido") 
-            userData.picture= request.FILES.get("image") 
-            userData.qualification=0
-            userData.save()
-            return HttpResponse("todo ok")
+            if userData:
+                userData.name=request.POST.get("nombre")
+                userData.last_name=request.POST.get("apellido") 
+                userData.picture= request.FILES.get("image") 
+                userData.qualification=0
+                userData.save()
+                return HttpResponse("todo ok")
+            else:
+                return HttpResponse("bad")
         else: 
             return HttpResponse("no usuario registrado")
 
@@ -232,7 +243,7 @@ def completeInfo (request):
 def addRubro (request):
     if request.method == 'POST':
 
-        user=User.objects.filter(email=request.POST.get("email"))
+        user=User.objects.filter(email=request.POST.get("email")).first()
         if user:
             rubros=item.objects.filter(user_id=user)
             if len(rubros)<2:
@@ -285,9 +296,9 @@ def completeInfoRubros (request,modo,tipo,email):
 def requestRubros(request, tipo,email,rubro):
     user=User.objects.filter(email=email).first()
     if user: 
-        rubro=item.objects.filter(user_id=user).filter(items=rubro)
+        rubro=item.objects.filter(user_id=user).filter(items=rubro).first()
         if rubro:
-            datos=rubro.first()
+            datos=rubro
             images = {}
             if datos.certificate: 
                 images['certificado'] = "data:image/png;base64,"+base64.b64encode(datos.certificate.read()).decode('ascii')
@@ -324,7 +335,7 @@ def requestRubros(request, tipo,email,rubro):
 @csrf_exempt 
 def deleteRubro (request):
     if request.method == 'POST':
-        user=User.objects.filter(email=request.POST.get("email"))
+        user=User.objects.filter(email=request.POST.get("email")).first()
         if user:
             rubro=item.objects.filter(user_id=user).filter(items=request.POST.get("item")).first() 
             if rubro:
@@ -757,15 +768,15 @@ def pedirOrdenGeneral (request):
                     new.motivo_rechazo=""
                     new.resena_al_proveedor=""
                     new.resena_al_cliente=""
+                    new.location_lat=clienteLat
+                    new.location_long=clienteLong
                     new.save()
 
                     user_client=User.objects.filter(email=clienteEmail).first()
                     userData=user_data.objects.filter(user_id=user_client).first()
-                    userData.posicion_lat=clienteLat
-                    userData.posicion_long=clienteLong
-                    userData.save()
+                   
                         
-                    send_proveedor_mail_new_orden.delay(ticket_numero, ProveedorEmail, client_.first().name+" "+client_.first().last_name)
+                    send_proveedor_mail_new_orden.delay(ticket_numero, ProveedorEmail, userData.name+" "+userData.last_name)
                            
                     return HttpResponse(ticket_numero)
             else:
@@ -789,15 +800,15 @@ def pedirOrdenGeneral (request):
                 new.motivo_rechazo=""
                 new.resena_al_proveedor=""
                 new.resena_al_cliente=""
+                new.location_lat=clienteLat
+                new.location_long=clienteLong
                 new.save()
 
                 user_client=User.objects.filter(email=clienteEmail).first()
                 userData=user_data.objects.filter(user_id=user_client).first()
-                userData.posicion_lat=clienteLat
-                userData.posicion_long=clienteLong
-                userData.save()
+               
                         
-                send_proveedor_mail_new_orden.delay(ticket_numero, ProveedorEmail, client_.first().name+" "+client_.first().last_name)
+                send_proveedor_mail_new_orden.delay(ticket_numero, ProveedorEmail, userData.name+" "+userData.last_name)
                            
                 return HttpResponse(ticket_numero)
 
@@ -978,7 +989,10 @@ def cambiarEstadoOrden (request , n_ticket, tipo_orden,nuevo_estado_orden):
                     return HttpResponse("ok")
                 
                 else:
-                    return HttpResponse("bad")      
+                    return HttpResponse("bad")  
+            else: 
+                return HttpResponse("ok")
+
         else: 
             return HttpResponse("bad")
     elif tipo_orden=="Orden de emergencia":
@@ -1196,11 +1210,11 @@ def finalizarOrdenCliente(request):
             user=User.objects.filter(email=email).first()
             userData=user_data.objects.filter(user_id=user).first()
             if userData:
-                calificacion_inicial= orden_General.rubro.qualification
-                orden_General.rubro.qualification=calificacion_inicial + (int(calificacion)/( (userData.cantidad_ordenes_realizadas + userData.cantidad_ordenes_rechazadas)+1))
+                calificacion_inicial= userData.qualification
+                userData.qualification=calificacion_inicial + (int(calificacion)/( (userData.cantidad_ordenes_realizadas + userData.cantidad_ordenes_canceladas)+1))
                 userData.cantidad_ordenes_realizadas=userData.cantidad_ordenes_realizadas+1
                 userData.save()
-                orden_General.rubro.save()
+                #orden_General.rubro.save()
                 if resena!="":
                     orden_General.resena_al_proveedor=resena
                 orden_General.calificacion_proveedor = calificacion #la calificación en la orden no es igual a la calificación del cliente
