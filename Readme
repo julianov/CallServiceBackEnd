@@ -1,0 +1,7 @@
+
+
+
+
+celery -A callservices worker
+
+systemctl status rabbitmq-server.service

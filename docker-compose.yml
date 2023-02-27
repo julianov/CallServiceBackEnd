@@ -1,0 +1,61 @@
+
+version: '3.8'
+
+services:
+    webserver:
+        image: nginx:latest
+        container_name: webserver
+        restart: always
+        depends_on:
+            - backend
+        ports:
+            - "8001:80"
+        volumes:
+            - ./:/var/www
+            - ./Dockerfiles/nginx:/etc/nginx/conf.d
+        networks:
+            app-network:
+
+    backend:
+      build:
+        context: ./Dockerfiles/python
+        dockerfile: Dockerfile
+      command: python manage.py runserver 0.0.0.0:8000
+      volumes:
+        - ./:/code
+      ports:
+        - "8000:8000"
+      environment:
+        - POSTGRES_NAME=postgres
+        - POSTGRES_USER=postgres
+        - POSTGRES_PASSWORD=postgres
+      depends_on:
+        - database
+      networks:
+        app-network:
+
+    celery:
+      build:
+        context: ./Dockerfiles/python
+        dockerfile: Dockerfile
+      command: celery -A callservices worker -l info
+      volumes:
+        - ./:/code
+      depends_on:
+        - database
+      networks:
+        app-network:
+
+    database:
+        image: postgres
+        volumes:
+          - ./data/db:/var/lib/postgresql/data
+        environment:
+          - POSTGRES_DB=postgres
+          - POSTGRES_USER=postgres
+          - POSTGRES_PASSWORD=postgres
+        networks:
+            app-network:
+networks:
+    app-network:
+
