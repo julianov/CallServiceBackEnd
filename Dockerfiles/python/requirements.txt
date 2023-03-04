@@ -3,3 +3,5 @@ djangorestframework==3.11.0
 psycopg2-binary>=2.8
 celery==5.2.0
 redis==3.5.3
+django-sslserver==0.22
+Pillow==8.4.0
