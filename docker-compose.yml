@@ -2,12 +2,12 @@
 version: '3.8'
 
 services:
-    webserverCallServices:
+    webservercallservices:
         image: nginx:latest
         container_name: webserver
         restart: always
         depends_on:
-            - backendCallServices
+            - backendcallservices
         ports:
             - "8001:80"
         volumes:
@@ -16,7 +16,7 @@ services:
         networks:
             app-network:
 
-    backendCallServices:
+    backendcallservices:
       build:
         context: ./Dockerfiles/python
         dockerfile: Dockerfile
@@ -30,7 +30,7 @@ services:
         - POSTGRES_USER=postgres
         - POSTGRES_PASSWORD=postgres
       depends_on:
-        - databaseCallServices
+        - databasecallservices
       networks:
         app-network:
 
@@ -42,11 +42,11 @@ services:
       volumes:
         - ./:/code
       depends_on:
-        - databaseCallServices
+        - databasecallservices
       networks:
         app-network:
 
-    databaseCallServices:
+    databasecallservices:
         image: postgres
         volumes:
           - ./data/db:/var/lib/postgresql/data
