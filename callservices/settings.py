@@ -46,7 +46,9 @@ INSTALLED_APPS = [
 ]
 
 
-CELERY_BROKER_URL = 'amqp://localhost'
+#CELERY_BROKER_URL = 'amqp://localhost'
+CELERY_BROKER_URL = 'redis://redis:6379/0'
+CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -85,10 +87,21 @@ WSGI_APPLICATION = 'callservices.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
-DATABASES = {
+'''DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
+}
+'''
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
+        'HOST': 'databasecallservices',
+        'PORT': '5432',
     }
 }
 

@@ -9,7 +9,7 @@ from django.core.mail import EmailMultiAlternatives, send_mail
 
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'callservices.settings')
-app = Celery('callservices')
+app = Celery('callservices',broker='redis://redis:6379/0')
 app.config_from_object('django.conf:settings')
 app.autodiscover_tasks(settings.INSTALLED_APPS)
 

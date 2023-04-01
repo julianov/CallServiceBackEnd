@@ -1,6 +1,11 @@
 
 
 
+docker compose build 
+
+docker compose up -d 
+
+
 
 celery -A callservices worker
 
