@@ -1,75 +1,77 @@
-
 version: '3.8'
 
 services:
-    webservercallservices:
-        image: nginx:latest
-        container_name: webserver-callservices
-        restart: always
-        depends_on:
-            - backendcallservices
-        ports:
-            - "80:80"
-        volumes:
-            - ./:/var/www
-            - ./Dockerfiles/nginx:/etc/nginx/conf.d
-            #- /etc/letsencrypt:/etc/letsencrypt # Agregando este volumen para usar los certificados SSL/TLS
-        networks:
-            app-network:
+  webservercallservices:
+    image: nginx:latest
+    container_name: webserver-callservices
+    restart: always
+    depends_on:
+      - backendcallservices
+    ports:
+      - "443:443"
+    volumes:
+      - ./:/var/www
+      - ./Dockerfiles/nginx:/etc/nginx/conf.d
+      #- /etc/letsencrypt:/etc/letsencrypt # Agregando este volumen para usar los certificados SSL/TLS
+    networks:
+      app-network:
 
-    backendcallservices:
-      build:
-        context: ./Dockerfiles/python
-        dockerfile: Dockerfile
-      command: sh -c 'python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000'
-      volumes:
-        - ./:/code
-      ports:
-        - "8000:8000"
-      environment:
-        - CELERY_BROKER_URL=redis://redis:6379/0
-        - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      depends_on:
-        - databasecallservices
-        - redis
-      networks:
-        app-network:
-
-
-    celery:
-      build:
-        context: ./Dockerfiles/python
-        dockerfile: Dockerfile
-      command: celery -A callservices worker -l info
-      volumes:
-        - ./:/code
-      depends_on:
-        - databasecallservices
-        - redis
-
-      networks:
-        app-network:
+  backendcallservices:
+    build:
+      context: ./Dockerfiles/python
+      dockerfile: Dockerfile
+    command: sh -c 'python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000'
+    volumes:
+      - ./:/code
+    ports:
+      - "8000:8000"
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - databasecallservices
+      - redis
+    networks:
+      app-network:
 
 
-    redis:
-      image: redis:latest
-      container_name: redis
-      restart: always
-      ports:
-        - "6379:6379"
+  celery:
+    build:
+      context: ./Dockerfiles/python
+      dockerfile: Dockerfile
+    command: celery -A callservices worker -l info
+    volumes:
+      - ./:/code
+    depends_on:
+      - databasecallservices
+      - redis
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    networks:
+      app-network:
 
-    databasecallservices:
-        image: postgres
-        volumes:
-          - ./data/db:/var/lib/postgresql/data
-        environment:
-          - POSTGRES_DB=postgres
-          - POSTGRES_USER=postgres
-          - POSTGRES_PASSWORD=postgres
-        ports:
-          - "5432:5432"
-        networks:
-            app-network:
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      app-network:
+
+  databasecallservices:
+    image: postgres
+    volumes:
+      - ./data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    networks:
+      app-network:
+
 networks:
-    app-network:
-
+  app-network:
