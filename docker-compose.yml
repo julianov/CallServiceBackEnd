@@ -12,7 +12,7 @@ services:
     volumes:
       - ./:/var/www
       - ./Dockerfiles/nginx:/etc/nginx/conf.d
-      #- /etc/letsencrypt:/etc/letsencrypt # Agregando este volumen para usar los certificados SSL/TLS
+      - /etc/letsencrypt:/etc/letsencrypt # Agregando este volumen para usar lo>
     networks:
       app-network:
 
