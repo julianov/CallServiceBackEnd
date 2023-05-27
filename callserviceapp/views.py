@@ -25,14 +25,17 @@ def login(request, email, password):
     if user:
         if user.is_active: 
             client_data=user_data.objects.filter(user_id=user).first()
-            if client_data:
+            if client_data.name:
                 imagen={}
                 if client_data.picture:
                     imagen['img_personal']="data:image/png;base64,"+base64.b64encode(client_data.picture.read()).decode('ascii')
                 else:
                     imagen['img_personal']=""
         
-                data=[{"user":user.email, "clientType":client_data.client_type, "calificacion":client_data.qualification,"picture":imagen['img_personal']}]
+                data=[{"personalDataCompleted": "true","user":user.email, "clientType":client_data.client_type, "calificacion":client_data.qualification,"picture":imagen['img_personal']}]
+                return JsonResponse(data, safe=False)
+            else: 
+                data=[{"personalDataCompleted": "false", "user":user.email, "clientType":client_data.client_type}]
                 return JsonResponse(data, safe=False)
         else: 
             return HttpResponse("Must verify the email")        
