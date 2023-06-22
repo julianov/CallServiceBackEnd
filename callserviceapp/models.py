@@ -57,7 +57,7 @@ class item (models.Model):
     ("LUNES A VIERNES", "LUNES A VIERNES"),
     ("LUNES A LUNES", "LUNES A LUNES"),
     ]
-    items = models.CharField(max_length=25, choices = ITEMS)
+    items = models.CharField(max_length=250, choices = ITEMS)
     certificate=models.ImageField(default=None)	
     radius = models.FloatField(default=None)
     qualification=models.IntegerField(default=0)
@@ -70,10 +70,8 @@ class item (models.Model):
     ciudad= models.TextField(blank = True)
     domicilio_calle= models.TextField(blank = True)
     domicilio_numeracion=models.TextField(blank = True)
-    #posicion_lat = models.FloatField(default=None) AHORA VA EN USER DATA
-    #posicion_long= models.FloatField(default=None) AHORA VA EN USER DATA
     description= models.TextField(blank = True)
-    days_of_works = models.CharField(max_length=25,choices= DAYS_OF_WORKS,default= "LV")
+    days_of_works = models.CharField(max_length=250,choices= DAYS_OF_WORKS,default= "LV")
     hour_init = models.TimeField()
     hour_end = models.TimeField()
     picture1=models.ImageField(default=None, blank=True)	
