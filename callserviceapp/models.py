@@ -93,7 +93,7 @@ class ordenGeneral (models.Model):
 
     client_email = models.EmailField(blank=True)
     proveedor_email=models.EmailField(blank=True)
-    rubro= models.OneToOneField(item,blank=True,null=True,on_delete=models.CASCADE)
+    rubro = models.ForeignKey(item, blank=True, null=True, on_delete=models.CASCADE)
     tiempo_respuesta_promedio=models.FloatField(default=1000)
 
     fecha_creacion=models.DateField( auto_now_add=True)

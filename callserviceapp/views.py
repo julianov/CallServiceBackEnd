@@ -750,6 +750,7 @@ def pedirOrdenGeneral (request):
                 if ordenGeneral.objects.filter(client_email=clienteEmail, proveedor_email=ProveedorEmail).exclude(status="CAN").exclude( status="REX").exclude( status="RED").first().rubro.items==itemProveedor:
                             
                     return HttpResponse("ya hay una orden")
+                
                 else:
                     new=ordenGeneral()
                     new.status="ENV"
@@ -778,7 +779,6 @@ def pedirOrdenGeneral (request):
                     user_client=User.objects.filter(email=clienteEmail).first()
                     userData=user_data.objects.filter(user_id=user_client).first()
                    
-                        
                     send_proveedor_mail_new_orden.delay(ticket_numero, ProveedorEmail, userData.name+" "+userData.last_name)
                            
                     return HttpResponse(ticket_numero)
@@ -810,7 +810,6 @@ def pedirOrdenGeneral (request):
                 user_client=User.objects.filter(email=clienteEmail).first()
                 userData=user_data.objects.filter(user_id=user_client).first()
                
-                        
                 send_proveedor_mail_new_orden.delay(ticket_numero, ProveedorEmail, userData.name+" "+userData.last_name)
                            
                 return HttpResponse(ticket_numero)
